@@ -4,14 +4,20 @@ import sys
 
 import pygame
 
-import start_screen
-
 
 if __name__ == '__main__':
     sys.path.append(os.curdir)
 
     # Инициализация pygame
     pygame.init()
+    # Инициализация mixer'а
+    pygame.mixer.init()
+
+    # этот модуль нужно импортировать именно тут,
+    # т.к. в нём происходит загрузка звуков (а это можно делать только
+    # после инициализации pygame.mixer)
+    import start_screen
+
     # Экран (он же будет использован везде)
     screen = pygame.display.set_mode(flags=pygame.FULLSCREEN)
 

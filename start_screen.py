@@ -59,7 +59,7 @@ def execute(screen: pygame.surface.Surface) -> int:
     # Фоновая музыка
     pygame.mixer.music.load(os.path.join("assets/audio", "main_menu.ogg"))
     # Воспроизведение музыки вечно
-    pygame.mixer.music.play(-1)
+    pygame.mixer.music.play(-1, start=0, fade_ms=500)
     # Установка громкости
     pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 

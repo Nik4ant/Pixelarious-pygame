@@ -1,4 +1,4 @@
-from math import atan2, sin, cos
+import os
 
 import pygame
 
@@ -221,6 +221,11 @@ def start(screen: pygame.surface.Surface):
     player_sprites = pygame.sprite.Group()
     player_sprites.add(player)
     player_sprites.add(player.scope)
+
+    # Фоновая музыка
+    pygame.mixer.music.load(os.path.join("assets/audio", "game_bg.ogg"))
+    pygame.mixer.music.play(-1, start=0, fade_ms=500)
+    pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
     # Игровой цикл
     while is_game_open:
