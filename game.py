@@ -23,7 +23,8 @@ class Player(pygame.sprite.Sprite):
         # TODO: заменить на spritesheet
         # self.image = load_image("test_player.png", "assets")
         self.image = pygame.surface.Surface((self.width, self.height))
-        self.image.fill((0, 0, 0))
+        self.image = pygame.transform.scale(self.image, (64, 64))
+        # self.image.fill((0, 0, 0))
         self.rect = self.image.get_rect()
 
         # Начальное положение
@@ -34,7 +35,8 @@ class Player(pygame.sprite.Sprite):
 
         # Направление взгляда
         # TODO: юзать при анимации
-        self.look_direction_x = self.look_direction_y = 1
+        self.look_direction_x = 0
+        self.look_direction_y = 1
 
         # Дэш
         self.dash_direction_x = self.dash_direction_y = 0
@@ -61,9 +63,9 @@ class Player(pygame.sprite.Sprite):
         # TODO: некоторые вещи можно зарефакторить и вынести из if'а, но пока НУЖНО оставить так
         # Если джойстик подключен, то управление идёт с него
         if self.joystick:
-            # Получение позиции левой оси у контроллера
-            axis_left_x = self.joystick.get_axis(0)
-            axis_left_y = self.joystick.get_axis(1)
+            # Получение направления куда указываеют нажатые стрелки геймпада
+            pads_x = self.joystick.get_button(13) * -1 + self.joystick.get_button(14)
+            pads_y = self.joystick.get_button(11) * -1 + self.joystick.get_button(12)
 
             # Получение позиции правой оси у контроллера
             axis_right_x = self.joystick.get_axis(2)
@@ -73,18 +75,13 @@ class Player(pygame.sprite.Sprite):
             if (self.joystick.get_button(CONTROLS["JOYSTICK_DASH"]) and
                     pygame.time.get_ticks() - self.dash_last_time > DASH_RELOAD_TIME):
                 # Направления дэша
-                # Для направления дэша использется текущее направление, либо направление взгляда
-                # Для x
-                if abs(axis_left_x) > JOYSTICK_SENSITIVITY:
-                    self.dash_direction_x = axis_left_xdd
-                # Для y
-                if abs(axis_left_y) > JOYSTICK_SENSITIVITY:
-                    self.dash_direction_y = axis_left_x
+                # Для этого использется текущее направление, либо направление взгляда
+                self.dash_direction_x, self.dash_direction_y = pads_x, pads_y
 
-                # Если направление движения не определено, то тогда берётся направление взгляда
+                # Если направление дэша не определено, берётся направление взгляда
                 if self.dash_direction_x == 0 and self.dash_direction_y == 0:
-                    self.dash_direction_x = self.look_direction_x * 0.5
-                    self.dash_direction_y = self.look_direction_y * 0.5
+                    self.dash_direction_x = self.look_direction_x
+                    self.dash_direction_y = self.look_direction_y
 
                 self.dash_force_x = self.dash_force_y = self.dash_force_base
                 # Обновляем последнее время использования дэша
@@ -109,15 +106,16 @@ class Player(pygame.sprite.Sprite):
                     self.dash_force_y = 0
                     self.dash_direction_y = 0
 
-            # Проверяем, что действительно игрок подвигал левую ось
-            if abs(axis_left_x) > JOYSTICK_SENSITIVITY or abs(axis_left_y) > JOYSTICK_SENSITIVITY:
+            # Проверка, что было было движение
+            if pads_x != 0 or pads_y != 0:
                 # Если сейчас происходит дэш, то игрок не может его прервать.
                 # Но он может дать дополнительное ускорение замедляющее или ускоряющее
                 if self.dash_force_x != 0 or self.dash_force_y != 0:
-                    self.dx += axis_left_x * self.dash_force_base * self.speed * 0.05
-                    self.dy += axis_left_y * self.dash_force_base * self.speed * 0.05
+                    self.dx += pads_x * (self.dash_force_base / self.speed * 2)
+                    self.dy += pads_y * (self.dash_force_base / self.speed * 2)
                 else:
-                    self.dx, self.dy = axis_left_x, axis_left_y
+                    self.dx, self.dy = pads_x, pads_y
+                    self.look_direction_x, self.look_direction_y = pads_x, pads_y
 
             # Если движений джойстика нет и дэш не происходит,
             # то тогда обнуляем ускорение
