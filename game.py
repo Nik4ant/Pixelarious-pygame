@@ -23,7 +23,7 @@ class Player(pygame.sprite.Sprite):
         # TODO: заменить на spritesheet
         # self.image = load_image("test_player.png", "assets")
         self.image = pygame.surface.Surface((self.width, self.height))
-        self.image = pygame.transform.scale(self.image, (64, 64))
+        self.image = pygame.transform.scale(self.image, (32, 32))
         # self.image.fill((0, 0, 0))
         self.rect = self.image.get_rect()
 

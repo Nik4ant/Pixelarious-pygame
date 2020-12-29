@@ -5,8 +5,8 @@ import pygame
 # ВОТ ИНФА: https://stackoverflow.com/a/2029546/13940541
 # NOTE: Но если не делать этот файл как .py, то нужно внутри окна изменения настроек
 FPS = 60
-DEFAULT_MUSIC_VOLUME = 50
-DEFAULT_HOVER_SOUND_VOLUME = 25
+DEFAULT_MUSIC_VOLUME = 35
+DEFAULT_HOVER_SOUND_VOLUME = 15
 # Чуствительность джойстика
 # (только при достижении этого значения игра просчитает движения джойстика)
 # TODO: МАКСИМАЛЬНОЕ ЗНАЧЕНИЕ В НАСТРОЙКАХ ДЛЯ ЭТОГО 0.24

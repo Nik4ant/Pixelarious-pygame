@@ -54,6 +54,7 @@ class Button(pygame.sprite.Sprite):
                 if not self.was_sound_played:
                     Button.HOVER_SOUND.play()
                     self.was_sound_played = True
+
                 pygame.event.post(self.HOVER_EVENT)
             # Меняем изображение
             self.image = load_image("button_hover.png", path_to_folder="assets/UI")
