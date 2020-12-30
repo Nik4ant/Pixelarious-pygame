@@ -134,13 +134,63 @@ class Player(pygame.sprite.Sprite):
             # Список с клавишами
             keys = pygame.key.get_pressed()
 
+            # Направления движения по x и y
             current_direction_x = float(float(int(keys[CONTROLS["KEYBOARD_LEFT"]]) * -1 +
                                         int(keys[CONTROLS["KEYBOARD_RIGHT"]])) * 0.5)
             current_direction_y = float(float(int(keys[CONTROLS["KEYBOARD_UP"]]) * -1 +
                                         int(keys[CONTROLS["KEYBOARD_DOWN"]])) * 0.5)
 
-            self.dx = current_direction_x
-            self.dy = current_direction_y
+            # Проверка на использование дэша
+            if (keys[CONTROLS["KEYBOARD_DASH"]] and pygame.time.get_ticks()
+                    - self.dash_last_time > DASH_RELOAD_TIME):
+                # Направления дэша
+                # Для этого использется текущее направление
+                self.dash_direction_x, self.dash_direction_y = current_direction_x, current_direction_y
+
+                # Если направление движения не задано, берётся направление взгляда
+                if self.dash_direction_x == 0 and self.dash_direction_y == 0:
+                    self.dash_direction_x = self.look_direction_x
+                    self.dash_direction_y = self.look_direction_y
+                # Задаётся начальная сила дэша
+                self.dash_force_x = self.dash_force_y = self.dash_force_base
+                # Обновляем последнее время использования дэша
+                self.dash_last_time = pygame.time.get_ticks()
+
+            # Обработка дэша (если он был)
+            if self.dash_force_x != 0 or self.dash_direction_y != 0:
+                # Применение силы дэша
+                self.dx = self.dash_force_x * self.dash_direction_x
+                self.dy = self.dash_force_y * self.dash_direction_y
+                # Естественное замедление дэша
+                # Замедление по x
+                if self.dash_force_x - self.dash_force_slower > 0:
+                    self.dash_force_x -= self.dash_force_slower
+                else:
+                    self.dash_force_x = 0
+                    self.dash_direction_x = 0
+                # Замедление по y
+                if self.dash_force_y - self.dash_force_slower > 0:
+                    self.dash_force_y -= self.dash_force_slower
+                else:
+                    self.dash_force_y = 0
+                    self.dash_direction_y = 0
+
+            # Проверка, что было было движение
+            if current_direction_x != 0 or current_direction_y != 0:
+                # Если сейчас происходит дэш, то игрок не может его прервать.
+                # Но он может дать дополнительное ускорение замедляющее или ускоряющее
+                if self.dash_force_x != 0 or self.dash_force_y != 0:
+                    self.dx += current_direction_x * (self.dash_force_base / self.speed * 2)
+                    self.dy += current_direction_y * (self.dash_force_base / self.speed * 2)
+                else:
+                    self.dx, self.dy = current_direction_x, current_direction_y
+                    self.look_direction_x = current_direction_x
+                    self.look_direction_y = current_direction_y
+
+            # Если движений джойстика нет и дэш не происходит,
+            # то тогда обнуляем ускорение
+            elif not (self.dash_force_x != 0 or self.dash_direction_y != 0):
+                self.dx = self.dy = 0
 
             # Если зажата клавиша бега, то игрок двигается быстрее
             self.dx *= 2 if keys[CONTROLS["KEYBOARD_RUN"]] else 1
