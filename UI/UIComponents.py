@@ -65,4 +65,3 @@ class Button(pygame.sprite.Sprite):
 
         # Заного выводим текст поверх кнопки
         self.image.blit(self.text_surface, self.text_surface.get_rect(center=self.image.get_rect().center))
-

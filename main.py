@@ -16,7 +16,7 @@ if __name__ == '__main__':
     # этот модуль нужно импортировать именно тут,
     # т.к. в нём происходит загрузка звуков (а это можно делать только
     # после инициализации pygame.mixer)
-    import start_screen
+    from UI import start_screen
 
     # Экран (он же будет использован везде)
     screen = pygame.display.set_mode(flags=pygame.FULLSCREEN)

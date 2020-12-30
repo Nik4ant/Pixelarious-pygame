@@ -5,7 +5,7 @@ import pygame
 from config import FPS, CONTROLS, JOYSTICK_SENSITIVITY, DEFAULT_MUSIC_VOLUME
 
 from engine import load_image, check_any_joystick, get_joystick
-from UIComponents import Button
+from UI.UIComponents import Button
 
 
 # TODO: возврат в main того, что будет регулировать дальнейшие действия?
@@ -59,7 +59,7 @@ def execute(screen: pygame.surface.Surface) -> int:
     # Фоновая музыка
     pygame.mixer.music.load(os.path.join("assets/audio", "main_menu.ogg"))
     # Воспроизведение музыки вечно
-    pygame.mixer.music.play(-1, start=0, fade_ms=500)
+    pygame.mixer.music.play(-1)
     # Установка громкости
     pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
