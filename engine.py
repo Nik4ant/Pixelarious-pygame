@@ -21,8 +21,20 @@ def get_joystick() -> pygame.joystick.Joystick:
     return joystick
 
 
+def concat_two_file_paths(path_to_folder: str, filename: str):
+    """
+    Т.к. в разных файлах очень часто нужно загрузить что-либо из ассетов, то
+    для объединения пути до папки сделан отдельный метод здесь (чтобы каждый раз
+    не импортировать модуль os)
+    :param path_to_folder: Путь до папки с файлом
+    :param filename: Название файла
+    :return: Объединённый путь
+    """
+    return os.path.join(path_to_folder, filename)
+
+
 def load_image(filename: str, path_to_folder="assets", colorkey=None):
-    fullname = os.path.join(path_to_folder, filename)
+    fullname = concat_two_file_paths(path_to_folder, filename)
     # если файл не существует, то выходим
     if not os.path.isfile(fullname):
         print(f"ОШИБКА! Не удалось загрузить изображение {filename}")

@@ -6,7 +6,7 @@ import pygame
 # NOTE: Но если не делать этот файл как .py, то нужно внутри окна изменения настроек
 FPS = 60
 DEFAULT_MUSIC_VOLUME = 35
-DEFAULT_HOVER_SOUND_VOLUME = 15
+DEFAULT_HOVER_SOUND_VOLUME = 10
 # Чуствительность джойстика
 # (только при достижении этого значения игра просчитает движения джойстика)
 # TODO: МАКСИМАЛЬНОЕ ЗНАЧЕНИЕ В НАСТРОЙКАХ ДЛЯ ЭТОГО 0.24
@@ -42,9 +42,7 @@ CONTROLS = {
     "KEYBOARD_RIGHT": pygame.K_d,
     "KEYBOARD_UP": pygame.K_w,
     "KEYBOARD_DOWN": pygame.K_s,
-    "KEYBOARD_RUN": pygame.K_LSHIFT,
 }
 # время перезарядки дэша
-DASH_RELOAD_TIME = 500  # в миллисекундах
 # сторона одного тайоа
 TILE_SIZE = 16
