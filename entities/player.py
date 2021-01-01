@@ -7,6 +7,21 @@ class Player(pygame.sprite.Sprite):
     """
     Класс отвечающий за игрока
     """
+    # время перезарядки дэша в миллисекундах
+    # TODO: возможно снизить, если это будет слишком имбово? Или наоборот сделать динамичный геймлпей с этим?
+    dash_reload_time = 500
+    # сила дэша, которая устанавливается в самом начале
+    dash_force_base = 1.65
+    # сила замедляющая дэш со временем
+    dash_force_slower = 0.04
+
+    # отметка при превышении которой, скорость игрока автоматически возврастает
+    min_delta_to_start_run = 0.55
+    # сила с которой игрок будет набирать/уменьшать свою скорость
+    delta_changer = 0.05
+
+    # Звуки
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "footstep.ogg"))
 
     def __init__(self, x: float, y: float):
         # Конструктор класса Sprite
@@ -26,26 +41,21 @@ class Player(pygame.sprite.Sprite):
 
         # Начальное положение
         self.rect.x, self.rect.y = x, y
+
         # Скорость
         self.speed = 10
         self.dx = self.dy = 0
 
         # Направление взгляда
-        # TODO: юзать при анимации
         self.look_direction_x = 0
         self.look_direction_y = 1
 
         # Дэш
         self.dash_direction_x = self.dash_direction_y = 0
         self.dash_force_x = self.dash_force_y = 0
-        # TODO: зелье/свиток забабахать на силы ниже
-        # сила дэша, которая устанавливается в самом начале
-        # (является свойство объекта, т.к. может менятся)
-        self.dash_force_base = 1.65
-        # сила замедляющая дэш
-        # (является свойство объекта, т.к. может менятся)
-        self.dash_force_slower = 0.04
-        # FIXME: это нормальный способ? (вряд ли)
+
+        # Время последнего использования дэша
+        # (Нужно для определения перезарядился дэш или нет)
         self.dash_last_time = pygame.time.get_ticks()
 
         # Инициализация прицеда для игрока
@@ -57,151 +67,71 @@ class Player(pygame.sprite.Sprite):
         # Обновляем состояние джойстика
         self.joystick = get_joystick() if check_any_joystick() else None
 
-        # TODO: некоторые вещи можно зарефакторить и вынести из if'а, но пока НУЖНО оставить так
+        # Ниже переменные, нужные для общей обработки игрока внезависимости от
+        # типа управления (геймпад/клавиатура)
+
+        # Переменная отвечает за проверку на то, была ли нажата кнопка дэша.
+        # (Но нет гарантии того, что дэш уже перезарядился, это проверяется при использовании)
+        was_dash_activated = False
+        # Новая позиция для прицела игрока
+        new_scope_x = new_scope_y = self.scope.rect.x, self.scope.rect.y
+
         # Если джойстик подключен, то управление идёт с него
         if self.joystick:
             # Получение направления куда указываеют нажатые стрелки геймпада
-            pads_x = self.joystick.get_button(13) * -1 + self.joystick.get_button(14)
-            pads_y = self.joystick.get_button(11) * -1 + self.joystick.get_button(12)
+            current_direction_x = self.joystick.get_button(13) * -1 + self.joystick.get_button(14)
+            current_direction_y = self.joystick.get_button(11) * -1 + self.joystick.get_button(12)
 
             # Получение позиции правой оси у контроллера
             axis_right_x = self.joystick.get_axis(2)
             axis_right_y = self.joystick.get_axis(3)
 
             # Проверка на использование дэша
-            if (self.joystick.get_button(CONTROLS["JOYSTICK_DASH"]) and
-                    pygame.time.get_ticks() - self.dash_last_time > DASH_RELOAD_TIME):
-                # Направления дэша
-                # Для этого использется текущее направление, либо направление взгляда
-                self.dash_direction_x, self.dash_direction_y = pads_x, pads_y
-
-                # Если направление дэша не определено, берётся направление взгляда
-                if self.dash_direction_x == 0 and self.dash_direction_y == 0:
-                    self.dash_direction_x = self.look_direction_x
-                    self.dash_direction_y = self.look_direction_y
-
-                self.dash_force_x = self.dash_force_y = self.dash_force_base
-                # Обновляем последнее время использования дэша
-                self.dash_last_time = pygame.time.get_ticks()
-
-            # Обработка дэша (если он был)
-            if self.dash_force_x != 0 or self.dash_direction_y != 0:
-                # Применение силы дэша
-                self.dx = self.dash_force_x * self.dash_direction_x
-                self.dy = self.dash_force_y * self.dash_direction_y
-                # Естественное замедление дэша
-                # Замедление по x
-                if self.dash_force_x - self.dash_force_slower > 0:
-                    self.dash_force_x -= self.dash_force_slower
-                else:
-                    self.dash_force_x = 0
-                    self.dash_direction_x = 0
-                # Замедление по y
-                if self.dash_force_y - self.dash_force_slower > 0:
-                    self.dash_force_y -= self.dash_force_slower
-                else:
-                    self.dash_force_y = 0
-                    self.dash_direction_y = 0
-
-            # Проверка, что было было движение
-            if pads_x != 0 or pads_y != 0:
-                # Если сейчас происходит дэш, то игрок не может его прервать.
-                # Но он может дать дополнительное ускорение замедляющее или ускоряющее
-                if self.dash_force_x != 0 or self.dash_force_y != 0:
-                    self.dx += pads_x * (self.dash_force_base / self.speed * 2)
-                    self.dy += pads_y * (self.dash_force_base / self.speed * 2)
-                else:
-                    self.dx, self.dy = pads_x, pads_y
-                    self.look_direction_x, self.look_direction_y = pads_x, pads_y
-
-            # Если движений джойстика нет и дэш не происходит,
-            # то тогда обнуляем ускорение
-            elif not (self.dash_force_x != 0 or self.dash_direction_y != 0):
-                self.dx = self.dy = 0
+            was_dash_activated = self.joystick.get_button(CONTROLS["JOYSTICK_DASH"])
 
             # Проверяем, что действительно игрок подвигал правую ось
-            new_scope_x, new_scope_y = self.scope.rect.x, self.scope.rect.y
-            if abs(axis_right_x) > JOYSTICK_SENSITIVITY or abs(axis_right_y) > JOYSTICK_SENSITIVITY:
+            if (abs(axis_right_x) > JOYSTICK_SENSITIVITY or
+                    abs(axis_right_y) > JOYSTICK_SENSITIVITY):
                 # Если игрок двигал правую ось, то прицел двигается по ней
                 new_scope_x = self.scope.rect.x + self.scope.speed * axis_right_x
                 new_scope_y = self.scope.rect.y + self.scope.speed * axis_right_y
-
-            # Обновление прицела
-            self.scope.update(new_scope_x, new_scope_y)
-
         # Иначе с клавиатуры
         else:
             # Список с клавишами
             keys = pygame.key.get_pressed()
 
             # Направления движения по x и y
-            current_direction_x = float(float(int(keys[CONTROLS["KEYBOARD_LEFT"]]) * -1 +
-                                        int(keys[CONTROLS["KEYBOARD_RIGHT"]])) * 0.5)
-            current_direction_y = float(float(int(keys[CONTROLS["KEYBOARD_UP"]]) * -1 +
-                                        int(keys[CONTROLS["KEYBOARD_DOWN"]])) * 0.5)
+            current_direction_x = int(int(keys[CONTROLS["KEYBOARD_LEFT"]]) * -1
+                                      + int(keys[CONTROLS["KEYBOARD_RIGHT"]]))
+            current_direction_y = int(int(keys[CONTROLS["KEYBOARD_UP"]]) * -1
+                                      + int(keys[CONTROLS["KEYBOARD_DOWN"]]))
 
             # Проверка на использование дэша
-            if (keys[CONTROLS["KEYBOARD_DASH"]] and pygame.time.get_ticks()
-                    - self.dash_last_time > DASH_RELOAD_TIME):
-                # Направления дэша
-                # Для этого использется текущее направление
-                self.dash_direction_x, self.dash_direction_y = current_direction_x, current_direction_y
+            was_dash_activated = keys[CONTROLS["KEYBOARD_DASH"]]
 
-                # Если направление движения не задано, берётся направление взгляда
-                if self.dash_direction_x == 0 and self.dash_direction_y == 0:
-                    self.dash_direction_x = self.look_direction_x
-                    self.dash_direction_y = self.look_direction_y
-                # Задаётся начальная сила дэша
-                self.dash_force_x = self.dash_force_y = self.dash_force_base
-                # Обновляем последнее время использования дэша
-                self.dash_last_time = pygame.time.get_ticks()
+            # Позиция для прицела
+            new_scope_x, new_scope_y = pygame.mouse.get_pos()
 
-            # Обработка дэша (если он был)
-            if self.dash_force_x != 0 or self.dash_direction_y != 0:
-                # Применение силы дэша
-                self.dx = self.dash_force_x * self.dash_direction_x
-                self.dy = self.dash_force_y * self.dash_direction_y
-                # Естественное замедление дэша
-                # Замедление по x
-                if self.dash_force_x - self.dash_force_slower > 0:
-                    self.dash_force_x -= self.dash_force_slower
-                else:
-                    self.dash_force_x = 0
-                    self.dash_direction_x = 0
-                # Замедление по y
-                if self.dash_force_y - self.dash_force_slower > 0:
-                    self.dash_force_y -= self.dash_force_slower
-                else:
-                    self.dash_force_y = 0
-                    self.dash_direction_y = 0
+        # Обработка дэша
+        if (was_dash_activated and pygame.time.get_ticks() -
+                self.dash_last_time > Player.dash_reload_time):
+            # TODO: stuff
+            pass
 
-            # Проверка, что было было движение
-            if current_direction_x != 0 or current_direction_y != 0:
-                # Если сейчас происходит дэш, то игрок не может его прервать.
-                # Но он может дать дополнительное ускорение замедляющее или ускоряющее
-                if self.dash_force_x != 0 or self.dash_force_y != 0:
-                    self.dx += current_direction_x * (self.dash_force_base / self.speed * 2)
-                    self.dy += current_direction_y * (self.dash_force_base / self.speed * 2)
-                else:
-                    self.dx, self.dy = current_direction_x, current_direction_y
-                    self.look_direction_x = current_direction_x
-                    self.look_direction_y = current_direction_y
+        # Проверка, что было было движение
+        # FIXME: здесь всё не то, целиком фиксить, а то не работает
+        if current_direction_x != 0 or current_direction_y != 0:
 
-            # Если движений джойстика нет и дэш не происходит,
-            # то тогда обнуляем ускорение
-            elif not (self.dash_force_x != 0 or self.dash_direction_y != 0):
-                self.dx = self.dy = 0
-
-            # Если зажата клавиша бега, то игрок двигается быстрее
-            self.dx *= 2 if keys[CONTROLS["KEYBOARD_RUN"]] else 1
-            self.dy *= 2 if keys[CONTROLS["KEYBOARD_RUN"]] else 1
-
-            # Обновляем состояние прицела
-            self.scope.update(*pygame.mouse.get_pos())
-
+            self.look_direction_x = current_direction_x
+            self.look_direction_y = current_direction_y
+        else:
+            self.dx = self.dy = 0
         # Перемещение игрока относительно ускорения
         self.rect.x = self.rect.x + self.dx * self.speed
         self.rect.y = self.rect.y + self.dy * self.speed
+
+        # Обновление прицела
+        self.scope.update(new_scope_x, new_scope_y)
 
 
 class Player_scope(pygame.sprite.Sprite):
