@@ -1,6 +1,6 @@
 import pygame
 
-from config import FPS, CONTROLS, JOYSTICK_SENSITIVITY, DEFAULT_MUSIC_VOLUME
+from config import FPS, CONTROLS, JOYSTICK_SENSITIVITY, DEFAULT_MUSIC_VOLUME, MUSIC_VOLUME_ADDER
 
 from engine import load_image, check_any_joystick, get_joystick, concat_two_file_paths
 from UI.UIComponents import Button
@@ -58,10 +58,8 @@ def execute(screen: pygame.surface.Surface) -> int:
 
     # Фоновая музыка
     pygame.mixer.music.load(concat_two_file_paths("assets/audio", "main_menu.ogg"))
-    # Воспроизведение музыки вечно
     pygame.mixer.music.play(-1)
-    # Установка громкости
-    pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
+    pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME + MUSIC_VOLUME_ADDER)
 
     # Цикл окна
     while is_open:
@@ -80,8 +78,8 @@ def execute(screen: pygame.surface.Surface) -> int:
                     was_click = True
 
             if event.type == Button.PRESS_TYPE:
-                # Музыка затухает (1 секунду), т.к. главный экран закроется
-                pygame.mixer.music.fadeout(1000)
+                # Музыка останавливается, т.к. главный экран закроется
+                pygame.mixer.music.stop()
 
                 # Текст нажатой кнопки
                 # (гарантированно есть, т.к. устанавливается при инициализации)

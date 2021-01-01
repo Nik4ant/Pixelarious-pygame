@@ -19,10 +19,9 @@ def start(screen: pygame.surface.Surface):
     player_sprites.add(player.scope)
 
     # Фоновая музыка
-    # FIXME: место на котором игра пролагивает (Никита пофиксит)
-    # pygame.mixer.music.load(concat_two_file_paths("assets/audio", "game_bg.ogg"))
-    # pygame.mixer.music.play(-1)
-    # pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
+    pygame.mixer.music.load(concat_two_file_paths("assets/audio", "game_bg.ogg"))
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
     # Игровой цикл
     while is_game_open:
