@@ -9,7 +9,7 @@ class Player(pygame.sprite.Sprite):
     """
     # время перезарядки дэша в миллисекундах
     # TODO: возможно снизить, если это будет слишком имбово? Или наоборот сделать динамичный геймлпей с этим?
-    dash_reload_time = 500
+    dash_reload_time = 1000
     # сила дэша, которая устанавливается в самом начале
     dash_force_base = 1.65
     # сила замедляющая дэш со временем
@@ -120,11 +120,24 @@ class Player(pygame.sprite.Sprite):
             # Позиция для прицела
             new_scope_x, new_scope_y = pygame.mouse.get_pos()
 
-        # Обработка дэша
+        # Обработка активации дэша
         if (was_dash_activated and pygame.time.get_ticks() -
                 self.dash_last_time > Player.dash_reload_time):
-            # TODO: нормальный дэш
-            # TODO: возможно улучшить эту конструкцию, чтобы не было повторяющегося кода?
+            self.dash_force_x = self.dash_force_y = self.dash_force_base
+            # Обновляем время последнего использования дэша
+            self.dash_last_time = pygame.time.get_ticks()
+            # Определение направления для дэша.
+            if current_direction_x != 0 or current_direction_y != 0:
+                self.dash_direction_x = current_direction_x
+                self.dash_direction_y = current_direction_y
+            else:
+                self.dash_direction_x = self.look_direction_x
+                self.dash_direction_y = self.look_direction_y
+
+            # Установка силы дэша
+            self.dx = self.dash_force_x * self.dash_direction_x
+            self.dy = self.dash_force_y * self.dash_direction_y
+
             # Звук для дэша
             if Player.sounds_channel.get_busy():
                 # Проверка нужна, чтобы не прервать собственный звук дэша
@@ -134,37 +147,67 @@ class Player(pygame.sprite.Sprite):
             else:
                 Player.sounds_channel.play(Player.DASH_SOUND)
 
+        # Обработка силы дэша, действующей на игрока
+        # по x
+        if self.dash_force_x > self.dash_force_slower:
+            self.dash_force_x -= self.dash_force_slower
+            self.dx = self.dash_force_x * self.dash_direction_x
+        else:
+            self.dash_force_x = 0
+            self.dash_direction_x = 0
+        # по y
+        if self.dash_force_y > self.dash_force_slower:
+            self.dash_force_y -= self.dash_force_slower
+            self.dy = self.dash_force_y * self.dash_direction_y
+        else:
+            self.dash_force_y = 0
+            self.dash_direction_y = 0
+
         '''
         TODO: на GitHub в README это написать
         
         Управление игрока сделано так, что при начале движения игрок не сразу
         получает максимальную скорость, а постепеноо разгоняется. При этом
         если во время набора скорости игрок меняет направление, то разгон будет
-        продолжаться. Но если игрок уже достиг своей максимальной скорости, он может
-        моментально менять направления, а не крутиться как черепаха (это 
-        повышает динамичность геймплея и заставляет игрока
-        больше двигаться, а не стоять на месте)
+        продолжаться. Но если игрок уже достиг своей максимальной скорости, он
+        может моментально менять направления, а не крутиться как черепаха (это
+        повышает динамичность геймплея и заставляет игрока больше двигаться, а
+        не стоять на месте). Но при этом, нельзя просто взять отпустить кнопку, 
+        зажать другую и ожидать, что скорость сохранится, если бы так всё 
+        работало, то это было бы неправильно, поэтому чтобы при изменении 
+        направления сохранить скорость, надо не отпуская текущую клавишу, 
+        зажать другие клавиши, а затем отпустить текущие.
         '''
         # Проверка, что было было движение
         if current_direction_x != 0 or current_direction_y != 0:
-            # Плавное изменение ускорение по x (если движение присутствует)
-            if abs(self.dx) < Player.min_delta_to_start_run and current_direction_x:
-                self.dx += Player.delta_changer * current_direction_x
-            else:
-                # Если значение "разгона" было превышено,
-                # то устанавливается максимальная скорость игрока
-                self.dx = current_direction_x * Player.max_delta_movements
-            # Плавное изменение ускорение по y (если движение присутствует)
-            if abs(self.dy) < Player.min_delta_to_start_run and current_direction_y:
-                self.dy += Player.delta_changer * current_direction_y
-            else:
-                # Если значение "разгона" было превышено,
-                # то устанавливается максимальная скорость игрока
-                self.dy = current_direction_y * Player.max_delta_movements
+            # Передвижения игрока при обычной ходьбе
+            if self.dash_force_x == 0 and self.dash_force_y == 0:
+                # Обновление взгляда, совершается, только если игрок не дэшит
+                self.look_direction_x = current_direction_x
+                self.look_direction_y = current_direction_y
 
-            self.look_direction_x = current_direction_x
-            self.look_direction_y = current_direction_y
-        else:
+                # Плавное изменение ускорение по x (если движение присутствует)
+                if abs(self.dx) < Player.min_delta_to_start_run and current_direction_x:
+                    self.dx += Player.delta_changer * current_direction_x
+                else:
+                    # Если значение "разгона" было превышено,
+                    # то устанавливается максимальная скорость игрока
+                    self.dx = current_direction_x * Player.max_delta_movements
+                # Плавное изменение ускорение по y (если движение присутствует)
+                if abs(self.dy) < Player.min_delta_to_start_run and current_direction_y:
+                    self.dy += Player.delta_changer * current_direction_y
+                else:
+                    # Если значение "разгона" было превышено,
+                    # то устанавливается максимальная скорость игрока
+                    self.dy = current_direction_y * Player.max_delta_movements
+            # Дополнительное ослабленное воздействие на игрока при дэше
+            else:
+                self.dx += current_direction_x * 0.4
+                self.dy += current_direction_y * 0.4
+
+        # Если игрок не совершает дэш и направления движения нет, то
+        # ускорение збрасывается
+        elif self.dash_force_x == 0 and self.dash_force_y == 0:
             self.dx = self.dy = 0
 
         # Если игрок движется и при этом не совершается дэш,

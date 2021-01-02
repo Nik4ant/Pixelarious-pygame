@@ -42,4 +42,4 @@ if __name__ == '__main__':
     ACTIONS[code]()
     # Закрытие pygame
     pygame.quit()
-    mixer.quit()
+    pygame.mixer.quit()
