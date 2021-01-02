@@ -53,7 +53,6 @@ class Player(pygame.sprite.Sprite):
         # Скорость
         self.speed = 8
         self.dx = self.dy = 0
-        self.previous_dx = self.previous_dy = 0
 
         # Направление взгляда
         self.look_direction_x = 0
@@ -62,8 +61,6 @@ class Player(pygame.sprite.Sprite):
         # Дэш
         self.dash_direction_x = self.dash_direction_y = 0
         self.dash_force_x = self.dash_force_y = 0
-
-        self.stop = False
 
         # Время последнего использования дэша
         # (Нужно для определения перезарядился дэш или нет)
@@ -182,10 +179,6 @@ class Player(pygame.sprite.Sprite):
         # Перемещение игрока относительно центра
         self.rect.centerx = self.rect.centerx + self.dx * self.speed
         self.rect.centery = self.rect.centery + self.dy * self.speed
-
-        # Устанавливаем ускорение, чтобы потом исползовать его как предыдущее
-        self.previous_dx = self.dx
-        self.previous_dy = self.dy
 
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
