@@ -16,12 +16,21 @@ class Player(pygame.sprite.Sprite):
     dash_force_slower = 0.04
 
     # отметка при превышении которой, скорость игрока автоматически возврастает
-    min_delta_to_start_run = 0.55
+    min_delta_to_start_run = 0.95
+    # Максимальное ускорение игрока (при перемещении, на дэш не влияет)
+    max_delta_movements = 1
     # сила с которой игрок будет набирать/уменьшать свою скорость
     delta_changer = 0.05
 
+    # Канал для звуков
+    sounds_channel = pygame.mixer.Channel(1)
+
     # Звуки
     FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "footstep.ogg"))
+    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+
+    DASH_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "dash.wav"))
+    DASH_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x: float, y: float):
         # Конструктор класса Sprite
@@ -38,13 +47,13 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (32, 32))
         # self.image.fill((0, 0, 0))
         self.rect = self.image.get_rect()
-
-        # Начальное положение
-        self.rect.x, self.rect.y = x, y
+        self.rect.centerx = x
+        self.rect.centery = y
 
         # Скорость
-        self.speed = 10
+        self.speed = 8
         self.dx = self.dy = 0
+        self.previous_dx = self.previous_dy = 0
 
         # Направление взгляда
         self.look_direction_x = 0
@@ -53,6 +62,8 @@ class Player(pygame.sprite.Sprite):
         # Дэш
         self.dash_direction_x = self.dash_direction_y = 0
         self.dash_force_x = self.dash_force_y = 0
+
+        self.stop = False
 
         # Время последнего использования дэша
         # (Нужно для определения перезарядился дэш или нет)
@@ -74,7 +85,7 @@ class Player(pygame.sprite.Sprite):
         # (Но нет гарантии того, что дэш уже перезарядился, это проверяется при использовании)
         was_dash_activated = False
         # Новая позиция для прицела игрока
-        new_scope_x = new_scope_y = self.scope.rect.x, self.scope.rect.y
+        new_scope_x, new_scope_y = self.scope.rect.x, self.scope.rect.y
 
         # Если джойстик подключен, то управление идёт с него
         if self.joystick:
@@ -115,20 +126,66 @@ class Player(pygame.sprite.Sprite):
         # Обработка дэша
         if (was_dash_activated and pygame.time.get_ticks() -
                 self.dash_last_time > Player.dash_reload_time):
-            # TODO: stuff
-            pass
+            # TODO: нормальный дэш
+            # TODO: возможно улучшить эту конструкцию, чтобы не было повторяющегося кода?
+            # Звук для дэша
+            if Player.sounds_channel.get_busy():
+                # Проверка нужна, чтобы не прервать собственный звук дэша
+                if Player.sounds_channel.get_sound() != Player.DASH_SOUND:
+                    Player.sounds_channel.get_sound().stop()
+                    Player.sounds_channel.play(Player.DASH_SOUND)
+            else:
+                Player.sounds_channel.play(Player.DASH_SOUND)
 
+        '''
+        TODO: на GitHub в README это написать
+        
+        Управление игрока сделано так, что при начале движения игрок не сразу
+        получает максимальную скорость, а постепеноо разгоняется. При этом
+        если во время набора скорости игрок меняет направление, то разгон будет
+        продолжаться. Но если игрок уже достиг своей максимальной скорости, он может
+        моментально менять направления, а не крутиться как черепаха (это 
+        повышает динамичность геймплея и заставляет игрока
+        больше двигаться, а не стоять на месте)
+        '''
         # Проверка, что было было движение
-        # FIXME: здесь всё не то, целиком фиксить, а то не работает
         if current_direction_x != 0 or current_direction_y != 0:
+            # Плавное изменение ускорение по x (если движение присутствует)
+            if abs(self.dx) < Player.min_delta_to_start_run and current_direction_x:
+                self.dx += Player.delta_changer * current_direction_x
+            else:
+                # Если значение "разгона" было превышено,
+                # то устанавливается максимальная скорость игрока
+                self.dx = current_direction_x * Player.max_delta_movements
+            # Плавное изменение ускорение по y (если движение присутствует)
+            if abs(self.dy) < Player.min_delta_to_start_run and current_direction_y:
+                self.dy += Player.delta_changer * current_direction_y
+            else:
+                # Если значение "разгона" было превышено,
+                # то устанавливается максимальная скорость игрока
+                self.dy = current_direction_y * Player.max_delta_movements
 
             self.look_direction_x = current_direction_x
             self.look_direction_y = current_direction_y
         else:
             self.dx = self.dy = 0
-        # Перемещение игрока относительно ускорения
-        self.rect.x = self.rect.x + self.dx * self.speed
-        self.rect.y = self.rect.y + self.dy * self.speed
+
+        # Если игрок движется и при этом не совершается дэш,
+        # то воспроизводится звук ходьбы
+        # (При этом проверяется текущий канал со звуками, чтобы не
+        # было наложения эффекта "наложения" звуков)
+        if ((self.dx != 0 or self.dy != 0)
+                and self.dash_force_x == self.dash_force_y == 0 and
+                not Player.sounds_channel.get_busy()):
+            Player.sounds_channel.play(Player.FOOTSTEP_SOUND)
+
+        # Перемещение игрока относительно центра
+        self.rect.centerx = self.rect.centerx + self.dx * self.speed
+        self.rect.centery = self.rect.centery + self.dy * self.speed
+
+        # Устанавливаем ускорение, чтобы потом исползовать его как предыдущее
+        self.previous_dx = self.dx
+        self.previous_dy = self.dy
 
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
