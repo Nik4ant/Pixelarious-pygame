@@ -13,10 +13,11 @@ def start(screen: pygame.surface.Surface):
 
     # Игрок
     player = Player(screen.get_width() * 0.5, screen.get_height() * 0.5)
-    # Группа со спрайтами игрока и его приуела
+    # Группа со спрайтами игрока и объектами, которые к нему относятся
+    # TODO: сами объекты в эту группу, ближе к организации mainloop'а посмотреть?
     player_sprites = pygame.sprite.Group()
     player_sprites.add(player)
-    player_sprites.add(player.scope)
+    player_sprites.add(player.scope)  # прицел игрока
 
     # Фоновая музыка
     pygame.mixer.music.load(concat_two_file_paths("assets/audio", "game_bg.ogg"))

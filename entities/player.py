@@ -23,6 +23,7 @@ class Player(pygame.sprite.Sprite):
     delta_changer = 0.05
 
     # Канал для звуков
+    # TODO: если не будет так много звуков может быть просто выпилить эту штуку?
     sounds_channel = pygame.mixer.Channel(1)
 
     # Звуки
@@ -82,7 +83,7 @@ class Player(pygame.sprite.Sprite):
         # (Но нет гарантии того, что дэш уже перезарядился, это проверяется при использовании)
         was_dash_activated = False
         # Новая позиция для прицела игрока
-        new_scope_x, new_scope_y = self.scope.rect.x, self.scope.rect.y
+        new_scope_x, new_scope_y = self.scope.rect.centerx, self.scope.rect.centery
 
         # Если джойстик подключен, то управление идёт с него
         if self.joystick:
@@ -101,8 +102,8 @@ class Player(pygame.sprite.Sprite):
             if (abs(axis_right_x) > JOYSTICK_SENSITIVITY or
                     abs(axis_right_y) > JOYSTICK_SENSITIVITY):
                 # Если игрок двигал правую ось, то прицел двигается по ней
-                new_scope_x = self.scope.rect.x + self.scope.speed * axis_right_x
-                new_scope_y = self.scope.rect.y + self.scope.speed * axis_right_y
+                new_scope_x = self.scope.rect.centerx + self.scope.speed * axis_right_x
+                new_scope_y = self.scope.rect.centery + self.scope.speed * axis_right_y
         # Иначе с клавиатуры
         else:
             # Список с клавишами
@@ -241,19 +242,19 @@ class Player_scope(pygame.sprite.Sprite):
 
         # Конструктор класса Sprite
         super().__init__()
-        self.width, self.height = 20, 20
-        # TODO: заменить на нормальный спрайт
-        self.image = pygame.Surface([self.width, self.height])
-        self.image.fill(pygame.Color("blue"))
+
+        self.image = load_image("scope_for_player.png", path_to_folder="assets")
         self.rect = self.image.get_rect()
         # Начальное местоположение
-        self.rect.x = x
-        self.rect.y = y
+        self.rect.centerx = x
+        self.rect.centery = y
         # Скорость перемещения
         # TODO: сделать как чуствительность у прицела
         self.speed = 15
 
-    def update(self, *args):
-        if args:
-            # Где args[0] - позиция по x, а args[1] - позиция по y
-            self.rect.x, self.rect.y = args[0], args[1]
+    def update(self, x=None, y=None):
+        # Т.к. update вызывается ещё и в игровом цикле, то
+        # стоит делать проверку на наличие аргументов x и y
+        # (но предполагается, что x и y - это float, либо int)
+        if x is not None and y is not None:
+            self.rect.centerx, self.rect.centery = x, y
