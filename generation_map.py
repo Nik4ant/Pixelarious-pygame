@@ -1,4 +1,4 @@
-from random import choice
+from random import choice, random
 import os
 import pygame
 import sys
@@ -80,7 +80,6 @@ class Player(pygame.sprite.Sprite):
             return
         x, y = self.pos
         if keys[4] or keys[80]:
-            print('left')
             if possible(x - 1, y, level_x, level_y):
                 if level[y][x - 1] in EMPTY:
                     self.rect.x -= tile_width
@@ -88,7 +87,6 @@ class Player(pygame.sprite.Sprite):
                     x, y = self.pos
 
         if keys[7] or keys[79]:
-            print('right')
             if possible(x + 1, y, level_x, level_y):
                 if level[y][x + 1] in EMPTY:
                     self.rect.x += tile_width
@@ -96,7 +94,6 @@ class Player(pygame.sprite.Sprite):
                     x, y = self.pos
 
         if keys[26] or keys[82]:
-            print('up')
             if possible(x, y - 1, level_x, level_y):
                 if level[y - 1][x] in EMPTY:
                     self.rect.y -= tile_height
@@ -104,7 +101,6 @@ class Player(pygame.sprite.Sprite):
                     x, y = self.pos
 
         if keys[22] or keys[81]:
-            print('down')
             if possible(x, y + 1, level_x, level_y):
                 if level[y + 1][x] in EMPTY:
                     self.rect.y += tile_height
@@ -189,7 +185,7 @@ D.........D
 EVIL_ROOM_2 = '''
 43338D63332
 5.......MC1
-5.433333336
+5.433333338
 5.677777772
 8.........6
 D.........D
@@ -231,13 +227,13 @@ D.........D
 EVIL_ROOM_5 = '''
 43338D63332
 5.........1
-5..M......1
-5.........1
-8.........6
-D.........D
-2.........4
-5.........1
-5.........1
+5....M....1
+5..47772..1
+8..1   5..6
+D..1   5..D
+2..1   5..4
+5..63338..1
+5....M....1
 5.........1
 67772D47778
 '''
@@ -303,9 +299,9 @@ EVIL_ROOM_10 = '''
   5.....1  
 438.....672
 5.........1
-8.........6
-D.........D
-2.........4
+8...472...6
+D...1 5...D
+2...638...4
 5.........1
 672.....478
   5.....1  
@@ -370,16 +366,30 @@ D.........D
 
 EVIL_ROOM_15 = '''
    48D62   
-   5...1   
    62.48   
-432 5.1 432
-8.638.638.6
+    5.1    
+42  5.1  42
+86338.63386
 D.........D
-2.472.472.4
-678 5.1 678
+24772.47724
+68  5.1  68
+    5.1    
    48.62   
-   5...1   
    62D48   
+'''
+
+EVIL_ROOM_16 = '''
+43338D63332
+5.........1
+5....M....1
+5..47772..1
+8..14338..6
+D..15C....D
+2..16772..4
+5..63338..1
+5....M....1
+5.........1
+67772D47778
 '''
 
 DOUBLE_EVIL_ROOM_1 = '''
@@ -522,6 +532,20 @@ D...C.C...D
 67772D47778
 '''
 
+LOOT_ROOM_8 = '''
+   48D62   
+   62.48   
+    5.1    
+42 48.62 42
+8638...6386
+D....C....D
+2472...4724
+68 62.48 68
+    5.1    
+   48.62   
+   62D48   
+'''
+
 EMPTY_ROOM = '''           \n           \n           \n           \n           \n           \n           
            \n           \n           \n           '''
 
@@ -542,21 +566,18 @@ D....E....D
 STANDART_ROOMS = [EVIL_ROOM_1, EVIL_ROOM_2, EVIL_ROOM_3, EVIL_ROOM_4, EVIL_ROOM_5,
                   EVIL_ROOM_6, EVIL_ROOM_7, EVIL_ROOM_8, EVIL_ROOM_9, EVIL_ROOM_10,
                   EVIL_ROOM_11, EVIL_ROOM_12, EVIL_ROOM_13, EVIL_ROOM_14, EVIL_ROOM_15,
+                  EVIL_ROOM_16,
                   LOOT_ROOM_1, LOOT_ROOM_2, LOOT_ROOM_3, LOOT_ROOM_4, LOOT_ROOM_5,
-                  LOOT_ROOM_6, LOOT_ROOM_7]
+                  LOOT_ROOM_6, LOOT_ROOM_7, LOOT_ROOM_8]
 
 DOUBLE_ROOMS = [DOUBLE_EVIL_ROOM_1, DOUBLE_EVIL_ROOM_2, DOUBLE_EVIL_ROOM_3,
                 DOUBLE_EVIL_ROOM_2, DOUBLE_EVIL_ROOM_3]
 
 PORTAL_ROOMS = [START_ROOM, END_ROOM]
 
-LITTLE_CHANCE = [1, 0, 0, 0, 0, 0, 0]
-CHANCE = [1, 0, 0]
-BIG_CHANCE = [1, 1, 0]
-
 TEST_LEVEL = '''
-SDDDDDDDDDDDDDD
-             DD
+SDDDDDDDDDDD D 
+             D 
 '''
 
 LEVEL_1 = '''
@@ -612,7 +633,6 @@ FORMS = [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5]
 # Сама функция генерации
 def generate_new_level() -> [str, ..., str]:
     level_form = choice(FORMS)
-    level_form = LEVEL_5
 
     level_form = level_form.strip('\n').split('\n')
     level = []
@@ -635,14 +655,11 @@ def generate_new_level() -> [str, ..., str]:
                 room = choice(STANDART_ROOMS)
             else:
                 room = EMPTY_ROOM
-            print(room.strip('\n'))
-            print()
             rooms.append(room.strip('\n').split('\n'))
 
         for numder_row in range(len(rooms[0])):
             row = []
             for room_a in rooms:
-                print(room_a)
                 row += list(room_a[numder_row])
             level.append(row)
 
@@ -653,12 +670,12 @@ def generate_new_level() -> [str, ..., str]:
 
             if level[i - 1][j] == '6' and level[i + 1][j] == '4':
                 if j + 1 >= len(level[i]) or level[i][j + 1] not in 'Dlrtb':
-                    if level[i + 2][j - 2] == '.' and choice(LITTLE_CHANCE):
+                    if level[i + 2][j - 2] == '.' and true_with_chance(45):
                         level[i - 1][j] = '8'
                         level[i + 1][j] = '2'
                         level[i][j] = ' '
 
-                        if choice(CHANCE):
+                        if true_with_chance(35) and level[i][j - 3] == '.':
                             level[i][j - 1] = ' '
                             level[i - 1][j - 1] = '7'
                             level[i + 1][j - 1] = '3'
@@ -676,12 +693,12 @@ def generate_new_level() -> [str, ..., str]:
 
             elif level[i][j - 1] == '8' and level[i][j + 1] == '6':
                 if i == 0 or level[i - 1][j] not in 'Dlrtb':
-                    if level[i + 2][j + 2] == '.' and choice(LITTLE_CHANCE):
+                    if level[i + 2][j + 2] == '.' and true_with_chance(45):
                         level[i][j + 1] = '4'
                         level[i][j - 1] = '2'
                         level[i][j] = ' '
 
-                        if choice(CHANCE):
+                        if true_with_chance(35) and level[i + 3][j] == '.':
                             level[i + 2][j] = '3'
                             level[i + 2][j - 1] = '6'
                             level[i + 2][j + 1] = '8'
@@ -699,12 +716,12 @@ def generate_new_level() -> [str, ..., str]:
 
             elif level[i - 1][j] == '8' and level[i + 1][j] == '2':
                 if j == 0 or level[i][j - 1] not in 'Dlrtb':
-                    if level[i + 2][j + 2] == '.' and choice(LITTLE_CHANCE):
+                    if level[i + 2][j + 2] == '.' and true_with_chance(45):
                         level[i - 1][j] = '6'
                         level[i + 1][j] = '4'
                         level[i][j] = ' '
 
-                        if choice(CHANCE):
+                        if true_with_chance(35) and level[i][j + 3] == '.':
                             level[i][j + 2] = '5'
                             level[i - 1][j + 2] = '2'
                             level[i + 1][j + 2] = '8'
@@ -722,12 +739,12 @@ def generate_new_level() -> [str, ..., str]:
 
             elif level[i][j - 1] == '2' and level[i][j + 1] == '4':
                 if i + 1 >= len(level) or level[i + 1][j] not in 'Dlrtb':
-                    if level[i - 2][j + 2] == '.' and choice(LITTLE_CHANCE):
+                    if level[i - 2][j + 2] == '.' and true_with_chance(45):
                         level[i][j + 1] = '6'
                         level[i][j - 1] = '8'
                         level[i][j] = ' '
 
-                        if choice(CHANCE):
+                        if true_with_chance(35) and level[i - 3][j] == '.':
                             level[i - 2][j] = '7'
                             level[i - 2][j - 1] = '4'
                             level[i - 2][j + 1] = '2'
@@ -748,8 +765,12 @@ def generate_new_level() -> [str, ..., str]:
     return [''.join(i) for i in level]
 
 
+def true_with_chance(chance=50):
+    return random() * 100 <= chance
+
+
 FPS = 50
-EMPTY = ' .@DMPCHLTlrtb' + '12345678'
+EMPTY = ' .@DMPCHLTlrtb'    # + '12345678'
 WALL = '#'
 
 # группы спрайтов
@@ -766,11 +787,11 @@ if __name__ == '__main__':
     tile_width = tile_height = 50
     screen = pygame.display.set_mode(size)
 
-    player_image = load_image('mario.png')
+    player_image = load_image('mario.png', -1)
     try:
         level, level_x, level_y = load_level('new level.txt')
     except FileNotFoundError:
-        print('В папке data не нашлось такого файла')
+        print('В папке data не нашлось такого файла уровня')
         terminate()
 
     camera = Camera()
@@ -798,13 +819,9 @@ if __name__ == '__main__':
             if event.type == pygame.KEYDOWN:
                 if event.key in (45, 61):
                     if event.key == 45:
-                        tile_width, tile_height = max(10, tile_width - 10), max(10, tile_height - 10)
+                        EMPTY = ' .@DMPCHLTlrtb'
                     else:
-                        tile_width, tile_height = min(100, tile_width + 10), min(100, tile_height + 10)
-
-                    for tile in tiles_group:
-                        tile.image = pygame.transform.scale(tile_images[tile.type], (tile_width, tile_height))
-                    player.image = pygame.transform.scale(player_image, (tile_width, tile_height))
+                        EMPTY = ' .@DMPCHLTlrtb' + '12345678'
 
         if any(keys):
             player.move(keys)
