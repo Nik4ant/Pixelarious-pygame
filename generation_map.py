@@ -29,7 +29,7 @@ def pprint(level):
     print()
 
 
-def load_level(filename):
+def load_level(seed=None):
     level_map = [line.strip('\n') for line in generate_new_level()]
     max_width = max(map(len, level_map))
 
@@ -46,7 +46,7 @@ def generate_level(level):
                 Tile('.', x, y)
                 new_player = Player(x, y)
             elif level[y][x] == '.':
-                Tile(choice(list('.' * 15) + ['.0', '.1', '.2', '.3']), x, y)
+                Tile(choice(list('.' * 12) + ['.0', '.1', '.2', '.3']), x, y)
             else:
                 Tile(level[y][x], x, y)
     # вернем игрока
@@ -434,7 +434,7 @@ D........5  1........D
 67772D4777777772D47778
 '''
 
-LOOT_ROOM_1 = '''
+CHEST_ROOM_1 = '''
    48D62   
    5...1   
    62.48   
@@ -448,7 +448,7 @@ D....C....D
    62D48   
 '''
 
-LOOT_ROOM_2 = '''
+CHEST_ROOM_2 = '''
 43338D63332
 5.........1
 5.........1
@@ -462,7 +462,7 @@ D...C.C...D
 67772D47778
 '''
 
-LOOT_ROOM_3 = '''
+CHEST_ROOM_3 = '''
 43338D632  
 5C......632
 67772.....1
@@ -476,7 +476,7 @@ D.........D
   672D47778
 '''
 
-LOOT_ROOM_4 = '''
+CHEST_ROOM_4 = '''
 43338D63332
 5.........1
 5.........1
@@ -490,7 +490,7 @@ D....H....D
 67772D47778
 '''
 
-LOOT_ROOM_5 = '''
+CHEST_ROOM_5 = '''
 43338D63332
 5.........1
 5.........1
@@ -504,7 +504,7 @@ D....L....D
 67772D47778
 '''
 
-LOOT_ROOM_6 = '''
+CHEST_ROOM_6 = '''
 43338D63332
 5.........1
 5.........1
@@ -518,7 +518,7 @@ D....T....D
 67772D47778
 '''
 
-LOOT_ROOM_7 = '''
+CHEST_ROOM_7 = '''
 43338D63332
 5.........1
 5.........1
@@ -532,7 +532,7 @@ D...C.C...D
 67772D47778
 '''
 
-LOOT_ROOM_8 = '''
+CHEST_ROOM_8 = '''
    48D62   
    62.48   
     5.1    
@@ -563,21 +563,42 @@ D....E....D
 67772D47778
 '''
 
-STANDART_ROOMS = [EVIL_ROOM_1, EVIL_ROOM_2, EVIL_ROOM_3, EVIL_ROOM_4, EVIL_ROOM_5,
-                  EVIL_ROOM_6, EVIL_ROOM_7, EVIL_ROOM_8, EVIL_ROOM_9, EVIL_ROOM_10,
-                  EVIL_ROOM_11, EVIL_ROOM_12, EVIL_ROOM_13, EVIL_ROOM_14, EVIL_ROOM_15,
-                  EVIL_ROOM_16,
-                  LOOT_ROOM_1, LOOT_ROOM_2, LOOT_ROOM_3, LOOT_ROOM_4, LOOT_ROOM_5,
-                  LOOT_ROOM_6, LOOT_ROOM_7, LOOT_ROOM_8]
+STANDART_ROOMS = {
+      'E1': EVIL_ROOM_1,
+      'E2': EVIL_ROOM_2,
+      'E3': EVIL_ROOM_3,
+      'E4': EVIL_ROOM_4,
+      'E5': EVIL_ROOM_5,
+      'E6': EVIL_ROOM_6,
+      'E7': EVIL_ROOM_7,
+      'E8': EVIL_ROOM_8,
+      'E9': EVIL_ROOM_9,
+      'E10': EVIL_ROOM_10,
+      'E11': EVIL_ROOM_11,
+      'E12': EVIL_ROOM_12,
+      'E13': EVIL_ROOM_13,
+      'E14': EVIL_ROOM_14,
+      'E15': EVIL_ROOM_15,
+      'E16': EVIL_ROOM_16,
+      'C1': CHEST_ROOM_1,
+      'C2': CHEST_ROOM_2,
+      'C3': CHEST_ROOM_3,
+      'C4': CHEST_ROOM_4,
+      'C5': CHEST_ROOM_5,
+      'C6': CHEST_ROOM_6,
+      'C7': CHEST_ROOM_7,
+      'C8': CHEST_ROOM_8
+      }
 
-DOUBLE_ROOMS = [DOUBLE_EVIL_ROOM_1, DOUBLE_EVIL_ROOM_2, DOUBLE_EVIL_ROOM_3,
-                DOUBLE_EVIL_ROOM_2, DOUBLE_EVIL_ROOM_3]
-
-PORTAL_ROOMS = [START_ROOM, END_ROOM]
+DOUBLE_ROOMS = {
+    'D1': DOUBLE_EVIL_ROOM_1,
+    'D2': DOUBLE_EVIL_ROOM_2,
+    'D3': DOUBLE_EVIL_ROOM_3
+    }
 
 TEST_LEVEL = '''
-SDDDDDDDDDDD D 
-             D 
+S R R R R R R R 
+ R R R R R R R R
 '''
 
 LEVEL_1 = '''
@@ -587,14 +608,14 @@ RRR RRRR RRE
  DDRR RR RRRR
 RRR RDDRR    
   RR R RRRRR 
-  '''    # 50
+'''      # 50
 
 LEVEL_2 = '''
-   RR RSR RR 
+   R  RSR RR 
  RRRR R RRRRR
-RRR  RRRR   R
+RRR RRRRR   R
 RR RRR    RRR
- RR RR RDDR  
+ RDDRR RDDR  
 RER RRRRR    
 '''      # 50
 
@@ -609,7 +630,7 @@ RRR  RRR  RRR
 '''      # 50
 
 LEVEL_4 = '''
-RRRR RRR RS  
+RRDD RRR RS  
  R  R RRRRR R
 RR RRR R RRRR
 R R R  R  RR 
@@ -620,22 +641,29 @@ RRR RRRRRR  R
 LEVEL_5 = '''
  R   RR RRRER
  RR R RRR R  
-  RRRRR RRR  
+  RRDDR RRR  
 RRR  R R R RR
 R R RRRRRRRR 
   RSR R   R  
-   R RR      
-'''
+   R  RRDDR  
+'''      # 50
 
-FORMS = [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5]
+FORMS = {'L1': LEVEL_1, 'L2': LEVEL_2, 'L3': LEVEL_3, 'L4': LEVEL_4, 'L5': LEVEL_5}
 
 
 # Сама функция генерации
-def generate_new_level() -> [str, ..., str]:
-    level_form = choice(FORMS)
+def generate_new_level(user_seed=None) -> [str, ..., str]:
+    level = []
+    seed = []
+    if user_seed:
+        seed.append(user_seed[0])
+        del user_seed[0]
+    else:
+        seed.append(choice(list(FORMS)))
+    level_form = FORMS[seed[-1]]
+    level_form = TEST_LEVEL
 
     level_form = level_form.strip('\n').split('\n')
-    level = []
     doubled = False
     for i in range(len(level_form)):
         room_row = level_form[i]
@@ -649,18 +677,28 @@ def generate_new_level() -> [str, ..., str]:
             elif j == 'E':
                 room = END_ROOM
             elif j == 'D':
-                room = choice(DOUBLE_ROOMS)
+                if user_seed:
+                    seed.append(user_seed[0])
+                    del user_seed[0]
+                else:
+                    seed.append(choice(list(DOUBLE_ROOMS)))
+                room = DOUBLE_ROOMS[seed[-1]]
                 doubled = True
             elif j == 'R':
-                room = choice(STANDART_ROOMS)
+                if user_seed:
+                    seed.append(user_seed[0])
+                    del user_seed[0]
+                else:
+                    seed.append(choice(list(STANDART_ROOMS)))
+                room = STANDART_ROOMS[seed[-1]]
             else:
                 room = EMPTY_ROOM
             rooms.append(room.strip('\n').split('\n'))
 
-        for numder_row in range(len(rooms[0])):
+        for number_row in range(len(rooms[0])):
             row = []
             for room_a in rooms:
-                row += list(room_a[numder_row])
+                row += list(room_a[number_row])
             level.append(row)
 
     for i in range(len(level)):
@@ -669,13 +707,13 @@ def generate_new_level() -> [str, ..., str]:
                 continue
 
             if level[i - 1][j] == '6' and level[i + 1][j] == '4':
-                if j + 1 >= len(level[i]) or level[i][j + 1] not in 'Dlrtb':
-                    if level[i + 2][j - 2] == '.' and true_with_chance(45):
+                if j + 1 >= len(level[i]) or level[i][j + 1] not in 'Dlrtb':     # СПРАВА
+                    if level[i + 2][j - 2] == '.' and true_with_chance(45, seed, user_seed):
                         level[i - 1][j] = '8'
                         level[i + 1][j] = '2'
                         level[i][j] = ' '
 
-                        if true_with_chance(35) and level[i][j - 3] == '.':
+                        if true_with_chance(35, seed, user_seed) and level[i][j - 3] == '.':
                             level[i][j - 1] = ' '
                             level[i - 1][j - 1] = '7'
                             level[i + 1][j - 1] = '3'
@@ -691,14 +729,14 @@ def generate_new_level() -> [str, ..., str]:
                 else:
                     level[i][j] = 'r'
 
-            elif level[i][j - 1] == '8' and level[i][j + 1] == '6':
+            elif level[i][j - 1] == '8' and level[i][j + 1] == '6':     # СВЕРХУ
                 if i == 0 or level[i - 1][j] not in 'Dlrtb':
-                    if level[i + 2][j + 2] == '.' and true_with_chance(45):
+                    if level[i + 2][j - 1] == '.' and true_with_chance(45, seed, user_seed):
                         level[i][j + 1] = '4'
                         level[i][j - 1] = '2'
                         level[i][j] = ' '
 
-                        if true_with_chance(35) and level[i + 3][j] == '.':
+                        if true_with_chance(35, seed, user_seed) and level[i + 3][j] == '.':
                             level[i + 2][j] = '3'
                             level[i + 2][j - 1] = '6'
                             level[i + 2][j + 1] = '8'
@@ -714,14 +752,14 @@ def generate_new_level() -> [str, ..., str]:
                 else:
                     level[i][j] = 'b'
 
-            elif level[i - 1][j] == '8' and level[i + 1][j] == '2':
+            elif level[i - 1][j] == '8' and level[i + 1][j] == '2':     # СЛЕВА
                 if j == 0 or level[i][j - 1] not in 'Dlrtb':
-                    if level[i + 2][j + 2] == '.' and true_with_chance(45):
+                    if level[i + 2][j + 2] == '.' and true_with_chance(45, seed, user_seed):
                         level[i - 1][j] = '6'
                         level[i + 1][j] = '4'
                         level[i][j] = ' '
 
-                        if true_with_chance(35) and level[i][j + 3] == '.':
+                        if true_with_chance(35, seed, user_seed) and level[i][j + 3] == '.':
                             level[i][j + 2] = '5'
                             level[i - 1][j + 2] = '2'
                             level[i + 1][j + 2] = '8'
@@ -737,14 +775,14 @@ def generate_new_level() -> [str, ..., str]:
                 else:
                     level[i][j] = 'l'
 
-            elif level[i][j - 1] == '2' and level[i][j + 1] == '4':
+            elif level[i][j - 1] == '2' and level[i][j + 1] == '4':     # СНИЗУ
                 if i + 1 >= len(level) or level[i + 1][j] not in 'Dlrtb':
-                    if level[i - 2][j + 2] == '.' and true_with_chance(45):
+                    if level[i - 2][j + 1] == '.' and true_with_chance(45, seed, user_seed):
                         level[i][j + 1] = '6'
                         level[i][j - 1] = '8'
                         level[i][j] = ' '
 
-                        if true_with_chance(35) and level[i - 3][j] == '.':
+                        if true_with_chance(35, seed, user_seed) and level[i - 3][j] == '.':
                             level[i - 2][j] = '7'
                             level[i - 2][j - 1] = '4'
                             level[i - 2][j + 1] = '2'
@@ -760,13 +798,21 @@ def generate_new_level() -> [str, ..., str]:
                 else:
                     level[i][j] = 't'
 
-    pprint(level)
+    # pprint(level)
     # Возвращаем созданный уровень
+    print(*seed)
     return [''.join(i) for i in level]
 
 
-def true_with_chance(chance=50):
-    return random() * 100 <= chance
+def true_with_chance(chance=50, seed=None, user_seed=None):
+    if user_seed:
+        seed.append(user_seed[0])
+        del user_seed[0]
+    else:
+        is_true = [0, 1][random() * 100 <= chance]
+        if seed:
+            seed.append(str(is_true))
+    return int(seed[-1])
 
 
 FPS = 50
@@ -787,24 +833,45 @@ if __name__ == '__main__':
     tile_width = tile_height = 50
     screen = pygame.display.set_mode(size)
 
+    my_seed = 'L5 E2 E2 C8 E2 C8 C7 E2 C5 C8 E2 E2 E2 C8 E2 C6 C8 D3 E2 C4 E2 E2 C6 E2 C8 ' \
+              'E2 E2 C7 C1 E2 E2 E2 E2 E2 E2 E2 E2 E2 C5 E2 E12 E16 E10 E8 C6 E15 E1 D3 ' \
+              'E3 0 0 0 0 1 1 0 0 1 1 0 1 0 0 0 0 1 1 0 0 1 1 0 1 0 1 0 0 0 0 1 0 1 0 0 1 0 0 ' \
+              '0 0 0 0 1 1 0 0 0 1 0 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 0 1 0 0 0 0 1 1 0 0 0 0 0 ' \
+              '0 1 1 1 1 0 1 0 1 0 0 0 0 0 1 1 0'.split()
+
     player_image = load_image('mario.png', -1)
-    try:
-        level, level_x, level_y = load_level('new level.txt')
-    except FileNotFoundError:
-        print('В папке data не нашлось такого файла уровня')
-        terminate()
+    level, level_x, level_y = load_level(my_seed)
 
     camera = Camera()
 
-    m1 = list('12345678DrltbMPCHLTE ') + ['.', '.0', '.1', '.2', '.3']
-    m2 = ['RIGHT_WALL.png', 'TOP_RIGHT_WALL.png', 'TOP_WALL.png', 'TOP_LEFT_WALL.png',
-          'LEFT_WALL.png', 'DOWN_LEFT_WALL.png', 'DOWN_WALL.png', 'DOWN_RIGHT_WALL.png',
-          'DOOR_VERTICAL.png', 'DOOR_RIGHT.png', 'DOOR_LEFT.png', 'DOOR_TOP.png', 'DOOR_BOTTOM.png',
-          'EMPTY.png', 'EMPTY.png', 'EMPTY.png', 'EMPTY.png', 'EMPTY.png', 'EMPTY.png', 'EMPTY.png',
-          'DARK.png', 'FLOOR.png', 'FLOOR_CRACKED_0.png', 'FLOOR_CRACKED_1.png', 'FLOOR_CRACKED_2.png',
-          'FLOOR_CRACKED_3.png']
-
-    tile_images = {m1[i]: load_image(m2[i]) for i in range(len(m1))}
+    tile_images = {
+        '1': load_image('RIGHT_WALL.png'),
+        '2': load_image('TOP_RIGHT_WALL.png'),
+        '3': load_image('TOP_WALL.png'),
+        '4': load_image('TOP_LEFT_WALL.png'),
+        '5': load_image('LEFT_WALL.png'),
+        '6': load_image('DOWN_LEFT_WALL.png'),
+        '7': load_image('DOWN_WALL.png'),
+        '8': load_image('DOWN_RIGHT_WALL.png'),
+        'D': load_image('DOOR_VERTICAL.png'),
+        'r': load_image('DOOR_RIGHT.png'),
+        'l': load_image('DOOR_LEFT.png'),
+        't': load_image('DOOR_TOP.png'),
+        'b': load_image('DOOR_BOTTOM.png'),
+        'M': load_image('EMPTY.png'),
+        'P': load_image('EMPTY.png'),
+        'C': load_image('EMPTY.png'),
+        'H': load_image('EMPTY.png'),
+        'L': load_image('EMPTY.png'),
+        'T': load_image('EMPTY.png'),
+        'E': load_image('EMPTY.png'),
+        ' ': load_image('DARK.png'),
+        '.': load_image('FLOOR.png'),
+        '.0': load_image('FLOOR_CRACKED_0.png'),
+        '.1': load_image('FLOOR_CRACKED_1.png'),
+        '.2': load_image('FLOOR_CRACKED_2.png'),
+        '.3': load_image('FLOOR_CRACKED_3.png')
+        }
 
     player = generate_level(level)
     if not player:
