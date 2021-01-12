@@ -380,7 +380,7 @@ l.........r
 24772.47724
 -=  5.1  -=
     5.1    
-   08.-9   
+   08.69   
    -2b4=   
 '''
 
@@ -966,7 +966,6 @@ R R   RRR
 RRE  RR RC
 '''      # 50
 
-
 LEVEL_7 = '''
  E  RRRRRR
  RRRR   R 
@@ -979,7 +978,6 @@ LEVEL_7 = '''
 C  RRRR RR
 RRRR  RR S
 '''      # 50
-
 
 LEVEL_8 = '''
    RRRRRRR
@@ -994,7 +992,6 @@ RR  R  R
 CRRR     S
 '''      # 50
 
-
 LEVEL_9 = '''
  ER    RR
   R  RRR 
@@ -1007,7 +1004,6 @@ RRR  RRRR
  RR   RRR
   S  CR  
 '''      # 50
-
 
 LEVEL_10 = '''
   RRR  S  
@@ -1120,7 +1116,8 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
 
             if level[i][j] == 'r':     # СПРАВА
                 if j + 1 >= len(level[i]) or level[i][j + 1] != 'l':
-                    if level[i + 2][j - 2] == '.' and level[i - 1][j - 1] == '.' and \
+                    if level[i + 2][j - 2] == level[i - 1][j - 1] == '.' and \
+                            (j + 1 == len(level[i]) or level[i][j + 1] != 'F') and \
                             true_with_chance(SHORT_BLOCK_CHANCE, seed, user_seed):
                         level[i - 1][j] = '='
                         level[i + 1][j] = '9'
@@ -1148,6 +1145,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
             elif level[i][j] == 't':     # СВЕРХУ
                 if i == 0 or level[i - 1][j] != 'b':
                     if level[i + 2][j - 1] == '.' and level[i + 1][j + 1] == '.' and \
+                            (i == 0 or level[i - 1][j] != 'F') and \
                             true_with_chance(SHORT_BLOCK_CHANCE, seed, user_seed):
                         level[i][j - 1] = '9'
                         level[i][j + 1] = '0'
@@ -1175,6 +1173,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
             elif level[i][j] == 'l':     # СЛЕВА
                 if j == 0 or level[i][j - 1] != 'r':
                     if level[i + 2][j + 2] == '.' and level[i + 1][j + 1] == '.' and \
+                            (j == 0 or level[i][j - 1] != 'F') and \
                             true_with_chance(SHORT_BLOCK_CHANCE, seed, user_seed):
                         level[i - 1][j] = '-'
                         level[i + 1][j] = '0'
@@ -1202,6 +1201,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
             elif level[i][j] == 'b':     # СНИЗУ
                 if i + 1 >= len(level) or level[i + 1][j] != 't':
                     if level[i - 2][j] == level[i - 2][j + 2] == '.' and level[i][j + 2] != ' ' and \
+                            (i + 1 == len(level) or level[i + 1][j] != 'F') and \
                             true_with_chance(SHORT_BLOCK_CHANCE, seed, user_seed):
                         level[i][j + 1] = '-'
                         level[i][j - 1] = '='
@@ -1245,7 +1245,7 @@ def true_with_chance(chance=50, seed=None, user_seed=None):
 
 
 FPS = 50
-EMPTY = ' .@DMPCHLTlrtb' + '1234567890-=B'
+EMPTY = ' .@DMPCHLTFlrtb' + '1234567890-=B'
 WALL = '#'
 
 # группы спрайтов
