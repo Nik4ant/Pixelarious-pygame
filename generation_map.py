@@ -1,8 +1,4 @@
 from random import choice, random
-import os
-import pygame
-import sys
-from time import time
 
 # 1-8 - Walls
 # . - Floor
@@ -16,6 +12,7 @@ from time import time
 # B - Box/Bochka
 
 
+# Карты комнат
 START_ROOM = '''
 03338t63339
 5.........1
@@ -678,7 +675,8 @@ F.........F
 -7777F7777=
 '''
 
-STANDART_ROOMS = {
+# Группы комнат по использованию
+STANDARD_ROOMS = {
       'E1': EVIL_ROOM_1,
       'E2': EVIL_ROOM_2,
       'E3': EVIL_ROOM_3,
@@ -732,6 +730,8 @@ SECRET_ROOMS = {
     'C3': COVERT_ROOM_3
 }
 
+
+# Карты комнат в уровнях
 LEVEL_1 = '''
   RR RRR RR  
  RSRR RRRR   
@@ -844,6 +844,7 @@ RR R RR  E
  RRRRR  RR
 '''      # 50
 
+# Группа уровней
 FORMS = {
     'L1': LEVEL_1,
     'L2': LEVEL_2,
@@ -906,8 +907,8 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
                     seed.append(user_seed[0])
                     del user_seed[0]
                 else:
-                    seed.append(choice(list(STANDART_ROOMS)))
-                room = STANDART_ROOMS[seed[-1]]
+                    seed.append(choice(list(STANDARD_ROOMS)))
+                room = STANDARD_ROOMS[seed[-1]]
             elif room_row[j] == 'C':
                 if user_seed:
                     seed.append(user_seed[0])
@@ -927,6 +928,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
 
     for i in range(len(level)):
         for j in range(len(level[i])):
+            # Убираем фпальшивые двери там, где они не нужны
             if level[i][j] == 'F':
                 if j == 0 or level[i][j - 1] == ' ':
                     level[i][j] = '5'
@@ -940,6 +942,8 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
             if level[i][j] not in 'rtlb':
                 continue
 
+            # Убираем двери там, где они не нужны
+            # И строим блоки из стен с некоторым шансом
             if level[i][j] == 'r':     # СПРАВА
                 if j + 1 >= len(level[i]) or level[i][j + 1] != 'l':
                     if level[i + 2][j - 2] == level[i - 1][j - 1] == '.' and \
@@ -1056,25 +1060,30 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
     return [''.join(i) for i in level], seed
 
 
-def true_with_chance(chance=50, seed=None, user_seed=None):
+# Функция, возвращающая случпайное булевое значение с вводящимся шансом
+def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: list = None) -> bool:
     if user_seed and seed:
         seed.append(user_seed[0])
         del user_seed[0]
     else:
-        is_true = [0, 1][random() * 100 <= chance]
+        is_true = [0, 1][round(random() * 100) <= percentage_chance]
         if seed:
             seed.append(str(is_true))
         else:
             seed = [str(is_true)]
-    return int(seed[-1])
+    return bool(int(seed[-1]))
 
 
 #
-#
-# ИГРОВОЙ ЦИКЛ ДЛЯ ТЕСТИРОВКИ
+# ИГРОВОЙ ЦИКЛ ДЛЯ ТЕСТИРОВКИ (убрать перед презентацией игры)
 # --------------------------------------------------------------------------------------------
 #
 #
+
+import os
+import pygame
+import sys
+from time import time
 
 
 def load_image(filename, colorkey=None):
