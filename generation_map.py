@@ -4,157 +4,13 @@ import pygame
 import sys
 from time import time
 
-
-def load_image(filename, colorkey=None):
-    fullname = os.path.join('assets\\tiles', filename)
-    if not os.path.isfile(fullname):
-        print(f"Файл с изображением '{fullname}' не найден")
-        sys.exit()
-    image = pygame.image.load(fullname)
-    if colorkey is not None:
-        image = image.convert()
-        if colorkey == -1:
-            colorkey = image.get_at((0, 0))
-        image.set_colorkey(colorkey)
-    else:
-        image = image.convert_alpha()
-        image = pygame.transform.scale(image, (tile_width, tile_height))
-    return image
-
-
-# функция вывода уровня в консоль
-def pprint(level):
-    for i in level:
-        print(*i, sep='   ')
-    print()
-
-
-def load_level(user_seed=None):
-    level_map, seed = generate_new_level(user_seed)
-    level_map = [line.strip('\n') for line in level_map]
-    max_width = max(map(len, level_map))
-
-    return list(map(lambda x: x.ljust(max_width, '.'), level_map)),\
-           max_width, len(level_map)
-
-
-def generate_level(level):
-    new_player = None
-    level = [list(i) for i in level]
-    for y in range(len(level)):
-        for x in range(len(level[y])):
-            Tile(choice(list('.' * 12) + ['.0', '.1', '.2', '.3']), x, y)
-            if level[y][x] == 'P':
-                new_player = Player(x, y)
-            elif level[y][x] in '.F':
-                pass
-            elif level[y][x] == 'B':
-                Tile(choice(('B', 'B1')), x, y)
-            else:
-                Tile(level[y][x], x, y)
-    # вернем игрока
-    return new_player
-
-
-class Tile(pygame.sprite.Sprite):
-    def __init__(self, tile_type, pos_x, pos_y):
-        super().__init__(tiles_group, all_sprites)
-        self.pos = pos_x, pos_y
-        self.type = tile_type
-        self.image = tile_images[self.type]
-        self.rect = pygame.Rect(
-            0, 0, tile_width, tile_height).move(
-            tile_width * pos_x, tile_height * pos_y)
-
-
-class Player(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y):
-        super().__init__(player_group, all_sprites)
-        self.image = pygame.transform.scale(player_image, (tile_width, tile_height))
-        self.rect = self.image.get_rect().move(
-            tile_width * pos_x, tile_height * pos_y,)
-        self.rect.x = self.rect.x    # + tile_width // 2 - self.rect.w // 2
-        self.rect.y = self.rect.y    # + tile_height // 2 - self.rect.h // 2
-        self.pos = [pos_x, pos_y]
-        self.last_move = time() - 1
-        self.time = 0.02
-
-    def move(self, keys):
-        if time() - self.last_move < self.time:
-            return
-        x, y = self.pos
-        if keys[4] or keys[80]:
-            if possible(x - 1, y, level_x, level_y):
-                if level[y][x - 1] in EMPTY:
-                    self.rect.x -= tile_width
-                    self.pos[0] -= 1
-                    x, y = self.pos
-
-        if keys[7] or keys[79]:
-            if possible(x + 1, y, level_x, level_y):
-                if level[y][x + 1] in EMPTY:
-                    self.rect.x += tile_width
-                    self.pos[0] += 1
-                    x, y = self.pos
-
-        if keys[26] or keys[82]:
-            if possible(x, y - 1, level_x, level_y):
-                if level[y - 1][x] in EMPTY:
-                    self.rect.y -= tile_height
-                    self.pos[1] -= 1
-                    x, y = self.pos
-
-        if keys[22] or keys[81]:
-            if possible(x, y + 1, level_x, level_y):
-                if level[y + 1][x] in EMPTY:
-                    self.rect.y += tile_height
-                    self.pos[1] += 1
-
-        self.last_move = time()
-
-
-def possible(x, y, w, h):
-    if 0 <= x < w and 0 <= y < h:
-        return True
-
-
-class Camera:
-    # зададим начальный сдвиг камеры
-    def __init__(self):
-        self.dx = 0
-        self.dy = 0
-
-    # сдвинуть объект obj на смещение камеры
-    def apply(self, obj):
-        obj.rect.x += self.dx
-        obj.rect.y += self.dy
-
-    # позиционировать камеру на объекте target
-    def update(self, target):
-        if width // 2 // tile_width <= target.pos[0] < level_x - width // 2 // tile_width:
-            self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
-        else:
-            self.dx = 0
-        if height // 2 // tile_height <= target.pos[1] < level_y - height // 2 // tile_height:
-            self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
-        else:
-            self.dy = 0
-
-
-def terminate():
-    pygame.quit()
-    sys.exit()
-
-
 # 1-8 - Walls
 # . - Floor
 # D - Door
 # M - Mob (Monster)
-# P - Player
+# P - Player, start platform
 # C - Chest
 # T - Torch
-# H - Health fountain (fontan)
-# L - Lower fountain
 # D - Dealer (Torgovec)
 # E - End portal/End stair/End platform
 # B - Box/Bochka
@@ -736,34 +592,6 @@ l.........r
 
 CHEST_ROOM_4 = '''
 03338t63339
-5.B.......1
-5.B.......1
-5.....B...1
-8.........6
-l....H....r
-2.........4
-5..T.B....1
-5B........1
-5.........1
--7772b4777=
-'''
-
-CHEST_ROOM_5 = '''
-03338t63339
-5.........1
-5.........1
-5......T..1
-8.........6
-l....L....r
-2.........4
-5.BT......1
-5..B......1
-5..B......1
--7772b4777=
-'''
-
-CHEST_ROOM_6 = '''
-03338t63339
 5.........1
 5.........1
 5......T..1
@@ -776,7 +604,7 @@ l....D....r
 -7772b4777=
 '''
 
-CHEST_ROOM_7 = '''
+CHEST_ROOM_5 = '''
    08t69   
    -2.4=   
     5.1    
@@ -837,7 +665,7 @@ F.........F
 '''
 
 COVERT_ROOM_3 = '''
-03333F63339
+03333F33339
 5.........1
 5.........1
 5.........1
@@ -846,7 +674,7 @@ F.........F
 5.........1
 5.........1
 5........T1
-5........C1
+5.......TC1
 -7777F7777=
 '''
 
@@ -885,9 +713,7 @@ STANDART_ROOMS = {
       'C2': CHEST_ROOM_2,
       'C3': CHEST_ROOM_3,
       'C4': CHEST_ROOM_4,
-      'C5': CHEST_ROOM_5,
-      'C6': CHEST_ROOM_6,
-      'C7': CHEST_ROOM_7
+      'C5': CHEST_ROOM_5
 }
 
 DOUBLE_ROOMS = {
@@ -1227,7 +1053,6 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
                             level[i][j - 1] = '-'
 
     # Возвращаем созданный уровень
-    # print(*seed)
     return [''.join(i) for i in level], seed
 
 
@@ -1244,9 +1069,157 @@ def true_with_chance(chance=50, seed=None, user_seed=None):
     return int(seed[-1])
 
 
+#
+#
+# ИГРОВОЙ ЦИКЛ ДЛЯ ТЕСТИРОВКИ
+# --------------------------------------------------------------------------------------------
+#
+#
+
+
+def load_image(filename, colorkey=None):
+    fullname = os.path.join('assets\\tiles', filename)
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pygame.image.load(fullname)
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
+        image = pygame.transform.scale(image, (tile_width, tile_height))
+    return image
+
+
+# функция вывода уровня в консоль
+def pprint(level):
+    for i in level:
+        print(*i, sep='   ')
+    print()
+
+
+def load_level(user_seed=None):
+    level_map, seed = generate_new_level(user_seed)
+    level_map = [line.strip('\n') for line in level_map]
+    max_width = max(map(len, level_map))
+
+    return list(map(lambda x: x.ljust(max_width, '.'), level_map)),\
+           max_width, len(level_map)
+
+
+def generate_level(level):
+    new_player = None
+    level = [list(i) for i in level]
+    for y in range(len(level)):
+        for x in range(len(level[y])):
+            Tile(choice(list('.' * 12) + ['.0', '.1', '.2', '.3']), x, y)
+            if level[y][x] == 'P':
+                new_player = Player(x, y)
+            elif level[y][x] in '.F':
+                pass
+            elif level[y][x] == 'B':
+                Tile(choice(('B', 'B1')), x, y)
+            else:
+                Tile(level[y][x], x, y)
+    # вернем игрока
+    return new_player
+
+
+class Tile(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(tiles_group, all_sprites)
+        self.pos = pos_x, pos_y
+        self.type = tile_type
+        self.image = tile_images[self.type]
+        self.rect = pygame.Rect(
+            0, 0, tile_width, tile_height).move(
+            tile_width * pos_x, tile_height * pos_y)
+
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(player_group, all_sprites)
+        self.image = pygame.transform.scale(player_image, (tile_width, tile_height))
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x, tile_height * pos_y,)
+        self.rect.x = self.rect.x    # + tile_width // 2 - self.rect.w // 2
+        self.rect.y = self.rect.y    # + tile_height // 2 - self.rect.h // 2
+        self.pos = [pos_x, pos_y]
+        self.last_move = time() - 1
+        self.time = 0.02
+
+    def move(self, keys):
+        if time() - self.last_move < self.time:
+            return
+        x, y = self.pos
+        if keys[4] or keys[80]:
+            if possible(x - 1, y, level_x, level_y):
+                if level[y][x - 1] in EMPTY:
+                    self.rect.x -= tile_width
+                    self.pos[0] -= 1
+                    x, y = self.pos
+
+        if keys[7] or keys[79]:
+            if possible(x + 1, y, level_x, level_y):
+                if level[y][x + 1] in EMPTY:
+                    self.rect.x += tile_width
+                    self.pos[0] += 1
+                    x, y = self.pos
+
+        if keys[26] or keys[82]:
+            if possible(x, y - 1, level_x, level_y):
+                if level[y - 1][x] in EMPTY:
+                    self.rect.y -= tile_height
+                    self.pos[1] -= 1
+                    x, y = self.pos
+
+        if keys[22] or keys[81]:
+            if possible(x, y + 1, level_x, level_y):
+                if level[y + 1][x] in EMPTY:
+                    self.rect.y += tile_height
+                    self.pos[1] += 1
+
+        self.last_move = time()
+
+
+def possible(x, y, w, h):
+    if 0 <= x < w and 0 <= y < h:
+        return True
+
+
+class Camera:
+    # зададим начальный сдвиг камеры
+    def __init__(self):
+        self.dx = 0
+        self.dy = 0
+
+    # сдвинуть объект obj на смещение камеры
+    def apply(self, obj):
+        obj.rect.x += self.dx
+        obj.rect.y += self.dy
+
+    # позиционировать камеру на объекте target
+    def update(self, target):
+        if width // 2 // tile_width <= target.pos[0] < level_x - width // 2 // tile_width:
+            self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
+        else:
+            self.dx = 0
+        if height // 2 // tile_height <= target.pos[1] < level_y - height // 2 // tile_height:
+            self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
+        else:
+            self.dy = 0
+
+
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
 FPS = 50
-EMPTY = ' .@DMPCHLTFlrtb' + '1234567890-=B'
-WALL = '#'
+EMPTY = ' .@DMPCTFlrtb' + '1234567890-=B'
 
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
@@ -1261,12 +1234,6 @@ if __name__ == '__main__':
     size = width, height = 1450, 1050
     tile_width = tile_height = 50
     screen = pygame.display.set_mode(size)
-
-    my_seed = 'L5 E2 E2 C8 E2 C8 C7 E2 C5 C8 E2 E2 E2 C8 E2 C6 C8 D3 E2 C4 E2 E2 C6 E2 C8 ' \
-              'E2 E2 C7 C1 E2 E2 E2 E2 E2 E2 E2 E2 E2 C5 E2 E12 E16 E10 E8 C6 E15 E1 D3 ' \
-              'E3 0 0 0 0 1 1 0 0 1 1 0 1 0 0 0 0 1 1 0 0 1 1 0 1 0 1 0 0 0 0 1 0 1 0 0 1 0 0 ' \
-              '0 0 0 0 1 1 0 0 0 1 0 1 0 0 0 0 0 0 1 1 0 0 0 0 0 0 1 0 1 0 0 0 0 1 1 0 0 0 0 0 ' \
-              '0 1 1 1 1 0 1 0 1 0 0 0 0 0 1 1 0'.split()
 
     player_image = load_image('mario.png', -1)
     level, level_x, level_y = load_level()
@@ -1293,12 +1260,9 @@ if __name__ == '__main__':
         't':  load_image('DOOR_BOTTOM.png'),
         'B':  load_image('BOX.png'),
         'B1': load_image('BARREL.png'),
-        'F':  load_image('FLOOR.png'),
         'M':  load_image('MONSTER.png'),
         'P':  load_image('EMPTY.png'),
         'C':  load_image('CHEST.png'),
-        'H':  load_image('EMPTY.png'),
-        'L':  load_image('EMPTY.png'),
         'T':  load_image('TORCH.png'),
         'E':  load_image('EMPTY.png'),
         ' ':  load_image('DARK.png'),
@@ -1307,7 +1271,7 @@ if __name__ == '__main__':
         '.1': load_image('FLOOR_CRACKED_1.png'),
         '.2': load_image('FLOOR_CRACKED_2.png'),
         '.3': load_image('FLOOR_CRACKED_3.png')
-        }
+    }
 
     player = generate_level(level)
     if not player:
@@ -1321,10 +1285,10 @@ if __name__ == '__main__':
                 terminate()
             if event.type == pygame.KEYDOWN:
                 if event.key == 46:
-                    if EMPTY == ' .@MPHLTFlrtb':
-                        EMPTY = ' .@MPHLTFlrtb' + '1234567890-=CBD'
+                    if EMPTY == ' .@MPTFlrtb':
+                        EMPTY = ' .@MPTFlrtb' + '1234567890-=CBD'
                     else:
-                        EMPTY = ' .@MPHLTFlrtb'
+                        EMPTY = ' .@MPTFlrtb'
                 if event.key == 45:
                     player.time += 0.01
                 if event.key == 61:
@@ -1334,7 +1298,6 @@ if __name__ == '__main__':
             player.move(keys)
 
         camera.update(player)
-        # обновляем положение всех спрайтов
         for sprite in all_sprites:
             camera.apply(sprite)
 
