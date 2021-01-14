@@ -13,21 +13,20 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
 
         # Remove this later
-        self.width = 32
-        self.height = 32
+        self.width = self.height = TILE_SIZE // 4 * 3
 
         # Изображение
         # TODO: заменить на spritesheet
         # self.image = load_image("test_player.png", "assets")
         self.image = pygame.surface.Surface((self.width, self.height))
-        self.image = pygame.transform.scale(self.image, (32, 32))
+        self.image = pygame.transform.scale(self.image, (self.width, self.height))
         # self.image.fill((0, 0, 0))
         self.rect = self.image.get_rect()
 
         # Начальное положение
         self.rect.x, self.rect.y = x, y
         # Скорость
-        self.speed = 10
+        self.speed = TILE_SIZE // 4
         self.dx = self.dy = 0
 
         # Направление взгляда
@@ -49,7 +48,7 @@ class Player(pygame.sprite.Sprite):
         self.dash_last_time = pygame.time.get_ticks()
 
         # Инициализация прицеда для игрока
-        self.scope = Player_scope(self.rect.x - self.width, self.rect.y - self.height)
+        self.scope = PlayerScope(self.rect.x - self.width, self.rect.y - self.height)
         # Установка начального состояния джойстика
         self.joystick = get_joystick() if check_any_joystick() else None
 
@@ -154,7 +153,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = self.rect.y + self.dy * self.speed
 
 
-class Player_scope(pygame.sprite.Sprite):
+class PlayerScope(pygame.sprite.Sprite):
     """
     # TODO: возможно переписать
     Этот класс отвечает за прицел игрока, относительно него будут
@@ -168,7 +167,7 @@ class Player_scope(pygame.sprite.Sprite):
 
         # Конструктор класса Sprite
         super().__init__()
-        self.width, self.height = 20, 20
+        self.width = self.height = TILE_SIZE / 4 * 2
         # TODO: заменить на нормальный спрайт
         self.image = pygame.Surface([self.width, self.height])
         self.image.fill(pygame.Color("blue"))
