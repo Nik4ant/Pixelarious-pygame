@@ -1125,12 +1125,6 @@ def get_random_item_by_chances(list_with_items: iter, chances: dict) -> any:
     return list_with_items[index]
 
 
-def load(filename):
-    image = load_image(filename, 'assets\\tiles')
-    image = pygame.transform.scale(image, (TILE_SIZE, TILE_SIZE))
-    return image
-
-
 def initialise_level(level_map, barriers_group):
     '''
     В ДУШЕ НЕ....
@@ -1159,38 +1153,3 @@ def initialise_level(level_map, barriers_group):
                 Tile(level_map[y][x], x, y)
     # вернем игрока
     return new_player
-
-
-'''
-tile_images = {
-    '1':  load('RIGHT_WALL.png'),
-    '2':  load('TOP_RIGHT_WALL.png'),
-    '3':  load('DOWN_WALL.png'),
-    '4':  load('TOP_LEFT_WALL.png'),
-    '5':  load('LEFT_WALL.png'),
-    '6':  load('DOWN_LEFT_WALL.png'),
-    '7':  load('DOWN_WALL.png'),
-    '8':  load('DOWN_RIGHT_WALL.png'),
-    '9':  load('TOP_RIGHT_WALL_2.png'),
-    '0':  load('TOP_LEFT_WALL_2.png'),
-    '-':  load('DOWN_LEFT_WALL_2.png'),
-    '=':  load('DOWN_RIGHT_WALL_2.png'),
-    'r':  load('DOOR_RIGHT.png'),
-    'l':  load('DOOR_LEFT.png'),
-    'b':  load('DOOR_TOP.png'),
-    't':  load('DOOR_BOTTOM.png'),
-    'B':  load('BOX.png'),
-    'B1': load('BARREL.png'),
-    'M':  load('MONSTER.png'),
-    'P':  load('UPSTAIRS.png'),
-    'C':  load('CHEST.png'),
-    'T':  load('TORCH.png'),
-    'E':  load('DOWNSTAIRS.png'),
-    ' ':  load('DARK.png'),
-    '.':  load('FLOOR.png'),
-    '.0': load('FLOOR_CRACKED_0.png'),
-    '.1': load('FLOOR_CRACKED_1.png'),
-    '.2': load('FLOOR_CRACKED_2.png'),
-    '.3': load('FLOOR_CRACKED_3.png')
-}
-'''
