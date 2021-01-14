@@ -1,18 +1,24 @@
+import pygame
+
 from random import choice, random
 
 from entities.tile import Tile
 from config import TILE_SIZE
+from entities.player import Player
+from engine import load_image
 
-# 1-8 - Walls
+EMPTIES = ' .@MPElrtb'
+BARRIERS = '1234567890-=BC'
+
+# "0-9" + "-=" - Walls
 # . - Floor
-# D - Door
+# r, t, l, b - Doors
 # M - Mob (Monster)
-# P - Player, start platform
+# P - Player, start stairs
 # C - Chest
 # T - Torch
-# D - Dealer (Torgovec)
-# E - End portal/End stair/End platform
-# B - Box/Bochka
+# E - End stairs
+# B - Box/Barrel
 
 
 # Карты комнат
@@ -956,8 +962,8 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
                 continue
 
             # Убираем двери там, где они не нужны
-            # И строим блоки из стен с некоторым шансом
-            if level[i][j] == 'r':     # СПРАВА
+            # И строим блоки из стен на их месте с некоторым шансом
+            if level[i][j] == 'r':     # ДВЕРЬ СПРАВА
                 if j + 1 >= len(level[i]) or level[i][j + 1] != 'l':
                     if level[i + 2][j - 2] == level[i - 1][j - 1] == '.' and \
                             (j + 1 == len(level[i]) or level[i][j + 1] != 'F') and \
@@ -985,7 +991,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
                         if level[i - 2][j] == ' ':
                             level[i - 1][j] = '9'
 
-            elif level[i][j] == 't':     # СВЕРХУ
+            elif level[i][j] == 't':     # ДВЕРЬ СВЕРХУ
                 if i == 0 or level[i - 1][j] != 'b':
                     if level[i + 2][j - 1] == '.' and level[i + 1][j + 1] == '.' and \
                             (i == 0 or level[i - 1][j] != 'F') and \
@@ -1013,7 +1019,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
                         if level[i][j - 2] == ' ':
                             level[i][j - 1] = '0'
 
-            elif level[i][j] == 'l':     # СЛЕВА
+            elif level[i][j] == 'l':     # ДВЕРЬ СЛЕВА
                 if j == 0 or level[i][j - 1] != 'r':
                     if level[i + 2][j + 2] == '.' and level[i + 1][j + 1] == '.' and \
                             (j == 0 or level[i][j - 1] != 'F') and \
@@ -1041,7 +1047,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
                         if level[i - 2][j] == ' ':
                             level[i - 1][j] = '0'
 
-            elif level[i][j] == 'b':     # СНИЗУ
+            elif level[i][j] == 'b':     # ДВЕРЬ СНИЗУ
                 if i + 1 >= len(level) or level[i + 1][j] != 't':
                     if level[i - 2][j] == level[i - 2][j + 2] == '.' and level[i][j + 2] != ' ' and \
                             (i + 1 == len(level) or level[i + 1][j] != 'F') and \
@@ -1075,16 +1081,16 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
 
 # Функция, возвращающая случайное булевое значение с вводящимся шансом
 def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: list = None) -> bool:
-    """
+    '''
     Функция принимает целое число и переводит в коэффицент, 0 <= k <= 1.
-    Затем генерирует случайное число с помощью функции рандом. 
+    Затем генерирует случайное число с помощью функции рандом.
     Если случайное число меньше либо равно коэффиценту, функция возвращает True.
     Получившееся значение записывается в переданный сид (в виде числа 1 или 0, для краткости).
     :param percentage_chance: шанс выпадания значения True, в процентах
     :param seed: в сид записывается полученное значение
     :param user_seed: если пользовательский сид передан, значение берётся из него
     :return: булевое значение (True/False)
-    """
+    '''
     if user_seed and seed:
         seed.append(user_seed[0])
         del user_seed[0]
@@ -1098,8 +1104,7 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
 
 
 # TODO: Никита это никуда не внидрял (и не тестил), но оставил тут, т.к. пригодится
-def get_random_item_by_chances(list_with_items: iter,
-                               chances: dict) -> any:
+def get_random_item_by_chances(list_with_items: iter, chances: dict) -> any:
     """
     Функция возвращает случайный элемент в соответсвии с шансами из словаря
     :param list_with_items: Список с элементами для рандомного выбора
@@ -1120,37 +1125,72 @@ def get_random_item_by_chances(list_with_items: iter,
     return list_with_items[index]
 
 
-# level, level_x, level_y = load_level()
-def load_level(user_seed=None):
-    level_map, seed = generate_new_level(user_seed)
-    level_map = [line.strip('\n') for line in level_map]
-    max_width = max(map(len, level_map))
-
-    return list(map(lambda x: x.ljust(max_width, '.'), level_map)), \
-        max_width, len(level_map)
+def load(filename):
+    image = load_image(filename, 'assets\\tiles')
+    image = pygame.transform.scale(image, (TILE_SIZE, TILE_SIZE))
+    return image
 
 
-# TODO: переименовать?
-def generate_level(level, group_for_tiles, player):
-    """
+def initialise_level(level_map, barriers_group):
+    '''
     В ДУШЕ НЕ....
-    :param level: В ДУШЕ НЕ....
-    :param group_for_tiles: Группа для спрайтов с тайлами
-    :param player: Игрок, который будет перемещён в определённое место на уровне
-    """
-    level = [list(i) for i in level]
-    for y in range(len(level)):
-        for x in range(len(level[y])):
-            # TODO: вот тут может пригодится get_random_item_by_chances (правда он пока не допилен :)
-            Tile(choice(list('.' * 12) + ['.0', '.1', '.2', '.3']), x, y, group_for_tiles)
-            if level[y][x] == 'P':
+    :param level_map: В ДУШЕ НЕ....
+    :param barriers_group: Группа для спрайтов с тайлами, сквозь которые нельзя ходить
+    '''
+    new_player = None
+    level_map = [list(i) for i in level_map]
+    for y in range(len(level_map)):
+        for x in range(len(level_map[y])):
+            Tile('.', x, y)
+            Tile(choice(['.0', '.1', '.2', '.3']), x, y)
+            if level_map[y][x] == 'P':
+                new_player = Player(x, y)
                 # Помещаем игрока в центр этого тайла
-                player.rect.centerx = x * TILE_SIZE + TILE_SIZE * 0.5
-                player.rect.centery = y * TILE_SIZE + TILE_SIZE * 0.5
-            elif level[y][x] in '.F':
+                new_player.rect.centerx = x * TILE_SIZE + TILE_SIZE * 0.5
+                new_player.rect.centery = y * TILE_SIZE + TILE_SIZE * 0.5
+                Tile(level_map[y][x], x, y)
+            elif level_map[y][x] in '.':
                 pass
-            elif level[y][x] == 'B':
-                Tile(choice(('B', 'B1')), x, y, group_for_tiles)
+            elif level_map[y][x] == 'B':
+                Tile(choice(('B', 'B1')), x, y, barriers_group)
+            elif level_map[y][x] in '1234567890-=':
+                Tile(level_map[y][x], x, y, barriers_group)
             else:
-                Tile(level[y][x], x, y, group_for_tiles)
+                Tile(level_map[y][x], x, y)
+    # вернем игрока
+    return new_player
 
+
+'''
+tile_images = {
+    '1':  load('RIGHT_WALL.png'),
+    '2':  load('TOP_RIGHT_WALL.png'),
+    '3':  load('DOWN_WALL.png'),
+    '4':  load('TOP_LEFT_WALL.png'),
+    '5':  load('LEFT_WALL.png'),
+    '6':  load('DOWN_LEFT_WALL.png'),
+    '7':  load('DOWN_WALL.png'),
+    '8':  load('DOWN_RIGHT_WALL.png'),
+    '9':  load('TOP_RIGHT_WALL_2.png'),
+    '0':  load('TOP_LEFT_WALL_2.png'),
+    '-':  load('DOWN_LEFT_WALL_2.png'),
+    '=':  load('DOWN_RIGHT_WALL_2.png'),
+    'r':  load('DOOR_RIGHT.png'),
+    'l':  load('DOOR_LEFT.png'),
+    'b':  load('DOOR_TOP.png'),
+    't':  load('DOOR_BOTTOM.png'),
+    'B':  load('BOX.png'),
+    'B1': load('BARREL.png'),
+    'M':  load('MONSTER.png'),
+    'P':  load('UPSTAIRS.png'),
+    'C':  load('CHEST.png'),
+    'T':  load('TORCH.png'),
+    'E':  load('DOWNSTAIRS.png'),
+    ' ':  load('DARK.png'),
+    '.':  load('FLOOR.png'),
+    '.0': load('FLOOR_CRACKED_0.png'),
+    '.1': load('FLOOR_CRACKED_1.png'),
+    '.2': load('FLOOR_CRACKED_2.png'),
+    '.3': load('FLOOR_CRACKED_3.png')
+}
+'''
