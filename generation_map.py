@@ -10,6 +10,7 @@ from engine import load_image
 EMPTIES = ' .@MPElrtb'
 BARRIERS = '1234567890-=BC'
 
+
 # "0-9" + "-=" - Walls
 # . - Floor
 # r, t, l, b - Doors
@@ -610,20 +611,6 @@ l....D....r
 -7772b4777=
 '''
 
-CHEST_ROOM_5 = '''
-   08t69   
-   -2.4=   
-    5.1    
-09 08.69 09
-8638.T.6386
-l...T.T...r
-2472.T.4724
--= -2.4= -=
-    5.1    
-   08.69   
-   -2b4=   
-'''
-
 EMPTY_ROOM = '''           \n           \n           
            \n           \n           \n           
            \n           \n           \n           '''
@@ -1103,7 +1090,7 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
     return bool(int(seed[-1]))
 
 
-# TODO: Никита это никуда не внидрял (и не тестил), но оставил тут, т.к. пригодится
+# TODO: Никита это никуда не внедрял (и не тестил), но оставил тут, т.к. пригодится
 def get_random_item_by_chances(list_with_items: iter, chances: dict) -> any:
     """
     Функция возвращает случайный элемент в соответсвии с шансами из словаря
@@ -1125,31 +1112,33 @@ def get_random_item_by_chances(list_with_items: iter, chances: dict) -> any:
     return list_with_items[index]
 
 
-def initialise_level(level_map, barriers_group):
-    '''
+def initialise_level(level_map, all_sprites, barriers_group):
+    """
     В ДУШЕ НЕ....
     :param level_map: В ДУШЕ НЕ....
+    :param all_sprites: Группа со всеми спрайтами
     :param barriers_group: Группа для спрайтов с тайлами, сквозь которые нельзя ходить
-    '''
+    """
     new_player = None
     level_map = [list(i) for i in level_map]
     for y in range(len(level_map)):
         for x in range(len(level_map[y])):
-            Tile('.', x, y)
-            Tile(choice(['.0', '.1', '.2', '.3']), x, y)
+            Tile('.', x, y, all_sprites)
+            if true_with_chance(15):
+                Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
             if level_map[y][x] == 'P':
                 new_player = Player(x, y)
                 # Помещаем игрока в центр этого тайла
                 new_player.rect.centerx = x * TILE_SIZE + TILE_SIZE * 0.5
                 new_player.rect.centery = y * TILE_SIZE + TILE_SIZE * 0.5
-                Tile(level_map[y][x], x, y)
-            elif level_map[y][x] in '.':
+                Tile(level_map[y][x], x, y, all_sprites)
+            elif level_map[y][x] in 'F.':
                 pass
             elif level_map[y][x] == 'B':
-                Tile(choice(('B', 'B1')), x, y, barriers_group)
+                Tile(choice(('B', 'B1')), x, y, all_sprites, barriers_group)
             elif level_map[y][x] in '1234567890-=':
-                Tile(level_map[y][x], x, y, barriers_group)
+                Tile(level_map[y][x], x, y, all_sprites, barriers_group)
             else:
-                Tile(level_map[y][x], x, y)
+                Tile(level_map[y][x], x, y, all_sprites)
     # вернем игрока
     return new_player
