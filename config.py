@@ -47,4 +47,4 @@ CONTROLS = {
 # время перезарядки дэша
 DASH_RELOAD_TIME = 500  # в миллисекундах
 # сторона одного тайоа
-TILE_SIZE = 16
+TILE_SIZE = 64
