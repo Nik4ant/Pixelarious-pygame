@@ -1,13 +1,15 @@
 import os
-
 import pygame
 
-from entities.player import Player
-
-from generation_map import generate_new_level, generate_level, load_level
-
+from generation_map import initialise_level, generate_level
 from config import *
 from engine import *
+
+imported = True
+try:
+    import win32api
+except ModuleNotFoundError:
+    imported = False
 
 
 # TODO: В этом месте Никита впадает в ступор, т.к. куда запихать камеру,
@@ -30,10 +32,12 @@ class Camera:
 
     # сдвинуть курсор, вместе с прицелом
     def apply_cursor(self):
-        win32api.mouse_event(1, self.dx // 2 + self.dx // 15, self.dy // 2 + self.dy // 15)
+        if imported:
+            win32api.mouse_event(1, self.dx // 2 + self.dx // 15, self.dy // 2 + self.dy // 15)
 
     # TODO: remove comment down bellow
     # NOTE: на самом деле я вообще хз какого типа будет target (Никита)
+    # NOTE: таргет в основном будет игрок (Максим)
     # позиционировать камеру на объекте target
     def update(self, target, width, height):
         """
@@ -42,7 +46,6 @@ class Camera:
         :param width: ширина экрана, на  котором будет отрисовка
         :param height: высота экрана, на  котором будет отрисовка
         """
-        # FIXME: level_x и level_y надо бы откопать где-то
         indent = TILE_SIZE * 2
 
         if self.first.rect.x - indent + width // 2 < target.rect.x < self.last.rect.x + indent - width // 2:
@@ -57,56 +60,58 @@ class Camera:
 
 
 def start(screen: pygame.surface.Surface):
+    loading_screen(screen)
+    
+    width, height = screen.get_size()
+    
+    # группы спрайтов
+    all_sprites = pygame.sprite.Group()
+    # Группа со спрайтами тайлов
+    tiles_group = pygame.sprite.Group()
+
+    # Фоновая музыка
+    # FIXME: место на котором игра пролагивает (Никита пофиксит)
+    pygame.mixer.music.load(os.path.join("assets/audio", "game_bg.ogg"))
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
+
     is_game_open = True
     clock = pygame.time.Clock()  # Часы
 
-    # Игровые объекты, которые должны инициализироваться отдельно
-    # Игрок
-    player = Player(screen.get_width() * 0.5, screen.get_height() * 0.5)
-    # Камера
-    camera = Camera()
+    level, new_seed, level_x, level_y = generate_level()
+    player = initialise_level(level, all_sprites, tiles_group)
+    camera = Camera(tiles_group)
 
+    # Игрок
     # Группа со всеми спрайтами
     all_sprites = pygame.sprite.Group()
     # Группа со спрайтами игрока и прицелом
     player_sprites = pygame.sprite.Group()
     player_sprites.add(player)
     player_sprites.add(player.scope)  # прицел игрока
-    # Группа со спрайтами тайлов
-    tiles_group = pygame.sprite.Group()
-
-    # Текущий уровень и его сид
-    current_level = load_level()
-    # FIXME: почему-то падает вот тут
-    generate_level(current_level, tiles_group, player)
-
-    # Фоновая музыка
-    pygame.mixer.music.load(concat_two_file_paths("assets/audio", "game_bg.ogg"))
-    pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
     # Игровой цикл
     while is_game_open:
+        # Очистка экрана
+        screen.fill((20, 20, 20))
+    
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                is_game_open = True
-                break
+                is_game_open = False
+
+        # Обновляем и выводим все спрайты
+        player_sprites.update()
+        player_sprites.draw(screen)
 
         # Обновление объектов относительно камеры
-        camera.update(player)
+        camera.update(player, width, height)
         for sprite in all_sprites:
             camera.apply(sprite)
-
-        # Обновление всех групп со спрайтами
-        player_sprites.update()
-
-        # Очистка экрана
-        screen.fill((255, 255, 255))
+        camera.apply_cursor()
 
         # TODO: возможно этот коммент можно улучшить, моя формулировка так себе
-        # Отрисовка всех групп спрайтов в определённом порядке отрисовки
-        player_sprites.draw(screen)
-        tiles_group.draw(screen)
+        # Отрисовка всех групп спрайтов в определённом порядке
+        all_sprites.draw(screen)
 
         clock.tick(FPS)
         pygame.display.flip()
