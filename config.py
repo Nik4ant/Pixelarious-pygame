@@ -51,6 +51,10 @@ CONTROLS = {
     "KEYBOARD_UP": pygame.K_w,
     "KEYBOARD_DOWN": pygame.K_s,
 }
+
 # время перезарядки дэша
+DASH_RELOAD_TIME = 500  # в миллисекундах
+# скорость игрока
+PLAYER_SPEED = 20
 # сторона одного тайла
-TILE_SIZE = 50
+TILE_SIZE = 64
