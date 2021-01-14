@@ -873,7 +873,7 @@ LONG_BLOCK_CHANCE = 35
 
 # Сама функция генерации
 def generate_new_level(user_seed=None) -> [str, ..., str]:
-    '''
+    """
     Создаёт список строк, каждый символ в строке означает определенный тайл
     Генерация происходит псевдорандомно, выбирая случайный шаблон уровня,
     а затем для каждого символа формы выбирает случайную комнату. 
@@ -882,7 +882,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
     Если генерация уже происходила и у вас есть сид, вы можете передать его этой функции,
     тогда карта будет сгенерирована по тем же параметрам. 
     Совпадение будет по форме уровня, каждой комнате и блоках из стен в комнатах.
-    '''
+    """
     level = []
     seed = []
     if user_seed:
@@ -1081,7 +1081,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
 
 # Функция, возвращающая случайное булевое значение с вводящимся шансом
 def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: list = None) -> bool:
-    '''
+    """
     Функция принимает целое число и переводит в коэффицент, 0 <= k <= 1.
     Затем генерирует случайное число с помощью функции рандом.
     Если случайное число меньше либо равно коэффиценту, функция возвращает True.
@@ -1090,7 +1090,7 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
     :param seed: в сид записывается полученное значение
     :param user_seed: если пользовательский сид передан, значение берётся из него
     :return: булевое значение (True/False)
-    '''
+    """
     if user_seed and seed:
         seed.append(user_seed[0])
         del user_seed[0]
@@ -1117,7 +1117,7 @@ def get_random_item_by_chances(list_with_items: iter, chances: dict) -> any:
     keys = chances.keys()
     random_percent = random() * 100
 
-    # TODO: somw stuff here
+    # TODO: some stuff here
     for i, key in enumerate(keys):
         if i + 1 != len(keys):
             pass
@@ -1132,11 +1132,11 @@ def load(filename):
 
 
 def initialise_level(level_map, barriers_group):
-    '''
+    """
     В ДУШЕ НЕ....
     :param level_map: В ДУШЕ НЕ....
     :param barriers_group: Группа для спрайтов с тайлами, сквозь которые нельзя ходить
-    '''
+    """
     new_player = None
     level_map = [list(i) for i in level_map]
     for y in range(len(level_map)):
