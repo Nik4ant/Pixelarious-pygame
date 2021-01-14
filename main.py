@@ -11,7 +11,7 @@ if __name__ == '__main__':
     # Инициализация pygame
     pygame.init()
     # Инициализация mixer'а
-    pygame.mixer.init()
+    pygame.mixer.init(44100, -16, 2, 64)
 
     # этот модуль нужно импортировать именно тут,
     # т.к. в нём происходит загрузка звуков (а это можно делать только
@@ -42,3 +42,4 @@ if __name__ == '__main__':
     ACTIONS[code]()
     # Закрытие pygame
     pygame.quit()
+    pygame.mixer.quit()

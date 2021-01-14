@@ -21,8 +21,20 @@ def get_joystick() -> pygame.joystick.Joystick:
     return joystick
 
 
+def concat_two_file_paths(path_to_folder: str, filename: str):
+    """
+    Т.к. в разных файлах очень часто нужно загрузить что-либо из ассетов, то
+    для объединения пути до папки сделан отдельный метод здесь (чтобы каждый раз
+    не импортировать модуль os)
+    :param path_to_folder: Путь до папки с файлом
+    :param filename: Название файла
+    :return: Объединённый путь
+    """
+    return os.path.join(path_to_folder, filename)
+
+
+# TODO: эта функция вводит Никиту в ступор, но он пока не придумал, что с ней сделать поэтому пусть будет тут
 def loading_screen(screen):
-    from time import sleep
     width, height = screen.get_size()
     screen.fill((20, 20, 20))
     # font = pygame.font.SysFont('Harrington', 35)
@@ -34,7 +46,7 @@ def loading_screen(screen):
     text_y = height // 2 - text.get_height() // 2
     screen.blit(text, (text_x, text_y))
     pygame.display.flip()
-    sleep(1)
+    pygame.time.wait(1000)
 
 
 def load_image(filename: str, path_to_folder="assets", colorkey=None):
