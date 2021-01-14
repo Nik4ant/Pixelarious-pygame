@@ -78,7 +78,7 @@ def start(screen: pygame.surface.Surface):
     is_game_open = True
     clock = pygame.time.Clock()  # Часы
 
-    level, new_seed, level_x, level_y = generate_level()
+    level, new_seed = generate_level()
     player = initialise_level(level, all_sprites, tiles_group)
     camera = Camera(tiles_group)
 
