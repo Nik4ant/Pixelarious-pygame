@@ -17,35 +17,41 @@ class Camera:
     """
     Класс отвечающий за поведение камеры в игровом цикле
     """
-
     def __init__(self):
-        #
         self.dx = 0
         self.dy = 0
+        tiles = tiles_group.sprites()
+        self.first, self.last = tiles[0], tiles[-1]
 
+    # сдвинуть объект obj на смещение камеры
     def apply(self, obj):
-        """
-        Передвижение переданного объекта относительно смещения камеры
-        :param obj: Объект для смещения
-        """
         obj.rect.x += self.dx
         obj.rect.y += self.dy
 
+    # сдвинуть курсор, вместе с прицелом
+    def apply_cursor(self):
+        win32api.mouse_event(1, self.dx // 2 + self.dx // 15, self.dy // 2 + self.dy // 15)
+
     # TODO: remove comment down bellow
     # NOTE: на самом деле я вообще хз какого типа будет target (Никита)
-    def update(self, target: pygame.sprite.Sprite):
+    # позиционировать камеру на объекте target
+    def update(self, target, width, height):
         """
         Камера будет позиционированна относительно объекта target
         :param target: объект относительно которого будет происходить позиционирование
+        :param width: ширина экрана, на  котором будет отрисовка
+        :param height: высота экрана, на  котором будет отрисовка
         """
-
         # FIXME: level_x и level_y надо бы откопать где-то
-        if width * 0.5 // tile_width <= target.pos[0] < level_x - width * 0.5 // tile_width:
+        indent = TILE_SIZE * 2
+
+        if self.first.rect.x - indent + width // 2 < target.rect.x < self.last.rect.x + indent - width // 2:
             self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
         else:
             self.dx = 0
-        if height * 0.5 // tile_height <= target.pos[1] < level_y - height * 0.5 // tile_height:
-            self.dy = -(target.rect.y + target.rect.h * 0.5 - height * 0.5)
+
+        if self.first.rect.y - indent + height // 2 < target.rect.y < self.last.rect.y + indent - height // 2:
+            self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
         else:
             self.dy = 0
 
