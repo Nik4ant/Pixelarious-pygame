@@ -1,15 +1,24 @@
+import pygame
+
 from random import choice, random
 
-# 1-8 - Walls
+from entities.tile import Tile
+from config import TILE_SIZE
+from entities.player import Player
+from engine import load_image
+
+EMPTIES = ' .@MPElrtb'
+BARRIERS = '1234567890-=BC'
+
+# "0-9" + "-=" - Walls
 # . - Floor
-# D - Door
+# r, t, l, b - Doors
 # M - Mob (Monster)
-# P - Player, start platform
+# P - Player, start stairs
 # C - Chest
 # T - Torch
-# D - Dealer (Torgovec)
-# E - End portal/End stair/End platform
-# B - Box/Bochka
+# E - End stairs
+# B - Box/Barrel
 
 
 # Карты комнат
@@ -863,7 +872,17 @@ LONG_BLOCK_CHANCE = 35
 
 
 # Сама функция генерации
-def generate_new_level(user_seed=None) -> [str, ..., str]:
+def generate_level(user_seed=None) -> [str, ..., str]:
+    '''
+    Создаёт список строк, каждый символ в строке означает определенный тайл
+    Генерация происходит псевдорандомно, выбирая случайный шаблон уровня,
+    а затем для каждого символа формы выбирает случайную комнату.
+    С некоторым шансом из двух комнат может быть создана одна большая.
+    Вместо дверей ставится либо стена, либо, если возможно, с некоторым шансом, "блок".
+    Если генерация уже происходила и у вас есть сид, вы можете передать его этой функции,
+    тогда карта будет сгенерирована по тем же параметрам.
+    Совпадение будет по форме уровня, каждой комнате и блоках из стен в комнатах.
+    '''
     level = []
     seed = []
     if user_seed:
@@ -943,8 +962,8 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
                 continue
 
             # Убираем двери там, где они не нужны
-            # И строим блоки из стен с некоторым шансом
-            if level[i][j] == 'r':     # СПРАВА
+            # И строим блоки из стен на их месте с некоторым шансом
+            if level[i][j] == 'r':     # ДВЕРЬ СПРАВА
                 if j + 1 >= len(level[i]) or level[i][j + 1] != 'l':
                     if level[i + 2][j - 2] == level[i - 1][j - 1] == '.' and \
                             (j + 1 == len(level[i]) or level[i][j + 1] != 'F') and \
@@ -972,7 +991,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
                         if level[i - 2][j] == ' ':
                             level[i - 1][j] = '9'
 
-            elif level[i][j] == 't':     # СВЕРХУ
+            elif level[i][j] == 't':     # ДВЕРЬ СВЕРХУ
                 if i == 0 or level[i - 1][j] != 'b':
                     if level[i + 2][j - 1] == '.' and level[i + 1][j + 1] == '.' and \
                             (i == 0 or level[i - 1][j] != 'F') and \
@@ -1000,7 +1019,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
                         if level[i][j - 2] == ' ':
                             level[i][j - 1] = '0'
 
-            elif level[i][j] == 'l':     # СЛЕВА
+            elif level[i][j] == 'l':     # ДВЕРЬ СЛЕВА
                 if j == 0 or level[i][j - 1] != 'r':
                     if level[i + 2][j + 2] == '.' and level[i + 1][j + 1] == '.' and \
                             (j == 0 or level[i][j - 1] != 'F') and \
@@ -1028,7 +1047,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
                         if level[i - 2][j] == ' ':
                             level[i - 1][j] = '0'
 
-            elif level[i][j] == 'b':     # СНИЗУ
+            elif level[i][j] == 'b':     # ДВЕРЬ СНИЗУ
                 if i + 1 >= len(level) or level[i + 1][j] != 't':
                     if level[i - 2][j] == level[i - 2][j + 2] == '.' and level[i][j + 2] != ' ' and \
                             (i + 1 == len(level) or level[i + 1][j] != 'F') and \
@@ -1056,12 +1075,22 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
                         if level[i][j - 2] == ' ':
                             level[i][j - 1] = '-'
 
-    # Возвращаем созданный уровень
-    return [''.join(i) for i in level], seed
+    # Возвращаем созданный уровень и его сид
+    return [''.join(i) for i in level], seed, len(level[0]), len(level)
 
 
-# Функция, возвращающая случпайное булевое значение с вводящимся шансом
+# Функция, возвращающая случайное булевое значение с вводящимся шансом
 def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: list = None) -> bool:
+    '''
+    Функция принимает целое число и переводит в коэффицент, 0 <= k <= 1.
+    Затем генерирует случайное число с помощью функции рандом.
+    Если случайное число меньше либо равно коэффиценту, функция возвращает True.
+    Получившееся значение записывается в переданный сид (в виде числа 1 или 0, для краткости).
+    :param percentage_chance: шанс выпадания значения True, в процентах
+    :param seed: в сид записывается полученное значение
+    :param user_seed: если пользовательский сид передан, значение берётся из него
+    :return: булевое значение (True/False)
+    '''
     if user_seed and seed:
         seed.append(user_seed[0])
         del user_seed[0]
@@ -1074,244 +1103,93 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
     return bool(int(seed[-1]))
 
 
-#
-# ИГРОВОЙ ЦИКЛ ДЛЯ ТЕСТИРОВКИ (убрать перед презентацией игры)
-# --------------------------------------------------------------------------------------------
-#
-#
+def get_random_item_by_chances(list_with_items: iter, chances: dict) -> any:
+    """
+    Функция возвращает случайный элемент в соответсвии с шансами из словаря
+    :param list_with_items: Список с элементами для рандомного выбора
+    :param chances: Словарь, где ключом является строка с индексами (без пробелов), а
+    значением процент вероятности (может быть дробным)
+    :return: Случайный элемент
+    """
 
-import os
-import pygame
-import sys
-from time import time
+    index = 0
+    keys = chances.keys()
+    random_percent = random() * 100
+
+    # TODO: somw stuff here
+    for i, key in enumerate(keys):
+        if i + 1 != len(keys):
+            pass
+
+    return list_with_items[index]
 
 
-def load_image(filename, colorkey=None):
-    fullname = os.path.join('assets\\tiles', filename)
-    if not os.path.isfile(fullname):
-        print(f"Файл с изображением '{fullname}' не найден")
-        sys.exit()
-    image = pygame.image.load(fullname)
-    if colorkey is not None:
-        image = image.convert()
-        if colorkey == -1:
-            colorkey = image.get_at((0, 0))
-        image.set_colorkey(colorkey)
-    else:
-        image = image.convert_alpha()
-        image = pygame.transform.scale(image, (tile_width, tile_height))
+def load(filename):
+    image = load_image(filename, 'assets\\tiles')
+    image = pygame.transform.scale(image, (TILE_SIZE, TILE_SIZE))
     return image
 
 
-# функция вывода уровня в консоль
-def pprint(level):
-    for i in level:
-        print(*i, sep='   ')
-    print()
-
-
-def load_level(user_seed=None):
-    level_map, seed = generate_new_level(user_seed)
-    level_map = [line.strip('\n') for line in level_map]
-    max_width = max(map(len, level_map))
-
-    return list(map(lambda x: x.ljust(max_width, '.'), level_map)),\
-           max_width, len(level_map)
-
-
-def generate_level(level):
+def initialise_level(level_map, barriers_group):
+    '''
+    В ДУШЕ НЕ....
+    :param level_map: В ДУШЕ НЕ....
+    :param barriers_group: Группа для спрайтов с тайлами, сквозь которые нельзя ходить
+    '''
     new_player = None
-    level = [list(i) for i in level]
-    for y in range(len(level)):
-        for x in range(len(level[y])):
-            Tile(choice(list('.' * 12) + ['.0', '.1', '.2', '.3']), x, y)
-            if level[y][x] == 'P':
+    level_map = [list(i) for i in level_map]
+    for y in range(len(level_map)):
+        for x in range(len(level_map[y])):
+            Tile('.', x, y)
+            Tile(choice(['.0', '.1', '.2', '.3']), x, y)
+            if level_map[y][x] == 'P':
                 new_player = Player(x, y)
-            elif level[y][x] in '.F':
+                # Помещаем игрока в центр этого тайла
+                new_player.rect.centerx = x * TILE_SIZE + TILE_SIZE * 0.5
+                new_player.rect.centery = y * TILE_SIZE + TILE_SIZE * 0.5
+                Tile(level_map[y][x], x, y)
+            elif level_map[y][x] in '.':
                 pass
-            elif level[y][x] == 'B':
-                Tile(choice(('B', 'B1')), x, y)
+            elif level_map[y][x] == 'B':
+                Tile(choice(('B', 'B1')), x, y, barriers_group)
+            elif level_map[y][x] in '1234567890-=':
+                Tile(level_map[y][x], x, y, barriers_group)
             else:
-                Tile(level[y][x], x, y)
+                Tile(level_map[y][x], x, y)
     # вернем игрока
     return new_player
 
 
-class Tile(pygame.sprite.Sprite):
-    def __init__(self, tile_type, pos_x, pos_y):
-        super().__init__(tiles_group, all_sprites)
-        self.pos = pos_x, pos_y
-        self.type = tile_type
-        self.image = tile_images[self.type]
-        self.rect = pygame.Rect(
-            0, 0, tile_width, tile_height).move(
-            tile_width * pos_x, tile_height * pos_y)
-
-
-class Player(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y):
-        super().__init__(player_group, all_sprites)
-        self.image = pygame.transform.scale(player_image, (tile_width, tile_height))
-        self.rect = self.image.get_rect().move(
-            tile_width * pos_x, tile_height * pos_y,)
-        self.rect.x = self.rect.x    # + tile_width // 2 - self.rect.w // 2
-        self.rect.y = self.rect.y    # + tile_height // 2 - self.rect.h // 2
-        self.pos = [pos_x, pos_y]
-        self.last_move = time() - 1
-        self.time = 0.02
-
-    def move(self, keys):
-        if time() - self.last_move < self.time:
-            return
-        x, y = self.pos
-        if keys[4] or keys[80]:
-            if possible(x - 1, y, level_x, level_y):
-                if level[y][x - 1] in EMPTY:
-                    self.rect.x -= tile_width
-                    self.pos[0] -= 1
-                    x, y = self.pos
-
-        if keys[7] or keys[79]:
-            if possible(x + 1, y, level_x, level_y):
-                if level[y][x + 1] in EMPTY:
-                    self.rect.x += tile_width
-                    self.pos[0] += 1
-                    x, y = self.pos
-
-        if keys[26] or keys[82]:
-            if possible(x, y - 1, level_x, level_y):
-                if level[y - 1][x] in EMPTY:
-                    self.rect.y -= tile_height
-                    self.pos[1] -= 1
-                    x, y = self.pos
-
-        if keys[22] or keys[81]:
-            if possible(x, y + 1, level_x, level_y):
-                if level[y + 1][x] in EMPTY:
-                    self.rect.y += tile_height
-                    self.pos[1] += 1
-
-        self.last_move = time()
-
-
-def possible(x, y, w, h):
-    if 0 <= x < w and 0 <= y < h:
-        return True
-
-
-class Camera:
-    # зададим начальный сдвиг камеры
-    def __init__(self):
-        self.dx = 0
-        self.dy = 0
-
-    # сдвинуть объект obj на смещение камеры
-    def apply(self, obj):
-        obj.rect.x += self.dx
-        obj.rect.y += self.dy
-
-    # позиционировать камеру на объекте target
-    def update(self, target):
-        if width // 2 // tile_width <= target.pos[0] < level_x - width // 2 // tile_width:
-            self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
-        else:
-            self.dx = 0
-        if height // 2 // tile_height <= target.pos[1] < level_y - height // 2 // tile_height:
-            self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
-        else:
-            self.dy = 0
-
-
-def terminate():
-    pygame.quit()
-    sys.exit()
-
-
-FPS = 50
-EMPTY = ' .@DMPCTFlrtb' + '1234567890-=B'
-
-# группы спрайтов
-all_sprites = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
-
-
-if __name__ == '__main__':
-    pygame.init()
-    pygame.display.set_caption('Ла-ла-ла')
-    clock = pygame.time.Clock()
-    size = width, height = 1450, 1050
-    tile_width = tile_height = 50
-    screen = pygame.display.set_mode(size)
-
-    player_image = load_image('mario.png', -1)
-    level, level_x, level_y = load_level()
-
-    camera = Camera()
-
-    tile_images = {
-        '1':  load_image('RIGHT_WALL.png'),
-        '2':  load_image('TOP_RIGHT_WALL.png'),
-        '3':  load_image('DOWN_WALL.png'),
-        '4':  load_image('TOP_LEFT_WALL.png'),
-        '5':  load_image('LEFT_WALL.png'),
-        '6':  load_image('DOWN_LEFT_WALL.png'),
-        '7':  load_image('DOWN_WALL.png'),
-        '8':  load_image('DOWN_RIGHT_WALL.png'),
-        '9':  load_image('TOP_RIGHT_WALL_2.png'),
-        '0':  load_image('TOP_LEFT_WALL_2.png'),
-        '-':  load_image('DOWN_LEFT_WALL_2.png'),
-        '=':  load_image('DOWN_RIGHT_WALL_2.png'),
-        'D':  load_image('dealer.png'),
-        'r':  load_image('DOOR_RIGHT.png'),
-        'l':  load_image('DOOR_LEFT.png'),
-        'b':  load_image('DOOR_TOP.png'),
-        't':  load_image('DOOR_BOTTOM.png'),
-        'B':  load_image('BOX.png'),
-        'B1': load_image('BARREL.png'),
-        'M':  load_image('MONSTER.png'),
-        'P':  load_image('EMPTY.png'),
-        'C':  load_image('CHEST.png'),
-        'T':  load_image('TORCH.png'),
-        'E':  load_image('EMPTY.png'),
-        ' ':  load_image('DARK.png'),
-        '.':  load_image('FLOOR.png'),
-        '.0': load_image('FLOOR_CRACKED_0.png'),
-        '.1': load_image('FLOOR_CRACKED_1.png'),
-        '.2': load_image('FLOOR_CRACKED_2.png'),
-        '.3': load_image('FLOOR_CRACKED_3.png')
-    }
-
-    player = generate_level(level)
-    if not player:
-        print('Отсутствие игрока на поле повергает в инфаркт игру')
-
-    while True:
-        keys = list(pygame.key.get_pressed())
-        screen.fill('white')
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                terminate()
-            if event.type == pygame.KEYDOWN:
-                if event.key == 46:
-                    if EMPTY == ' .@MPTFlrtb':
-                        EMPTY = ' .@MPTFlrtb' + '1234567890-=CBD'
-                    else:
-                        EMPTY = ' .@MPTFlrtb'
-                if event.key == 45:
-                    player.time += 0.01
-                if event.key == 61:
-                    player.time -= 0.01
-
-        if any(keys):
-            player.move(keys)
-
-        camera.update(player)
-        for sprite in all_sprites:
-            camera.apply(sprite)
-
-        all_sprites.draw(screen)
-        player_group.draw(screen)
-
-        clock.tick(FPS)
-        pygame.display.flip()
+'''
+tile_images = {
+    '1':  load('RIGHT_WALL.png'),
+    '2':  load('TOP_RIGHT_WALL.png'),
+    '3':  load('DOWN_WALL.png'),
+    '4':  load('TOP_LEFT_WALL.png'),
+    '5':  load('LEFT_WALL.png'),
+    '6':  load('DOWN_LEFT_WALL.png'),
+    '7':  load('DOWN_WALL.png'),
+    '8':  load('DOWN_RIGHT_WALL.png'),
+    '9':  load('TOP_RIGHT_WALL_2.png'),
+    '0':  load('TOP_LEFT_WALL_2.png'),
+    '-':  load('DOWN_LEFT_WALL_2.png'),
+    '=':  load('DOWN_RIGHT_WALL_2.png'),
+    'r':  load('DOOR_RIGHT.png'),
+    'l':  load('DOOR_LEFT.png'),
+    'b':  load('DOOR_TOP.png'),
+    't':  load('DOOR_BOTTOM.png'),
+    'B':  load('BOX.png'),
+    'B1': load('BARREL.png'),
+    'M':  load('MONSTER.png'),
+    'P':  load('UPSTAIRS.png'),
+    'C':  load('CHEST.png'),
+    'T':  load('TORCH.png'),
+    'E':  load('DOWNSTAIRS.png'),
+    ' ':  load('DARK.png'),
+    '.':  load('FLOOR.png'),
+    '.0': load('FLOOR_CRACKED_0.png'),
+    '.1': load('FLOOR_CRACKED_1.png'),
+    '.2': load('FLOOR_CRACKED_2.png'),
+    '.3': load('FLOOR_CRACKED_3.png')
+}
+'''
