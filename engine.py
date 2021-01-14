@@ -66,3 +66,9 @@ def load_image(filename: str, path_to_folder="assets", colorkey=None):
     else:
         image = image.convert_alpha()
     return image
+
+
+def load(filename):
+    image = load_image(filename, 'assets\\tiles')
+    image = pygame.transform.scale(image, (TILE_SIZE, TILE_SIZE))
+    return image
