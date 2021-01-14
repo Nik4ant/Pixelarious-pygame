@@ -1,8 +1,6 @@
-import os
-
 import pygame
 
-from engine import load_image
+from engine import load_image, concat_two_file_paths
 from config import DEFAULT_HOVER_SOUND_VOLUME
 
 
@@ -11,7 +9,7 @@ class Button(pygame.sprite.Sprite):
     PRESS_TYPE = pygame.USEREVENT + 1
     HOVER_TYPE = pygame.USEREVENT + 2
     # Звук при наведении
-    HOVER_SOUND = pygame.mixer.Sound(os.path.join("assets/audio", "button_hover.wav"))
+    HOVER_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "button_hover.wav"))
     HOVER_SOUND.set_volume(DEFAULT_HOVER_SOUND_VOLUME)
 
     def __init__(self, position: tuple, text: str, text_size: int):

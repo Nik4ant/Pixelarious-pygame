@@ -52,5 +52,5 @@ CONTROLS = {
     "KEYBOARD_DOWN": pygame.K_s,
 }
 # время перезарядки дэша
-# сторона одного тайла
-TILE_SIZE = 50
+# сторона одного тайоа
+TILE_SIZE = 16

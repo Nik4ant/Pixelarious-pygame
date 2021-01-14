@@ -33,24 +33,8 @@ def concat_two_file_paths(path_to_folder: str, filename: str):
     return os.path.join(path_to_folder, filename)
 
 
-# TODO: эта функция вводит Никиту в ступор, но он пока не придумал, что с ней сделать поэтому пусть будет тут
-def loading_screen(screen):
-    width, height = screen.get_size()
-    screen.fill((20, 20, 20))
-    # font = pygame.font.SysFont('Harrington', 35)
-    font = pygame.font.Font('assets\\UI\\pixel_font.ttf', 48)
-    text = font.render('Loading...', True, (240, 240, 240))
-    # text = load_image('loading_text.png', 'assets\\UI')
-    # text = pygame.transform.scale(text, (192, 64))
-    text_x = width // 2 - text.get_width() // 2
-    text_y = height // 2 - text.get_height() // 2
-    screen.blit(text, (text_x, text_y))
-    pygame.display.flip()
-    pygame.time.wait(1000)
-
-
 def load_image(filename: str, path_to_folder="assets", colorkey=None):
-    fullname = os.path.join(path_to_folder, filename)
+    fullname = concat_two_file_paths(path_to_folder, filename)
     # если файл не существует, то выходим
     if not os.path.isfile(fullname):
         print(f"ОШИБКА! Не удалось загрузить изображение {filename}")
