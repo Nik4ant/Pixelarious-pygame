@@ -2,6 +2,8 @@ import os
 import sys
 import pygame
 
+from config import TILE_SIZE
+
 
 def check_any_joystick() -> bool:
     """
