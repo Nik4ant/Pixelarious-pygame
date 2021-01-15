@@ -1,88 +1,57 @@
 import os
 import pygame
 
-from generation_map import initialise_level, generate_level
+from generation_map import initialise_level, generate_new_level
 from config import *
 from engine import *
-
-imported = True
-try:
-    import win32api
-except ModuleNotFoundError:
-    imported = False
 
 
 # TODO: В этом месте Никита впадает в ступор, т.к. куда запихать камеру,
 #  вроде бы в entities не хочется, но здесь хранить её как-то странно, наверное
 # FIXME: короче нужны идеи срочно
 class Camera:
-    """
-    Класс отвечающий за поведение камеры в игровом цикле
-    """
+    # зададим начальный сдвиг камеры
     def __init__(self):
         self.dx = 0
         self.dy = 0
-        tiles = tiles_group.sprites()
-        self.first, self.last = tiles[0], tiles[-1]
 
     # сдвинуть объект obj на смещение камеры
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
 
-    # сдвинуть курсор, вместе с прицелом
-    # NOTE: Какого......?!?!??!?!?!?!?!?!?!?!!?!?!??!?!?!?!?!?!?!?!? (Никита)
-    def apply_cursor(self):
-        if imported:
-            win32api.mouse_event(1, self.dx // 2 + self.dx // 15, self.dy // 2 + self.dy // 15)
-
-    def update(self, target: pygame.sprite.Sprite, width, height):
-        """
-        Позиционирование камеры относительно объекта target
-        :param target: объект относительно которого будет происходить позиционирование
-        :param width: ширина экрана, на котором будет отрисовка
-        :param height: высота экрана, на котором будет отрисовка
-        """
-        indent = TILE_SIZE * 2
-
-        if self.first.rect.x - indent + width * 0.5 < target.rect.x < self.last.rect.x + indent - width * 0.5:
-            self.dx = -(target.rect.x + target.rect.w * 0.5 - width * 0.5)
-        else:
-            self.dx = 0
-
-        if self.first.rect.y - indent + height * 0.5 < target.rect.y < self.last.rect.y + indent - height * 0.5:
-            self.dy = -(target.rect.y + target.rect.h * 0.5 - height * 0.5)
-        else:
-            self.dy = 0
+    # позиционировать камеру на объекте target
+    def update(self, target, screen_width, screen_height):
+        self.dx = -(target.rect.x + target.rect.w // 2 - screen_width // 2)
+        self.dy = -(target.rect.y + target.rect.h // 2 - screen_height // 2)
 
 
 def start(screen: pygame.surface.Surface):
     loading_screen(screen)
     
-    width, height = screen.get_size()
-    
-    # группы спрайтов
+    screen_width, screen_height = screen.get_size()
+
+    # Группа со всеми спрайтами
     all_sprites = pygame.sprite.Group()
     # Группа со спрайтами тайлов
-    tiles_group = pygame.sprite.Group()
-
-    # Фоновая музыка
-    # FIXME: место на котором игра пролагивает (Никита пофиксит)
-    pygame.mixer.music.load(os.path.join("assets/audio", "game_bg.ogg"))
-    pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
+    colidable_tiles_group = pygame.sprite.Group()
 
     is_game_open = True
     clock = pygame.time.Clock()  # Часы
 
-    level, new_seed = generate_level()
-    player = initialise_level(level, all_sprites, tiles_group)
-    camera = Camera(tiles_group)
+    level, new_seed = generate_new_level()
+    player = initialise_level(level, all_sprites, colidable_tiles_group)
+    camera = Camera()
 
     # Группа со спрайтами игрока и прицелом
     player_sprites = pygame.sprite.Group()
     player_sprites.add(player)
     player_sprites.add(player.scope)  # прицел игрока
+
+    # Фоновая музыка
+    pygame.mixer.music.load(os.path.join("assets/audio", "game_bg.ogg"))
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
     # Игровой цикл
     while is_game_open:
@@ -93,19 +62,18 @@ def start(screen: pygame.surface.Surface):
             if event.type == pygame.QUIT:
                 is_game_open = False
 
-        # Обновляем и выводим все спрайты
+        # Обновление спрайтов игрока
         player_sprites.update()
-        player_sprites.draw(screen)
+        all_sprites.update()
 
         # Обновление объектов относительно камеры
-        camera.update(player, width, height)
-        for sprite in all_sprites:
-            camera.apply(sprite)
-        camera.apply_cursor()
+        # camera.update(player, screen_width, screen_height)
+        # for sprite in all_sprites:
+            # camera.apply(sprite)
 
-        # TODO: возможно этот коммент можно улучшить, моя формулировка так себе
-        # Отрисовка всех групп спрайтов в определённом порядке
+        # Отрисовка всех спрайтов
         all_sprites.draw(screen)
+        player_sprites.draw(screen)
 
         clock.tick(FPS)
         pygame.display.flip()

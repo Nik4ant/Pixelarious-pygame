@@ -391,7 +391,7 @@ EVIL_ROOM_26 = '''
 03338t639  
 5.......639
 5MBBT.....1
-5.DB......1
+5..B......1
 8BBB...M..6
 l.........r
 2.........4
@@ -603,7 +603,7 @@ CHEST_ROOM_4 = '''
 5.........1
 5......T..1
 8.........6
-l....D....r
+l.........r
 2.........4
 5..T......1
 5.........1
@@ -707,7 +707,6 @@ STANDARD_ROOMS = {
       'C2': CHEST_ROOM_2,
       'C3': CHEST_ROOM_3,
       'C4': CHEST_ROOM_4,
-      'C5': CHEST_ROOM_5
 }
 
 DOUBLE_ROOMS = {
@@ -1090,29 +1089,6 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
     return bool(int(seed[-1]))
 
 
-# TODO: Никита это никуда не внедрял (и не тестил), но оставил тут, т.к. пригодится
-def get_random_item_by_chances(list_with_items: iter, chances: dict) -> any:
-    """
-    Функция возвращает случайный элемент в соответсвии с шансами из словаря
-    :param list_with_items: Список с элементами для рандомного выбора
-    :param chances: Словарь, где ключом является строка с индексами (без пробелов), а
-    значением процент вероятности (может быть дробным)
-    :return: Случайный элемент
-    """
-
-    index = 0
-    keys = chances.keys()
-    random_percent = random() * 100
-
-    # TODO: some stuff
-    # NOTE: Никак не могу добраться до этого (Никита)
-    for i, key in enumerate(keys):
-        if i + 1 != len(keys):
-            pass
-
-    return list_with_items[index]
-
-
 def initialise_level(level_map, all_sprites, barriers_group):
     """
     В ДУШЕ НЕ....
@@ -1134,7 +1110,6 @@ def initialise_level(level_map, all_sprites, barriers_group):
                 new_player.rect.centery = y * TILE_SIZE + TILE_SIZE * 0.5
                 Tile(level_map[y][x], x, y, all_sprites)
             elif level_map[y][x] in 'F.':
-                # NOTE: Так и должно быть? (Никита)
                 pass
             elif level_map[y][x] == 'B':
                 Tile(choice(('B', 'B1')), x, y, all_sprites, barriers_group)

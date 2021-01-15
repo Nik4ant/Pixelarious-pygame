@@ -2,7 +2,7 @@ import os
 
 import pygame
 
-from engine import load_image
+from engine import load_image, concat_two_file_paths
 from config import DEFAULT_HOVER_SOUND_VOLUME
 
 
@@ -11,7 +11,7 @@ class Button(pygame.sprite.Sprite):
     PRESS_TYPE = pygame.USEREVENT + 1
     HOVER_TYPE = pygame.USEREVENT + 2
     # Звук при наведении
-    HOVER_SOUND = pygame.mixer.Sound(os.path.join("assets/audio", "button_hover.wav"))
+    HOVER_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "button_hover.wav"))
     HOVER_SOUND.set_volume(DEFAULT_HOVER_SOUND_VOLUME)
 
     def __init__(self, position: tuple, text: str, text_size: int):
@@ -28,7 +28,7 @@ class Button(pygame.sprite.Sprite):
         self.image = load_image("button.png", path_to_folder="assets/UI")
         # Текст
         self.text = text
-        self.font = pygame.font.SysFont(pygame.font.get_default_font(), text_size)
+        self.font = pygame.font.Font("assets\\UI\\pixel_font.ttf", text_size)
         self.text_surface = self.font.render(text, True, pygame.Color("white"))
         # Выводим текст поверх кнопки
         self.image.blit(self.text_surface, self.text_surface.get_rect(center=self.image.get_rect().center))

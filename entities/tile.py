@@ -36,8 +36,8 @@ class Tile(pygame.sprite.Sprite):
         '.3': load_tile('FLOOR_CRACKED_3.png')
     }
 
-    def __init__(self, tile_type: str, x: int, y: int, all_sprites_list: pygame.sprite.Group, *args):
-        super().__init__(all_sprites_list, *args)
+    def __init__(self, tile_type: str, x: int, y: int, *groups):
+        super().__init__(*groups)
 
         self.tile_type = tile_type  # тип тайла
         self.image = Tile.IMAGES[self.tile_type]

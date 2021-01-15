@@ -37,13 +37,11 @@ class Player(pygame.sprite.Sprite):
         # Конструктор класса Sprite
         super().__init__()
 
-        # Remove this later
-        self.width = 32
-        self.height = 32
-
         # TODO: заменить на spritesheet
         # Изображение
         self.image = load_image("test_player.png", "assets")
+        self.image = pygame.transform.scale(self.image, (TILE_SIZE, TILE_SIZE))
+        self.width, self.height = self.image.get_size()
 
         self.rect = self.image.get_rect()
         self.rect.centerx = x
@@ -226,17 +224,11 @@ class Player(pygame.sprite.Sprite):
 
 class Player_scope(pygame.sprite.Sprite):
     """
-    # TODO: возможно переписать
-    Этот класс отвечает за прицел игрока, относительно него будут
-    выполнятся дэш и кастование заклинаний
+    Этот класс отвечает за прицел игрока, нарпимер,
+    относительно него будут создаваться заклинаний
     """
 
     def __init__(self, x: float, y: float):
-        """
-        # TODO: возможно дописать инфы
-        Инициализация
-        """
-
         # Конструктор класса Sprite
         super().__init__()
 

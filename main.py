@@ -29,12 +29,13 @@ if __name__ == '__main__':
     code = start_screen.execute(screen)
     # Кортеж с действиями, которые зависят от кода из главного меню
     ACTIONS = (
+        # выход из игры
+        lambda: None,
+        # Запуск игры
         lambda: game.start(screen),
-        # TODO:
+        # TODO: туториал
         lambda: None,
-        # TODO:
-        lambda: None,
-        # так и должно быть, т.к. это выход из игры
+        # TODO: настройки
         lambda: None,
     )
     # Выполнение действия по коду
