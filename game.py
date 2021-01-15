@@ -31,30 +31,27 @@ class Camera:
         obj.rect.y += self.dy
 
     # сдвинуть курсор, вместе с прицелом
+    # NOTE: Какого......?!?!??!?!?!?!?!?!?!?!!?!?!??!?!?!?!?!?!?!?!? (Никита)
     def apply_cursor(self):
         if imported:
             win32api.mouse_event(1, self.dx // 2 + self.dx // 15, self.dy // 2 + self.dy // 15)
 
-    # TODO: remove comment down bellow
-    # NOTE: на самом деле я вообще хз какого типа будет target (Никита)
-    # NOTE: таргет в основном будет игрок (Максим)
-    # позиционировать камеру на объекте target
-    def update(self, target, width, height):
+    def update(self, target: pygame.sprite.Sprite, width, height):
         """
-        Камера будет позиционированна относительно объекта target
+        Позиционирование камеры относительно объекта target
         :param target: объект относительно которого будет происходить позиционирование
-        :param width: ширина экрана, на  котором будет отрисовка
-        :param height: высота экрана, на  котором будет отрисовка
+        :param width: ширина экрана, на котором будет отрисовка
+        :param height: высота экрана, на котором будет отрисовка
         """
         indent = TILE_SIZE * 2
 
-        if self.first.rect.x - indent + width // 2 < target.rect.x < self.last.rect.x + indent - width // 2:
-            self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
+        if self.first.rect.x - indent + width * 0.5 < target.rect.x < self.last.rect.x + indent - width * 0.5:
+            self.dx = -(target.rect.x + target.rect.w * 0.5 - width * 0.5)
         else:
             self.dx = 0
 
-        if self.first.rect.y - indent + height // 2 < target.rect.y < self.last.rect.y + indent - height // 2:
-            self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
+        if self.first.rect.y - indent + height * 0.5 < target.rect.y < self.last.rect.y + indent - height * 0.5:
+            self.dy = -(target.rect.y + target.rect.h * 0.5 - height * 0.5)
         else:
             self.dy = 0
 
@@ -82,9 +79,6 @@ def start(screen: pygame.surface.Surface):
     player = initialise_level(level, all_sprites, tiles_group)
     camera = Camera(tiles_group)
 
-    # Игрок
-    # Группа со всеми спрайтами
-    all_sprites = pygame.sprite.Group()
     # Группа со спрайтами игрока и прицелом
     player_sprites = pygame.sprite.Group()
     player_sprites.add(player)

@@ -1,39 +1,39 @@
 import pygame
-from engine import load
+from engine import load_tile
 from config import TILE_SIZE
 
 
 class Tile(pygame.sprite.Sprite):
     IMAGES = {
-        '1':  load('RIGHT_WALL.png'),
-        '2':  load('TOP_RIGHT_WALL.png'),
-        '3':  load('DOWN_WALL.png'),
-        '4':  load('TOP_LEFT_WALL.png'),
-        '5':  load('LEFT_WALL.png'),
-        '6':  load('DOWN_LEFT_WALL.png'),
-        '7':  load('DOWN_WALL.png'),
-        '8':  load('DOWN_RIGHT_WALL.png'),
-        '9':  load('TOP_RIGHT_WALL_2.png'),
-        '0':  load('TOP_LEFT_WALL_2.png'),
-        '-':  load('DOWN_LEFT_WALL_2.png'),
-        '=':  load('DOWN_RIGHT_WALL_2.png'),
-        'r':  load('DOOR_RIGHT.png'),
-        'l':  load('DOOR_LEFT.png'),
-        'b':  load('DOOR_TOP.png'),
-        't':  load('DOOR_BOTTOM.png'),
-        'B':  load('BOX.png'),
-        'B1': load('BARREL.png'),
-        'M':  load('MONSTER.png'),
-        'P':  load('UPSTAIRS.png'),
-        'C':  load('CHEST.png'),
-        'T':  load('TORCH.png'),
-        'E':  load('DOWNSTAIRS.png'),
-        ' ':  load('DARK.png'),
-        '.':  load('FLOOR.png'),
-        '.0': load('FLOOR_CRACKED_0.png'),
-        '.1': load('FLOOR_CRACKED_1.png'),
-        '.2': load('FLOOR_CRACKED_2.png'),
-        '.3': load('FLOOR_CRACKED_3.png')
+        '1':  load_tile('RIGHT_WALL.png'),
+        '2':  load_tile('TOP_RIGHT_WALL.png'),
+        '3':  load_tile('DOWN_WALL.png'),
+        '4':  load_tile('TOP_LEFT_WALL.png'),
+        '5':  load_tile('LEFT_WALL.png'),
+        '6':  load_tile('DOWN_LEFT_WALL.png'),
+        '7':  load_tile('DOWN_WALL.png'),
+        '8':  load_tile('DOWN_RIGHT_WALL.png'),
+        '9':  load_tile('TOP_RIGHT_WALL_2.png'),
+        '0':  load_tile('TOP_LEFT_WALL_2.png'),
+        '-':  load_tile('DOWN_LEFT_WALL_2.png'),
+        '=':  load_tile('DOWN_RIGHT_WALL_2.png'),
+        'r':  load_tile('DOOR_RIGHT.png'),
+        'l':  load_tile('DOOR_LEFT.png'),
+        'b':  load_tile('DOOR_TOP.png'),
+        't':  load_tile('DOOR_BOTTOM.png'),
+        'B':  load_tile('BOX.png'),
+        'B1': load_tile('BARREL.png'),
+        'M':  load_tile('MONSTER.png'),
+        'P':  load_tile('UPSTAIRS.png'),
+        'C':  load_tile('CHEST.png'),
+        'T':  load_tile('TORCH.png'),
+        'E':  load_tile('DOWNSTAIRS.png'),
+        ' ':  load_tile('DARK.png'),
+        '.':  load_tile('FLOOR.png'),
+        '.0': load_tile('FLOOR_CRACKED_0.png'),
+        '.1': load_tile('FLOOR_CRACKED_1.png'),
+        '.2': load_tile('FLOOR_CRACKED_2.png'),
+        '.3': load_tile('FLOOR_CRACKED_3.png')
     }
 
     def __init__(self, tile_type: str, x: int, y: int, all_sprites_list: pygame.sprite.Group, *args):

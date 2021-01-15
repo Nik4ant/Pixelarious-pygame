@@ -3,9 +3,9 @@ import pygame
 from random import choice, random
 
 from entities.tile import Tile
-from config import TILE_SIZE
 from entities.player import Player
-from engine import load_image
+from config import TILE_SIZE
+
 
 EMPTIES = ' .@MPElrtb'
 BARRIERS = '1234567890-=BC'
@@ -1104,7 +1104,8 @@ def get_random_item_by_chances(list_with_items: iter, chances: dict) -> any:
     keys = chances.keys()
     random_percent = random() * 100
 
-    # TODO: somw stuff here
+    # TODO: some stuff
+    # NOTE: Никак не могу добраться до этого (Никита)
     for i, key in enumerate(keys):
         if i + 1 != len(keys):
             pass
@@ -1133,6 +1134,7 @@ def initialise_level(level_map, all_sprites, barriers_group):
                 new_player.rect.centery = y * TILE_SIZE + TILE_SIZE * 0.5
                 Tile(level_map[y][x], x, y, all_sprites)
             elif level_map[y][x] in 'F.':
+                # NOTE: Так и должно быть? (Никита)
                 pass
             elif level_map[y][x] == 'B':
                 Tile(choice(('B', 'B1')), x, y, all_sprites, barriers_group)

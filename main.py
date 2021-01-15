@@ -1,4 +1,3 @@
-# FIXME: I need something like that (maybe): https://stackoverflow.com/a/64791087/13940541
 import os
 import sys
 
@@ -28,18 +27,19 @@ if __name__ == '__main__':
 
     # Вызов начального экрана
     code = start_screen.execute(screen)
-    # Словарь с действиями, которые зависят от кода из главного меню
-    ACTIONS = {
-        1: lambda: game.start(screen),
+    # Кортеж с действиями, которые зависят от кода из главного меню
+    ACTIONS = (
+        lambda: game.start(screen),
         # TODO:
-        2: lambda: None,
+        lambda: None,
         # TODO:
-        3: lambda: None,
+        lambda: None,
         # так и должно быть, т.к. это выход из игры
-        -1: lambda: None,
-    }
+        lambda: None,
+    )
     # Выполнение действия по коду
     ACTIONS[code]()
+
     # Закрытие pygame
     pygame.quit()
     pygame.mixer.quit()

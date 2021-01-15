@@ -52,7 +52,7 @@ def loading_screen(screen):
 
 
 def load_image(filename: str, path_to_folder="assets", colorkey=None):
-    fullname = os.path.join(path_to_folder, filename)
+    fullname = concat_two_file_paths(path_to_folder, filename)
     # если файл не существует, то выходим
     if not os.path.isfile(fullname):
         print(f"ОШИБКА! Не удалось загрузить изображение {filename}")
@@ -70,7 +70,13 @@ def load_image(filename: str, path_to_folder="assets", colorkey=None):
     return image
 
 
-def load(filename):
-    image = load_image(filename, 'assets\\tiles')
+def load_tile(filename: str) -> pygame.surface.Surface:
+    """
+    Функция нужна для загрузки тайлов и их расширения до TILE_SIZE.
+    (отдельно, т.к. при использовании load_image код выглядел бы некрасиво)
+    :param filename: Имя файла с тайлом
+    :return: Поверхность, растянутого изображение
+    """
+    image = load_image(filename, path_to_folder='assets\\tiles')
     image = pygame.transform.scale(image, (TILE_SIZE, TILE_SIZE))
     return image
