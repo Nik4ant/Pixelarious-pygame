@@ -11,9 +11,11 @@ from engine import *
 # FIXME: короче нужны идеи срочно
 class Camera:
     # зададим начальный сдвиг камеры
-    def __init__(self):
+    def __init__(self, screen_width, screen_height):
         self.dx = 0
         self.dy = 0
+        self.screen_width = screen_width
+        self.screen_height = screen_height
 
     # сдвинуть объект obj на смещение камеры
     def apply(self, obj):
@@ -21,9 +23,9 @@ class Camera:
         obj.rect.y += self.dy
 
     # позиционировать камеру на объекте target
-    def update(self, target, screen_width, screen_height):
-        self.dx = -(target.rect.x + target.rect.w // 2 - screen_width // 2)
-        self.dy = -(target.rect.y + target.rect.h // 2 - screen_height // 2)
+    def update(self, target):
+        self.dx = -(target.rect.x + target.rect.w // 2 - self.screen_width // 2)
+        self.dy = -(target.rect.y + target.rect.h // 2 - self.screen_height // 2)
 
 
 def start(screen: pygame.surface.Surface):
@@ -34,19 +36,20 @@ def start(screen: pygame.surface.Surface):
     # Группа со всеми спрайтами
     all_sprites = pygame.sprite.Group()
     # Группа со спрайтами тайлов
-    colidable_tiles_group = pygame.sprite.Group()
+    collidable_tiles_group = pygame.sprite.Group()
 
     is_game_open = True
     clock = pygame.time.Clock()  # Часы
 
     level, new_seed = generate_new_level()
-    player = initialise_level(level, all_sprites, colidable_tiles_group)
-    camera = Camera()
+    player = initialise_level(level, all_sprites, collidable_tiles_group)
+    camera = Camera(screen_width, screen_height)
 
     # Группа со спрайтами игрока и прицелом
     player_sprites = pygame.sprite.Group()
     player_sprites.add(player)
     player_sprites.add(player.scope)  # прицел игрока
+    all_sprites.add(player)
 
     # Фоновая музыка
     pygame.mixer.music.load(os.path.join("assets/audio", "game_bg.ogg"))
@@ -67,10 +70,11 @@ def start(screen: pygame.surface.Surface):
         all_sprites.update()
 
         # Обновление объектов относительно камеры
-        # camera.update(player, screen_width, screen_height)
-        # for sprite in all_sprites:
-            # camera.apply(sprite)
+        camera.update(player)
+        for sprite in all_sprites:
+            camera.apply(sprite)
 
+        # pygame.draw.line(screen, 'red', (x1, y1), (player.rect.x, player.rect.y))
         # Отрисовка всех спрайтов
         all_sprites.draw(screen)
         player_sprites.draw(screen)
