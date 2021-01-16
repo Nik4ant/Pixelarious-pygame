@@ -24,8 +24,8 @@ class Camera:
 
     # позиционировать камеру на объекте target
     def update(self, target):
-        self.dx = -(target.rect.x + target.rect.w // 2 - self.screen_width // 2)
-        self.dy = -(target.rect.y + target.rect.h // 2 - self.screen_height // 2)
+        self.dx = -(target.rect.x + target.rect.w * 0.5 - self.screen_width * 0.5)
+        self.dy = -(target.rect.y + target.rect.h * 0.5 - self.screen_height * 0.5)
 
 
 def start(screen: pygame.surface.Surface):
@@ -74,7 +74,6 @@ def start(screen: pygame.surface.Surface):
         for sprite in all_sprites:
             camera.apply(sprite)
 
-        # pygame.draw.line(screen, 'red', (x1, y1), (player.rect.x, player.rect.y))
         # Отрисовка всех спрайтов
         all_sprites.draw(screen)
         player_sprites.draw(screen)

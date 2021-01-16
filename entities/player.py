@@ -48,7 +48,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.centery = y
 
         # Скорость
-        self.speed = TILE_SIZE * 0.
+        self.speed = TILE_SIZE * 0.1
         self.dx = self.dy = 0
 
         # Направление взгляда

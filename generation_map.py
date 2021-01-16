@@ -1104,10 +1104,9 @@ def initialise_level(level_map, all_sprites, barriers_group):
             if true_with_chance(15):
                 Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
             if level_map[y][x] == 'P':
-                new_player = Player(x, y)
-                # Помещаем игрока в центр этого тайла
-                new_player.rect.centerx = x * TILE_SIZE + TILE_SIZE * 0.5
-                new_player.rect.centery = y * TILE_SIZE + TILE_SIZE * 0.5
+                # Помещаем игрока в центр текущего тайла
+                new_player = Player(x * TILE_SIZE + TILE_SIZE * 0.5,
+                                    y * TILE_SIZE + TILE_SIZE * 0.5)
                 Tile(level_map[y][x], x, y, all_sprites)
             elif level_map[y][x] in 'F.':
                 pass
