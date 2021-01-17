@@ -1098,23 +1098,37 @@ def initialise_level(level_map, all_sprites, barriers_group):
     """
     new_player = None
     level_map = [list(i) for i in level_map]
+    monsters = []
     for y in range(len(level_map)):
         for x in range(len(level_map[y])):
-            Tile('.', x, y, all_sprites)
-            if true_with_chance(15):
-                Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
             if level_map[y][x] == 'P':
+                Tile('.', x, y, all_sprites)
+                if true_with_chance(15):
+                    Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 # Помещаем игрока в центр текущего тайла
                 new_player = Player(x * TILE_SIZE + TILE_SIZE * 0.5,
                                     y * TILE_SIZE + TILE_SIZE * 0.5)
                 Tile(level_map[y][x], x, y, all_sprites)
+            elif level_map[y][x] in 'M':
+                Tile('.', x, y, all_sprites)
+                if true_with_chance(15):
+                    Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
+                # monsters.append(Monster(x * TILE_SIZE + TILE_SIZE * 0.5,
+                #                         y * TILE_SIZE + TILE_SIZE * 0.5))
             elif level_map[y][x] in 'F.':
-                pass
+                Tile('.', x, y, all_sprites)
+                if true_with_chance(15):
+                    Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
             elif level_map[y][x] == 'B':
-                Tile(choice(('B', 'B1')), x, y, all_sprites, barriers_group)
+                Tile(('B', 'B1')[true_with_chance(30)], x, y, all_sprites, barriers_group)
             elif level_map[y][x] in '1234567890-=':
                 Tile(level_map[y][x], x, y, all_sprites, barriers_group)
-            else:
+            elif level_map[y][x] in 'rbltT':
+                Tile('.', x, y, all_sprites)
+                if true_with_chance(15):
+                    Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
+                Tile(level_map[y][x], x, y, all_sprites)
+            elif level_map[y][x] != ' ':
                 Tile(level_map[y][x], x, y, all_sprites)
     # вернем игрока
-    return new_player
+    return new_player, monsters
