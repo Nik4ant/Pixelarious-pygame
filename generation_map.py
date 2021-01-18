@@ -1100,7 +1100,13 @@ def initialise_level(level_map, all_sprites, barriers_group):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 else:
                     Tile('.', x, y, all_sprites)
-                Tile(level_map[y][x], x, y, all_sprites)
+
+                if level_map[y][x] == 'l':
+                    Tile('D', x - 0.5, y, all_sprites)
+                elif level_map[y][x] == 't':
+                    Tile('D', x, y - 0.5, all_sprites)
+                elif level_map[y][x] == 'T':
+                    Tile(level_map[y][x], x, y, all_sprites)
             elif level_map[y][x] != ' ':
                 Tile(level_map[y][x], x, y, all_sprites)
     # вернем игрока и монстров
