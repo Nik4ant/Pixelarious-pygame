@@ -42,7 +42,7 @@ def start(screen: pygame.surface.Surface):
     clock = pygame.time.Clock()  # Часы
 
     level, new_seed = generate_new_level()
-    player = initialise_level(level, all_sprites, collidable_tiles_group)
+    player, monsters = initialise_level(level, all_sprites, collidable_tiles_group)
     camera = Camera(screen_width, screen_height)
 
     # Группа со спрайтами игрока и прицелом
