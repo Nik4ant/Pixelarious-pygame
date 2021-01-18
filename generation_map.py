@@ -630,45 +630,45 @@ l....E....r
 '''
 
 COVERT_ROOM_1 = '''
-03333F33339
+03333333339
 5.........1
 5.........1
 5..T...T..1
 5....C....1
-F...C.C...F
+5...C.C...1
 5....C....1
 5..T...T..1
 5.........1
 5.........1
--7777F7777=
+-777777777=
 '''
 
 COVERT_ROOM_2 = '''
-03333F33339
+03333333339
 5.........1
 5.........1
 5..T...T..1
 5...C.C...1
-F.........F
+5.........1
 5...C.C...1
 5..T...T..1
 5.........1
 5.........1
--7777F7777=
+-777777777=
 '''
 
 COVERT_ROOM_3 = '''
-03333F33339
+03333333339
 5.........1
 5.........1
 5.........1
 5.........1
-F.........F
+5.........1
 5.........1
 5.........1
 5........T1
 5.......TC1
--7777F7777=
+-777777777=
 '''
 
 # Группы комнат по использованию
@@ -728,116 +728,95 @@ SECRET_ROOMS = {
 
 # Карты комнат в уровнях
 LEVEL_1 = '''
-  RR RRR RR  
- RSRR RRRR   
-RRR RRRR RRE 
- RRRR RR RRRR
-RRR RRRRR    
-  RR R RRRRRC
-'''      # 50
+RRS CRR
+R     R
+RRR RRR
+  R R  
+RRR RRR
+R     R
+RRRERRR
+'''      # 31
 
 LEVEL_2 = '''
-   R  RRR SR 
- RRRR R RRRRR
-RRR RRRRR   R
-RR RRR    RRR
- RRRRR RRRR C
-RER RRRRR    
-'''      # 50
+   R  C
+ RRRR R
+SR  RRR
+ R  R  
+ RRRRR 
+RE   RR
+'''      # 23
 
 LEVEL_3 = '''
- RR   R   RRC
-  RRRRRRERR  
-RRR  RRR  RRR
-  RRR   RRR  
-RRR  RRR  RRR
-  RSRRRRRRR  
- RR   R   RR 
-'''      # 50
+  C    
+ ERRRR 
+  R  RR
+  RRR R
+  R  RR
+ SRRRR 
+'''      # 21
 
 LEVEL_4 = '''
-RRRR RRR RS C
- R  R RRRRR R
-RR RRR R RRRR
-R R R  R  RR 
- RRRR  R RRRE
-RRR RRRRRR  R
-'''      # 50
+SRRR  C
+ R    R
+ R  RRR
+ R  R  
+ RRRR  
+    RRE
+'''      # 20
 
 LEVEL_5 = '''
-CR   RR RRRER
- RR R RRR R  
-  RRRRR RRR  
-RRR  R R R RR
-R R RRRRRRRR 
-  RSR R   R  
-   R  RRRRR  
-'''      # 50
+ER   RS
+ RR RR 
+  RRR  
+ RR RR 
+RR   RR
+C     C
+'''      # 21
 
 LEVEL_6 = '''
-  RRR     
- RR RRRRRR
- R     R R
- RRRRR R S
-  R    R  
-RRR RR RR 
-  R  RRR  
-R RRRRR   
-R R   RRR 
-RRE  RR RC
-'''      # 50
+  RRR  
+ RR RRS
+ R     
+ RRRRE 
+  R    
+RRRRRC 
+'''      # 21
 
 LEVEL_7 = '''
- E  RRRRRR
- RRRR   R 
-  R RR  RR
-  R  R   C
-  RRRRRR  
-  R    RRR
- RRRR  R  
- R  R RRR 
-C  RRRR RR
-RRRR  RR S
-'''      # 50
+ E  RRR
+ RRRR  
+  R RR 
+  R  R 
+  RRRRR
+  R   S
+'''      # 20
 
 LEVEL_8 = '''
-   RRRRRRR
- ERR  R  R
- R    R  R
- R    R  R
-RRRRR RRRR
- R  R  R  
-RR  R  R  
- R  R RRRR
- R RRRR  R
-CRRR     S
-'''      # 50
+   RRRR
+ ERR  R
+RR    R
+ R    R
+RRRRE S
+ R     
+'''      # 20
 
 LEVEL_9 = '''
- ER    RR
-  R  RRR 
-  RRRR   
-RRR  RRRR
-  R     R
- RRRR   R
-  R R RRR
-  R  RR  
- RR   RRR
-  S  CR  
-'''      # 50
+ ER RR
+  R  R
+  RRRR
+RRR  R
+  R  S
+CRRRR 
+'''      # 21
 
 LEVEL_10 = '''
-  RRR  S  
-    R  RRR
-C   RRRR R
-RR  R  RRR
- RRRR    R
-    R   RR
- RRRR   R 
- R    RRRR
-RR R RR  E
- RRRRR  RR
-'''      # 50
+   RRRS
+C   R  
+R   RRR
+RR  R  
+ RRRRR 
+ER R   
+'''      # 21
 
 # Группа уровней
 FORMS = {
@@ -933,17 +912,6 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
 
     for i in range(len(level)):
         for j in range(len(level[i])):
-            # Убираем фпальшивые двери там, где они не нужны
-            if level[i][j] == 'F':
-                if j == 0 or level[i][j - 1] == ' ':
-                    level[i][j] = '5'
-                elif j + 1 == len(level[i]) or level[i][j + 1] == ' ':
-                    level[i][j] = '1'
-                elif i == 0 or level[i - 1][j] == ' ':
-                    level[i][j] = '3'
-                elif i + 1 == len(level) or level[i + 1][j] == ' ':
-                    level[i][j] = '7'
-
             if level[i][j] not in 'rtlb':
                 continue
 
