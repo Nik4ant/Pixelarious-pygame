@@ -54,13 +54,13 @@ l.........r
 EVIL_ROOM_2 = '''
 03338t63339
 5.......MC1
-5.43333333=
-5.677777779
+5.47777777=
+5.633333339
 8....B...B6
 l.........r
 2.T.......4
--33333332.1
-077777778.1
+-77777772.1
+033333338.1
 5CM.......1
 -7772b4777=
 '''
@@ -166,7 +166,7 @@ l....T....r
 EVIL_ROOM_10 = '''
   038t639  
   5.....1  
-038.....679
+038.....639
 5B........1
 8...472...6
 l..T1 5...r
@@ -987,7 +987,8 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
                         level[i][j] = ' '
 
                         if true_with_chance(LONG_BLOCK_CHANCE, seed, user_seed) and \
-                                level[i + 3][j + 2] == '.' and level[i + 2][j - 1] == '.':
+                                level[i + 3][j + 2] == '.' and level[i + 2][j - 1] == '.' and \
+                                level[i + 2][j + 1] == '.':
                             level[i + 2][j] = '3'
                             level[i + 2][j - 1] = '6'
                             level[i + 2][j + 1] = '8'
@@ -1020,8 +1021,8 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
                             level[i - 1][j + 2] = '2'
                             level[i + 1][j + 2] = '8'
                             level[i][j + 1] = ' '
-                            level[i - 1][j + 1] = '3'
-                            level[i + 1][j + 1] = '7'
+                            level[i - 1][j + 1] = '7'
+                            level[i + 1][j + 1] = '3'
                         else:
                             level[i][j + 1] = '5'
                             level[i - 1][j + 1] = '2'
