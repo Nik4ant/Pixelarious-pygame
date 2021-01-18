@@ -10,6 +10,11 @@ from config import TILE_SIZE
 EMPTIES = ' .@MPElrtb'
 BARRIERS = '1234567890-=BC'
 
+SHORT_BLOCK_CHANCE = 45
+LONG_BLOCK_CHANCE = 35
+
+CRACKED_FLOOR_CHANCE = 15
+
 
 # "0-9" + "-=" - Walls
 # . - Floor
@@ -832,13 +837,10 @@ FORMS = {
     'L10': LEVEL_10
 }
 
-SHORT_BLOCK_CHANCE = 45
-LONG_BLOCK_CHANCE = 35
-
 
 # Сама функция генерации
 def generate_new_level(user_seed=None) -> [str, ..., str]:
-    '''
+    """
     Создаёт список строк, каждый символ в строке означает определенный тайл
     Генерация происходит псевдорандомно, выбирая случайный шаблон уровня,
     а затем для каждого символа формы выбирает случайную комнату. 
@@ -847,7 +849,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
     Если генерация уже происходила и у вас есть сид, вы можете передать его этой функции,
     тогда карта будет сгенерирована по тем же параметрам. 
     Совпадение будет по форме уровня, каждой комнате и блоках из стен в комнатах.
-    '''
+    """
     level = []
     seed = []
     if user_seed:
@@ -1036,7 +1038,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
 
 # Функция, возвращающая случайное булевое значение с вводящимся шансом
 def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: list = None) -> bool:
-    '''
+    """
     Функция принимает целое число и переводит в коэффицент, 0 <= k <= 1.
     Затем генерирует случайное число с помощью функции рандом.
     Если случайное число меньше либо равно коэффиценту, функция возвращает True.
@@ -1045,7 +1047,7 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
     :param seed: в сид записывается полученное значение
     :param user_seed: если пользовательский сид передан, значение берётся из него
     :return: булевое значение (True/False)
-    '''
+    """
     if user_seed and seed:
         seed.append(user_seed[0])
         del user_seed[0]
@@ -1071,7 +1073,7 @@ def initialise_level(level_map, all_sprites, barriers_group):
     for y in range(len(level_map)):
         for x in range(len(level_map[y])):
             if level_map[y][x] == 'P':
-                if true_with_chance(15):
+                if true_with_chance(CRACKED_FLOOR_CHANCE):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 else:
                     Tile('.', x, y, all_sprites)
@@ -1080,14 +1082,14 @@ def initialise_level(level_map, all_sprites, barriers_group):
                                     y * TILE_SIZE + TILE_SIZE * 0.5)
                 Tile(level_map[y][x], x, y, all_sprites)
             elif level_map[y][x] in 'M':
-                if true_with_chance(15):
+                if true_with_chance(CRACKED_FLOOR_CHANCE):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 else:
                     Tile('.', x, y, all_sprites)
                 # monsters.append(Monster(x * TILE_SIZE + TILE_SIZE * 0.5,
                 #                         y * TILE_SIZE + TILE_SIZE * 0.5))
             elif level_map[y][x] in 'F.':
-                if true_with_chance(15):
+                if true_with_chance(CRACKED_FLOOR_CHANCE):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 else:
                     Tile('.', x, y, all_sprites)
@@ -1096,7 +1098,7 @@ def initialise_level(level_map, all_sprites, barriers_group):
             elif level_map[y][x] in '1234567890-=':
                 Tile(level_map[y][x], x, y, all_sprites, barriers_group)
             elif level_map[y][x] in 'rbltT':
-                if true_with_chance(15):
+                if true_with_chance(CRACKED_FLOOR_CHANCE):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 else:
                     Tile('.', x, y, all_sprites)
