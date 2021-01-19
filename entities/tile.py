@@ -17,12 +17,9 @@ class Tile(pygame.sprite.Sprite):
         '0':  load_tile('TOP_LEFT_CORNER.png'),
         '-':  load_tile('DOWN_LEFT_CORNER_FLAT.png'),
         '=':  load_tile('DOWN_RIGHT_CORNER_FLAT.png'),
-        'r':  load_tile('DOOR_RIGHT.png'),
-        'l':  load_tile('DOOR_LEFT.png'),
-        'b':  load_tile('DOOR_TOP.png'),
-        't':  load_tile('DOOR_BOTTOM.png'),
-        'B':  load_tile('BOX.png'),
-        'B1': load_tile('BARREL.png'),
+        'D':  load_tile('DOOR.png'),
+        'B':  load_tile('BARREL.png'),
+        'B1': load_tile('BOX.png'),
         'P':  load_tile('UPSTAIRS.png'),
         'C':  load_tile('CHEST.png'),
         'T':  load_tile('TORCH.png'),
@@ -34,7 +31,7 @@ class Tile(pygame.sprite.Sprite):
         '.3': load_tile('FLOOR_CRACKED_3.png')
     }
 
-    def __init__(self, tile_type: str, x: int, y: int, *groups):
+    def __init__(self, tile_type: str, x: float, y: float, *groups):
         super().__init__(*groups)
 
         self.type = tile_type  # тип тайла
