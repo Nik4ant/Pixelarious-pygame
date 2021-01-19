@@ -6,9 +6,10 @@ from entities.tile import Tile
 from entities.player import Player
 from config import TILE_SIZE
 
+SHORT_BLOCK_CHANCE = 45
+LONG_BLOCK_CHANCE = 35
 
-EMPTIES = ' .@MPElrtb'
-BARRIERS = '1234567890-=BC'
+CRACKED_FLOOR_CHANCE = 15
 
 
 # "0-9" + "-=" - Walls
@@ -41,7 +42,7 @@ EVIL_ROOM_1 = '''
 03338t63339
 5.........1
 5.M.....M.1
-5..B.....C1
+5..B......1
 8.........6
 l.........r
 2...B.....4
@@ -61,7 +62,7 @@ l.........r
 2.T.......4
 -77777772.1
 033333338.1
-5CM.......1
+5.M.......1
 -7772b4777=
 '''
 
@@ -211,7 +212,7 @@ EVIL_ROOM_13 = '''
 5B........1
 5.........1
 8...M.....6
-l...TCM...r
+l....TM...r
 2...M.....4
 5.........1
 5.........1
@@ -229,7 +230,7 @@ l....T....r
 2.........4
 5B........1
 -2B......M1
- -2.....MC1
+ -2.....M.1
   -72b4777=
 '''
 
@@ -253,7 +254,7 @@ EVIL_ROOM_16 = '''
 5....M....1
 5..47772..1
 8..10338..6
-l..15C....r
+l..15.....r
 2..1-772T.4
 5..63338..1
 5....MB...1
@@ -311,7 +312,7 @@ EVIL_ROOM_20 = '''
 8......B..6
 l.....BB..r
 2...T.....4
--2......C4=
+-2.......4=
  -2M...M4= 
   -2...4=  
    -2b4=   
@@ -336,7 +337,7 @@ EVIL_ROOM_22 = '''
 -7772.4777=
     5.1    
     5.69   
-33338.C6333
+33338..6333
 l.........r
 77772.47777
     5.69   
@@ -367,7 +368,7 @@ EVIL_ROOM_24 = '''
 38.M.....63
 l....T....r
 72.......47
- 5..M...C1 
+ 5..M....1 
  5.B..B.B1 
  -772.477= 
     5b1    
@@ -378,7 +379,7 @@ EVIL_ROOM_25 = '''
     5.1    
   038.639  
   5....B1  
-338M...C633
+338M....633
 l....T....r
 772.....477
   5M....1  
@@ -461,7 +462,7 @@ DOUBLE_EVIL_ROOM_1 = '''
 03338t6333903338t63339
 5.........68.........1
 -2...............B..4=
-08.42B....42C....42.69
+08.42B....42.....42.69
 8..68..T..68..T..68..6
 l....................r
 2B.42..T..42..T..42..4
@@ -501,7 +502,7 @@ l........1  5........r
 
 DOUBLE_EVIL_ROOM_4 = '''
 03338t6333333338t63339
-5..M..............M..1
+5..M..............MC.1
 5.42.42.42..42.42.42.1
 5.68.68.68..68.68.68.1
 8..B...T......T......6
@@ -517,7 +518,7 @@ DOUBLE_EVIL_ROOM_5 = '''
 03338t6333333338t63339
 5....................1
 5.472B.472..472..472.1
-5.1 5..1 5..1 5..1 5.1
+5.1 5..1 5.C1 5..1 5.1
 8.638..638.M638..638.6
 l.......T....T.......r
 2.472..472M.472..472.4
@@ -533,7 +534,7 @@ DOUBLE_EVIL_ROOM_6 = '''
 5.BBBBBBBBBBBBBBBBBB.1
 5.B.T..B....T........1
 8.B.BB.BBBBB.BBBBBBB.6
-l.B.B...T..B.B..T..B.r
+l.B.B...T.CB.B..T..B.r
 2.B.BBBBBBBB.BBBBB.B.4
 5.B..T........T....B.1
 5.BBBBBBBBBBBBBBBBBB.1
@@ -593,7 +594,7 @@ l.........r
 2T....42..4
 5.....1-77=
 5B....63339
--72......C1
+-72.......1
   -72b4777=
 '''
 
@@ -630,45 +631,59 @@ l....E....r
 '''
 
 COVERT_ROOM_1 = '''
-03333F33339
+03333333339
 5.........1
 5.........1
 5..T...T..1
 5....C....1
-F...C.C...F
+5...C.C...1
 5....C....1
 5..T...T..1
 5.........1
 5.........1
--7777F7777=
+-777777777=
 '''
 
 COVERT_ROOM_2 = '''
-03333F33339
+03333333339
 5.........1
 5.........1
 5..T...T..1
 5...C.C...1
-F.........F
+5.........1
 5...C.C...1
 5..T...T..1
 5.........1
 5.........1
--7777F7777=
+-777777777=
 '''
 
 COVERT_ROOM_3 = '''
-03333F33339
+03333333339
+5CT.....TC1
+5T.......T1
 5.........1
 5.........1
 5.........1
 5.........1
-F.........F
+5.........1
+5T.......T1
+5CT.....TC1
+-777777777=
+'''
+
+COVERT_ROOM_4 = '''
+03333333339
+5.........1
+5.C.....C.1
+5..T...T..1
 5.........1
 5.........1
-5........T1
-5.......TC1
--7777F7777=
+5.........1
+5..T...T..1
+5.C.....C.1
+5.........1
+-777777777=
 '''
 
 # Группы комнат по использованию
@@ -728,116 +743,95 @@ SECRET_ROOMS = {
 
 # Карты комнат в уровнях
 LEVEL_1 = '''
-  RR RRR RR  
- RSRR RRRR   
-RRR RRRR RRE 
- RRRR RR RRRR
-RRR RRRRR    
-  RR R RRRRRC
-'''      # 50
+RRS CRR
+R     R
+RRR RRR
+  R R  
+RRR RRR
+R     R
+RRRERRR
+'''      # 31
 
 LEVEL_2 = '''
-   R  RRR SR 
- RRRR R RRRRR
-RRR RRRRR   R
-RR RRR    RRR
- RRRRR RRRR C
-RER RRRRR    
-'''      # 50
+   R  C
+ RRRR R
+SR  RRR
+ R  R  
+ RRRRR 
+RE   RR
+'''      # 23
 
 LEVEL_3 = '''
- RR   R   RRC
-  RRRRRRERR  
-RRR  RRR  RRR
-  RRR   RRR  
-RRR  RRR  RRR
-  RSRRRRRRR  
- RR   R   RR 
-'''      # 50
+  C    
+ ERRRR 
+  R  RR
+  RRR R
+  R  RR
+ SRRRR 
+'''      # 21
 
 LEVEL_4 = '''
-RRRR RRR RS C
- R  R RRRRR R
-RR RRR R RRRR
-R R R  R  RR 
- RRRR  R RRRE
-RRR RRRRRR  R
-'''      # 50
+SRRR  C
+ R    R
+ R  RRR
+ R  R  
+ RRRR  
+    RRE
+'''      # 20
 
 LEVEL_5 = '''
-CR   RR RRRER
- RR R RRR R  
-  RRRRR RRR  
-RRR  R R R RR
-R R RRRRRRRR 
-  RSR R   R  
-   R  RRRRR  
-'''      # 50
+ER   RS
+ RR RR 
+  RRR  
+ RR RR 
+RR   RR
+C     C
+'''      # 21
 
 LEVEL_6 = '''
-  RRR     
- RR RRRRRR
- R     R R
- RRRRR R S
-  R    R  
-RRR RR RR 
-  R  RRR  
-R RRRRR   
-R R   RRR 
-RRE  RR RC
-'''      # 50
+  RRR  
+ RR RRS
+ R     
+ RRRRE 
+  R    
+RRRRRC 
+'''      # 21
 
 LEVEL_7 = '''
- E  RRRRRR
- RRRR   R 
-  R RR  RR
-  R  R   C
-  RRRRRR  
-  R    RRR
- RRRR  R  
- R  R RRR 
-C  RRRR RR
-RRRR  RR S
-'''      # 50
+ E  RRR
+ RRRR  
+  R RR 
+  R  R 
+  RRRRR
+  R   S
+'''      # 20
 
 LEVEL_8 = '''
-   RRRRRRR
- ERR  R  R
- R    R  R
- R    R  R
-RRRRR RRRR
- R  R  R  
-RR  R  R  
- R  R RRRR
- R RRRR  R
-CRRR     S
-'''      # 50
+   RRRR
+ ERR  R
+RR    R
+ R    R
+RRRRE S
+ R     
+'''      # 20
 
 LEVEL_9 = '''
- ER    RR
-  R  RRR 
-  RRRR   
-RRR  RRRR
-  R     R
- RRRR   R
-  R R RRR
-  R  RR  
- RR   RRR
-  S  CR  
-'''      # 50
+ ER RR
+  R  R
+  RRRR
+RRR  R
+  R  S
+CRRRR 
+'''      # 21
 
 LEVEL_10 = '''
-  RRR  S  
-    R  RRR
-C   RRRR R
-RR  R  RRR
- RRRR    R
-    R   RR
- RRRR   R 
- R    RRRR
-RR R RR  E
- RRRRR  RR
-'''      # 50
+   RRRS
+C   R  
+R   RRR
+RR  R  
+ RRRRR 
+ER R   
+'''      # 21
 
 # Группа уровней
 FORMS = {
@@ -853,13 +847,10 @@ FORMS = {
     'L10': LEVEL_10
 }
 
-SHORT_BLOCK_CHANCE = 45
-LONG_BLOCK_CHANCE = 35
-
 
 # Сама функция генерации
 def generate_new_level(user_seed=None) -> [str, ..., str]:
-    '''
+    """
     Создаёт список строк, каждый символ в строке означает определенный тайл
     Генерация происходит псевдорандомно, выбирая случайный шаблон уровня,
     а затем для каждого символа формы выбирает случайную комнату. 
@@ -868,7 +859,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
     Если генерация уже происходила и у вас есть сид, вы можете передать его этой функции,
     тогда карта будет сгенерирована по тем же параметрам. 
     Совпадение будет по форме уровня, каждой комнате и блоках из стен в комнатах.
-    '''
+    """
     level = []
     seed = []
     if user_seed:
@@ -933,17 +924,6 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
 
     for i in range(len(level)):
         for j in range(len(level[i])):
-            # Убираем фпальшивые двери там, где они не нужны
-            if level[i][j] == 'F':
-                if j == 0 or level[i][j - 1] == ' ':
-                    level[i][j] = '5'
-                elif j + 1 == len(level[i]) or level[i][j + 1] == ' ':
-                    level[i][j] = '1'
-                elif i == 0 or level[i - 1][j] == ' ':
-                    level[i][j] = '3'
-                elif i + 1 == len(level) or level[i + 1][j] == ' ':
-                    level[i][j] = '7'
-
             if level[i][j] not in 'rtlb':
                 continue
 
@@ -1068,7 +1048,7 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
 
 # Функция, возвращающая случайное булевое значение с вводящимся шансом
 def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: list = None) -> bool:
-    '''
+    """
     Функция принимает целое число и переводит в коэффицент, 0 <= k <= 1.
     Затем генерирует случайное число с помощью функции рандом.
     Если случайное число меньше либо равно коэффиценту, функция возвращает True.
@@ -1077,7 +1057,7 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
     :param seed: в сид записывается полученное значение
     :param user_seed: если пользовательский сид передан, значение берётся из него
     :return: булевое значение (True/False)
-    '''
+    """
     if user_seed and seed:
         seed.append(user_seed[0])
         del user_seed[0]
@@ -1103,40 +1083,43 @@ def initialise_level(level_map, all_sprites, barriers_group):
     for y in range(len(level_map)):
         for x in range(len(level_map[y])):
             if level_map[y][x] == 'P':
-                Tile('.', x, y, all_sprites)
-                if true_with_chance(15):
+                if true_with_chance(CRACKED_FLOOR_CHANCE):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
+                else:
+                    Tile('.', x, y, all_sprites)
                 # Помещаем игрока в центр текущего тайла
                 new_player = Player(x * TILE_SIZE + TILE_SIZE * 0.5,
-                                    y * TILE_SIZE + TILE_SIZE * 0.5,
-                                    barriers_group)
+                                    y * TILE_SIZE + TILE_SIZE * 0.5)
                 Tile(level_map[y][x], x, y, all_sprites)
-
             elif level_map[y][x] in 'M':
-                Tile('.', x, y, all_sprites)
-                if true_with_chance(15):
+                if true_with_chance(CRACKED_FLOOR_CHANCE):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
+                else:
+                    Tile('.', x, y, all_sprites)
                 # monsters.append(Monster(x * TILE_SIZE + TILE_SIZE * 0.5,
                 #                         y * TILE_SIZE + TILE_SIZE * 0.5))
-
             elif level_map[y][x] in 'F.':
-                Tile('.', x, y, all_sprites)
-                if true_with_chance(15):
+                if true_with_chance(CRACKED_FLOOR_CHANCE):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
-
+                else:
+                    Tile('.', x, y, all_sprites)
             elif level_map[y][x] == 'B':
                 Tile(('B', 'B1')[true_with_chance(30)], x, y, all_sprites, barriers_group)
-
             elif level_map[y][x] in '1234567890-=':
                 Tile(level_map[y][x], x, y, all_sprites, barriers_group)
-
             elif level_map[y][x] in 'rbltT':
-                Tile('.', x, y, all_sprites)
-                if true_with_chance(15):
+                if true_with_chance(CRACKED_FLOOR_CHANCE):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
-                Tile(level_map[y][x], x, y, all_sprites)
+                else:
+                    Tile('.', x, y, all_sprites)
 
+                if level_map[y][x] == 'l':
+                    Tile('D', x - 0.5, y, all_sprites)
+                elif level_map[y][x] == 't':
+                    Tile('D', x, y - 0.5, all_sprites)
+                elif level_map[y][x] == 'T':
+                    Tile(level_map[y][x], x, y, all_sprites)
             elif level_map[y][x] != ' ':
                 Tile(level_map[y][x], x, y, all_sprites)
-    # вернем игрока
+    # вернем игрока и монстров
     return new_player, monsters

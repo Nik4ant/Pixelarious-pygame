@@ -49,7 +49,8 @@ def execute(screen: pygame.surface.Surface) -> int:
     # Фоновое изоюражение
     background_image = load_image("main_menu_BG.png", "assets/UI")
     # Меняем размер картинки в зависимости от размера экрана
-    pygame.transform.scale(background_image, (screen.get_width(), screen.get_height()))
+    background_image = pygame.transform.scale(background_image,
+                                              (screen.get_width(), screen.get_height()))
 
     # Делаем курсор мыши невидимым и загружаем вместо него своё изображение
     pygame.mouse.set_visible(False)
