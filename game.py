@@ -22,6 +22,11 @@ class Camera:
         obj.rect.x += self.dx
         obj.rect.y += self.dy
 
+    def apply_point(self, obj):
+        obj.start_posision = obj.start_posision[0] + self.dx, obj.start_posision[1] + self.dy
+        if obj.point:
+            obj.point = obj.point[0] + self.dx, obj.point[1] + self.dy
+
     # позиционировать камеру на объекте target
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w * 0.5 - self.screen_width * 0.5)
@@ -37,12 +42,14 @@ def start(screen: pygame.surface.Surface):
     all_sprites = pygame.sprite.Group()
     # Группа со спрайтами тайлов
     collidable_tiles_group = pygame.sprite.Group()
+    # Группа со спрайтами врагов
+    enemies_group = pygame.sprite.Group()
 
     is_game_open = True
     clock = pygame.time.Clock()  # Часы
 
     level, new_seed = generate_new_level()
-    player, monsters = initialise_level(level, all_sprites, collidable_tiles_group)
+    player, monsters = initialise_level(level, all_sprites, collidable_tiles_group, enemies_group)
     camera = Camera(screen_width, screen_height)
 
     # Группа со спрайтами игрока и прицелом
@@ -68,14 +75,19 @@ def start(screen: pygame.surface.Surface):
         # Обновление спрайтов игрока
         player_sprites.update()
         all_sprites.update()
+        enemies_group.update(player)
 
         # Обновление объектов относительно камеры
         camera.update(player)
         for sprite in all_sprites:
             camera.apply(sprite)
 
+        for enemy in enemies_group:
+            camera.apply_point(enemy)
+
         # Отрисовка всех спрайтов
         all_sprites.draw(screen)
+        enemies_group.draw(screen)
         player_sprites.draw(screen)
 
         clock.tick(FPS)
