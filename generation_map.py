@@ -4,6 +4,7 @@ from random import choice, random
 
 from entities.tile import Tile
 from entities.player import Player
+from entities.enemies import random_monster
 from config import TILE_SIZE
 
 SHORT_BLOCK_CHANCE = 45
