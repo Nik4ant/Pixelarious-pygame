@@ -1070,7 +1070,7 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
     return bool(int(seed[-1]))
 
 
-def initialise_level(level_map, all_sprites, barriers_group):
+def initialise_level(level_map, all_sprites, barriers_group, enemies_group):
     """
     В ДУШЕ НЕ....
     :param level_map: В ДУШЕ НЕ....
@@ -1096,8 +1096,7 @@ def initialise_level(level_map, all_sprites, barriers_group):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 else:
                     Tile('.', x, y, all_sprites)
-                # monsters.append(Monster(x * TILE_SIZE + TILE_SIZE * 0.5,
-                #                         y * TILE_SIZE + TILE_SIZE * 0.5))
+                monsters.append(random_monster(x, y, all_sprites, enemies_group))
             elif level_map[y][x] in 'F.':
                 if true_with_chance(CRACKED_FLOOR_CHANCE):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
