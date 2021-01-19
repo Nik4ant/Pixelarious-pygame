@@ -7,7 +7,7 @@ class Tile(pygame.sprite.Sprite):
     IMAGES = {
         '1':  load_tile('RIGHT_WALL.png'),
         '2':  load_tile('TOP_RIGHT_WALL_FLAT.png'),
-        '3':  load_tile('TOP_WALL.png'),
+        '3':  load_tile('WALL.png'),
         '4':  load_tile('TOP_LEFT_WALL_FLAT.png'),
         '5':  load_tile('LEFT_WALL.png'),
         '6':  load_tile('DOWN_LEFT_WALL.png'),
@@ -37,6 +37,6 @@ class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type: str, x: int, y: int, *groups):
         super().__init__(*groups)
 
-        self.tile_type = tile_type  # тип тайла
-        self.image = Tile.IMAGES[self.tile_type]
+        self.type = tile_type  # тип тайла
+        self.image = Tile.IMAGES[self.type]
         self.rect = self.image.get_rect().move(x * TILE_SIZE, y * TILE_SIZE)

@@ -1,4 +1,5 @@
 import pygame
+
 from engine import *
 from config import *
 
@@ -7,20 +8,20 @@ class Player(pygame.sprite.Sprite):
     """
     Класс отвечающий за игрока
     """
+
     # время перезарядки дэша в миллисекундах
-    # TODO: возможно снизить, если это будет слишком имбово? Или наоборот сделать динамичный геймлпей с этим?
-    dash_reload_time = 1000
+    dash_reload_time = 2000
     # сила дэша, которая устанавливается в самом начале
-    dash_force_base = 1.65
+    dash_force_base = 1.8
     # сила замедляющая дэш со временем
     dash_force_slower = 0.04
 
     # отметка при превышении которой, скорость игрока автоматически возврастает
-    min_delta_to_start_run = 0.95
+    min_delta_to_start_run = 0.96
     # Максимальное ускорение игрока (при перемещении, на дэш не влияет)
     max_delta_movements = 1
     # сила с которой игрок будет набирать/уменьшать свою скорость
-    delta_changer = 0.05
+    delta_changer = 0.036
 
     # Канал для звуков
     # TODO: если не будет так много звуков может быть просто выпилить эту штуку?
@@ -43,12 +44,13 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (TILE_SIZE, TILE_SIZE))
         self.width, self.height = self.image.get_size()
 
+        # Графический прямоугольник
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.centery = y
 
         # Скорость
-        self.speed = TILE_SIZE * 0.1
+        self.speed = TILE_SIZE * 0.055
         self.dx = self.dy = 0
 
         # Направление взгляда

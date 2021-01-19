@@ -1108,27 +1108,34 @@ def initialise_level(level_map, all_sprites, barriers_group):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 # Помещаем игрока в центр текущего тайла
                 new_player = Player(x * TILE_SIZE + TILE_SIZE * 0.5,
-                                    y * TILE_SIZE + TILE_SIZE * 0.5)
+                                    y * TILE_SIZE + TILE_SIZE * 0.5,
+                                    barriers_group)
                 Tile(level_map[y][x], x, y, all_sprites)
+
             elif level_map[y][x] in 'M':
                 Tile('.', x, y, all_sprites)
                 if true_with_chance(15):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 # monsters.append(Monster(x * TILE_SIZE + TILE_SIZE * 0.5,
                 #                         y * TILE_SIZE + TILE_SIZE * 0.5))
+
             elif level_map[y][x] in 'F.':
                 Tile('.', x, y, all_sprites)
                 if true_with_chance(15):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
+
             elif level_map[y][x] == 'B':
                 Tile(('B', 'B1')[true_with_chance(30)], x, y, all_sprites, barriers_group)
+
             elif level_map[y][x] in '1234567890-=':
                 Tile(level_map[y][x], x, y, all_sprites, barriers_group)
+
             elif level_map[y][x] in 'rbltT':
                 Tile('.', x, y, all_sprites)
                 if true_with_chance(15):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 Tile(level_map[y][x], x, y, all_sprites)
+
             elif level_map[y][x] != ' ':
                 Tile(level_map[y][x], x, y, all_sprites)
     # вернем игрока
