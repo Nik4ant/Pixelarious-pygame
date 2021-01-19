@@ -1108,8 +1108,7 @@ def initialise_level(level_map, all_sprites, barriers_group):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 # Помещаем игрока в центр текущего тайла
                 new_player = Player(x * TILE_SIZE + TILE_SIZE * 0.5,
-                                    y * TILE_SIZE + TILE_SIZE * 0.5,
-                                    barriers_group)
+                                    y * TILE_SIZE + TILE_SIZE * 0.5)
                 Tile(level_map[y][x], x, y, all_sprites)
 
             elif level_map[y][x] in 'M':
