@@ -1071,7 +1071,7 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
     return bool(int(seed[-1]))
 
 
-def initialise_level(level_map, all_sprites, barriers_group, enemies_group):
+def initialise_level(level_map, all_sprites, barriers_group, enemies_group, doors_group):
     """
     В ДУШЕ НЕ....
     :param level_map: В ДУШЕ НЕ....
@@ -1104,7 +1104,17 @@ def initialise_level(level_map, all_sprites, barriers_group, enemies_group):
                 else:
                     Tile('.', x, y, all_sprites)
             elif level_map[y][x] == 'B':
+                if true_with_chance(CRACKED_FLOOR_CHANCE):
+                    Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
+                else:
+                    Tile('.', x, y, all_sprites)
                 Tile(('B', 'B1')[true_with_chance(30)], x, y, all_sprites, barriers_group)
+            elif level_map[y][x] == 'C':
+                if true_with_chance(CRACKED_FLOOR_CHANCE):
+                    Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
+                else:
+                    Tile('.', x, y, all_sprites)
+                Tile(level_map[y][x], x, y, all_sprites)
             elif level_map[y][x] in '1234567890-=':
                 Tile(level_map[y][x], x, y, all_sprites, barriers_group)
             elif level_map[y][x] in 'rbltT':
@@ -1114,9 +1124,9 @@ def initialise_level(level_map, all_sprites, barriers_group, enemies_group):
                     Tile('.', x, y, all_sprites)
 
                 if level_map[y][x] == 'l':
-                    Tile('D', x - 0.5, y, all_sprites)
+                    Tile('D', x - 0.5, y, all_sprites, doors_group)
                 elif level_map[y][x] == 't':
-                    Tile('D', x, y - 0.5, all_sprites)
+                    Tile('D', x, y - 0.5, all_sprites, doors_group)
                 elif level_map[y][x] == 'T':
                     Tile(level_map[y][x], x, y, all_sprites)
             elif level_map[y][x] != ' ':
