@@ -53,6 +53,19 @@ def loading_screen(screen):
             pygame.time.wait(1)
 
 
+def cut_sheet(sheet, columns, rows, frames):
+    rect = pygame.Rect(0, 0, sheet.get_width() // columns,
+                       sheet.get_height() // rows)
+    for j in range(rows):
+        for i in range(columns):
+            frame_location = (rect.w * i, rect.h * j)
+            image = sheet.subsurface(pygame.Rect(frame_location, rect.size))
+            image = pygame.transform.scale(image, (TILE_SIZE, TILE_SIZE))
+            frames[j].append(image)
+            if i == j == 0:
+                frames.append(image)
+
+
 def load_image(filename: str, path_to_folder="assets", colorkey=None):
     fullname = concat_two_file_paths(path_to_folder, filename)
     # если файл не существует, то выходим
