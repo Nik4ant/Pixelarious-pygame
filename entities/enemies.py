@@ -1,40 +1,39 @@
 import pygame
-from engine import load_image
+from engine import load_image, cut_sheet
 from config import TILE_SIZE
 
-from random import randint
+from random import randint, choice
 
 
 class Entity(pygame.sprite.Sprite):
     """
     Класс отвечающий за игрока и врагов в игре
     """
-    # отметка при превышении которой, скорость игрока автоматически возврастает
-    min_delta_to_start_run = 0.95
-    # Максимальное ускорение игрока (при перемещении, на дэш не влияет)
-    max_delta_movements = 1
-    # сила с которой игрок будет набирать/уменьшать свою скорость
-    delta_changer = 0.05
+
+    look_directions = {
+        (-1, -1): 3,
+        (-1, 0): 3,
+        (-1, 1): 3,
+        (0, -1): 1,
+        (0, 0): -1,
+        (0, 1): 0,
+        (1, -1): 2,
+        (1, 0): 2,
+        (1, 1): 2
+    }
 
     # Канал для звуков
     # TODO: если не будет так много звуков может быть просто выпилить эту штуку?
     sounds_channel = pygame.mixer.Channel(1)
 
-    # Звуки
-    # FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "footstep.ogg"))
-    # FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
-    #
-    # DASH_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "dash.wav"))
-    # DASH_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
-
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
         super().__init__(*args)
 
-        # TODO: заменить на spritesheet
         # Изображение
-        self.image = load_image("test_monster.png", "assets")
-        self.image = pygame.transform.scale(self.image, (TILE_SIZE, TILE_SIZE))
+        self.cur_frame = 0
+        self.image = self.__class__.frames[0][self.cur_frame]
+        self.last_update = pygame.time.get_ticks()
         self.width, self.height = self.image.get_size()
 
         self.start_posision = x, y
@@ -45,12 +44,34 @@ class Entity(pygame.sprite.Sprite):
         self.rect.centery = y
 
         # Скорость
-        self.speed = TILE_SIZE * 0.03
         self.dx = self.dy = 0
 
         # Направление взгляда
         self.look_direction_x = 0
         self.look_direction_y = 1
+
+    def update(self):
+        tick = pygame.time.get_ticks()
+        if tick - self.last_update > 100:
+            self.last_update = tick
+            look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
+            self.cur_frame = (self.cur_frame + 1) % len(self.__class__.frames[look])
+            self.image = self.__class__.frames[look][self.cur_frame]
+
+
+class WalkingMonster(Entity):
+    sheet = load_image('player_spritesheet.png')
+    columns, rows = 4, 4
+    frames = [[], [], [], []]
+    cut_sheet(sheet, columns, rows, frames)
+
+    def __init__(self, x: float, y: float, *args):
+        # Конструктор класса Sprite
+        super().__init__(x, y, *args)
+
+        # Значения по-умолчанию
+        self.speed = TILE_SIZE * 0.03
+        self.visibility_range = TILE_SIZE * 7
 
     def update(self, player=None):
         if not player:
@@ -63,9 +84,9 @@ class Entity(pygame.sprite.Sprite):
         line = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
 
         # Если игрок далеко, крутимся у своей стартовой точки
-        if line >= 6 * TILE_SIZE:
+        if line >= self.visibility_range:
             if not self.point or self.point == (self.rect.centerx, self.rect.centery):
-                self.point = self.start_posision[0] + randint(-TILE_SIZE * 0.5, TILE_SIZE * 0.5), \
+                self.point = self.start_posision[0] + choice((-TILE_SIZE * 0.5, TILE_SIZE * 0.5)), \
                              self.start_posision[1] + randint(-TILE_SIZE * 0.5, TILE_SIZE * 0.5)
             point_x, point_y = self.point
             line = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
@@ -73,29 +94,15 @@ class Entity(pygame.sprite.Sprite):
             part_move = max(line / self.speed, 1)
             self.dx = int((point_x - self_x) / part_move)
             self.dy = int((point_y - self_y) / part_move)
+            if line > 1.5 * TILE_SIZE:
+                self.dx *= 3
+                self.dy *= 3
+
         else:
             part_move = max(line / self.speed, 1)
-            self.dx = int((point_x - self_x) * 3 / part_move)
-            self.dy = int((point_y - self_y) * 3 / part_move)
+            self.dx = int((point_x - self_x) * 4 / part_move)
+            self.dy = int((point_y - self_y) * 4 / part_move)
 
-        # Направления движения по x и y
-
-        '''
-        Управление игрока сделано так, что при начале движения игрок не сразу
-        получает максимальную скорость, а постепеноо разгоняется. При этом
-        если во время набора скорости игрок меняет направление, то разгон будет
-        продолжаться. Но если игрок уже достиг своей максимальной скорости, он
-        может моментально менять направления, а не крутиться как черепаха (это
-        повышает динамичность геймплея и заставляет игрока больше двигаться, а
-        не стоять на месте). Но при этом, нельзя просто взять отпустить кнопку, 
-        зажать другую и ожидать, что скорость сохранится, если бы так всё 
-        работало, то это было бы неправильно, поэтому чтобы при изменении 
-        направления сохранить скорость, надо не отпуская текущую клавишу, 
-        зажать другие клавиши, а затем отпустить текущие.
-        '''
-
-        # Если игрок движется и при этом не совершается дэш,
-        # то воспроизводится звук ходьбы
         # (При этом проверяется текущий канал со звуками, чтобы не
         # было наложения эффекта "наложения" звуков)
         # if (self.dx != 0 or self.dy != 0) and not Entity.sounds_channel.get_busy():
@@ -105,6 +112,29 @@ class Entity(pygame.sprite.Sprite):
         self.rect.centerx = self.rect.centerx + self.dx
         self.rect.centery = self.rect.centery + self.dy
 
+        if self.dx > 0:
+            self.look_direction_x = 1
+        elif self.dx < 0:
+            self.look_direction_x = -1
+        else:
+            self.look_direction_x = 0
+        if self.dy > 0:
+            self.look_direction_y = 1
+        elif self.dy < 0:
+            self.look_direction_y = -1
+        else:
+            self.look_direction_y = 0
+
+        if self.dx or self.dy:
+            super().update()
+
+
+class Ghost(WalkingMonster):
+    def __init__(self, x, y, *args):
+        super().__init__(x, y, *args)
+        self.speed = TILE_SIZE * 0.03
+        self.visibility_range = TILE_SIZE * 7
+
 
 def random_monster(x, y, all_sprites, enemies_group):
-    return Entity(x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5, all_sprites, enemies_group)
+    return Ghost(x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5, all_sprites, enemies_group)
