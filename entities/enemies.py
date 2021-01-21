@@ -22,10 +22,6 @@ class Entity(pygame.sprite.Sprite):
         (1, 1): 2
     }
 
-    # Канал для звуков
-    # TODO: если не будет так много звуков может быть просто выпилить эту штуку?
-    sounds_channel = pygame.mixer.Channel(1)
-
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
         super().__init__(*args)
@@ -102,11 +98,6 @@ class WalkingMonster(Entity):
             part_move = max(line / self.speed, 1)
             self.dx = int((point_x - self_x) * 4 / part_move)
             self.dy = int((point_y - self_y) * 4 / part_move)
-
-        # (При этом проверяется текущий канал со звуками, чтобы не
-        # было наложения эффекта "наложения" звуков)
-        # if (self.dx != 0 or self.dy != 0) and not Entity.sounds_channel.get_busy():
-        #     Entity.sounds_channel.play(Entity.FOOTSTEP_SOUND)
 
         # Перемещение сущности относительно центра
         self.rect.centerx = self.rect.centerx + self.dx
