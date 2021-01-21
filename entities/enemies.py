@@ -62,8 +62,8 @@ class Entity(pygame.sprite.Sprite):
 class WalkingMonster(Entity):
     sheet = load_image('player_spritesheet.png')
     columns, rows = 4, 4
-    frames = [[], [], [], []]
-    cut_sheet(sheet, columns, rows, frames)
+
+    frames = cut_sheet(sheet, columns, rows)
 
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
