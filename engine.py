@@ -54,7 +54,7 @@ def loading_screen(screen):
 
 
 def cut_sheet(sheet, columns, rows):
-    frames = [[], [], [], []]
+    frames = [[] for _ in range(rows)]
     rect = pygame.Rect(0, 0, sheet.get_width() // columns,
                        sheet.get_height() // rows)
     for j in range(rows):
