@@ -10,18 +10,6 @@ class Entity(pygame.sprite.Sprite):
     Класс отвечающий за игрока и врагов в игре
     """
 
-    look_directions = {
-        (-1, -1): 3,
-        (-1, 0): 3,
-        (-1, 1): 3,
-        (0, -1): 1,
-        (0, 0): -1,
-        (0, 1): 0,
-        (1, -1): 2,
-        (1, 0): 2,
-        (1, 1): 2
-    }
-
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
         super().__init__(*args)
@@ -56,11 +44,6 @@ class Entity(pygame.sprite.Sprite):
 
 
 class WalkingMonster(Entity):
-    sheet = load_image('player_spritesheet.png')
-    columns, rows = 4, 4
-
-    frames = cut_sheet(sheet, columns, rows)
-
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
         super().__init__(x, y, *args)
@@ -88,16 +71,16 @@ class WalkingMonster(Entity):
             line = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
 
             part_move = max(line / self.speed, 1)
-            self.dx = int((point_x - self_x) / part_move)
-            self.dy = int((point_y - self_y) / part_move)
+            self.dx = (point_x - self_x) / part_move
+            self.dy = (point_y - self_y) / part_move
             if line > 1.5 * TILE_SIZE:
                 self.dx *= 3
                 self.dy *= 3
 
         else:
-            part_move = max(line / self.speed, 1)
-            self.dx = int((point_x - self_x) * 4 / part_move)
-            self.dy = int((point_y - self_y) * 4 / part_move)
+            part_move = max(line / self.speed, 10)
+            self.dx = (point_x - self_x) * 4 / part_move
+            self.dy = (point_y - self_y) * 4 / part_move
 
         # Перемещение сущности относительно центра
         self.rect.centerx = self.rect.centerx + self.dx
@@ -120,12 +103,53 @@ class WalkingMonster(Entity):
             super().update()
 
 
-class Ghost(WalkingMonster):
+class Demon(WalkingMonster):
+    frames = cut_sheet(load_image('demon_run.png', 'assets\\enemies'), 4, 2)
+
+    look_directions = {
+        (-1, -1): 1,
+        (-1, 0):  1,
+        (-1, 1):  1,
+        (0, -1):  1,
+        (0, 0):   2,
+        (0, 1):   0,
+        (1, -1):  0,
+        (1, 0):   0,
+        (1, 1):   0
+    }
+
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
-        self.speed = TILE_SIZE * 0.03
+        self.speed = TILE_SIZE * 0.025
         self.visibility_range = TILE_SIZE * 7
 
 
+class GreenSlime(WalkingMonster):
+    frames = cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2)
+
+    look_directions = {
+        (-1, -1): 1,
+        (-1, 0): 1,
+        (-1, 1): 1,
+        (0, -1): 1,
+        (0, 0): 2,
+        (0, 1): 0,
+        (1, -1): 0,
+        (1, 0): 0,
+        (1, 1): 0
+    }
+
+    def __init__(self, x, y, *args):
+        super().__init__(x, y, *args)
+        self.speed = TILE_SIZE * 0.02
+        self.visibility_range = TILE_SIZE * 5
+
+
 def random_monster(x, y, all_sprites, enemies_group):
-    return Ghost(x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5, all_sprites, enemies_group)
+    n = randint(1, 2)
+    args = (x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5,
+            all_sprites, enemies_group)
+    if n == 1:
+        return Demon(*args)
+    elif n == 2:
+        return GreenSlime(*args)
