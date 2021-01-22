@@ -1,50 +1,14 @@
+from random import randint
+
 import pygame
+
+from entities.base_entity import Entity
 from engine import load_image, cut_sheet
 from config import TILE_SIZE
 
-from random import randint
 
 WAITING_TIME = 2000
 UPDATE_TIME = 120
-
-
-class Entity(pygame.sprite.Sprite):
-    """
-    Класс отвечающий за игрока и врагов в игре
-    """
-
-    def __init__(self, x: float, y: float, *args):
-        # Конструктор класса Sprite
-        super().__init__(*args)
-
-        # Изображение
-        self.cur_frame = 0
-        self.image = self.__class__.frames[0][self.cur_frame]
-        self.last_update = pygame.time.get_ticks()
-        self.width, self.height = self.image.get_size()
-
-        self.start_posision = x, y
-        self.point = None
-
-        self.rect = self.image.get_rect()
-        self.rect.centerx = x
-        self.rect.centery = y
-
-        # Скорость
-        self.dx = self.dy = 0
-
-        # Направление взгляда
-        self.look_direction_x = 0
-        self.look_direction_y = 1
-
-    def update(self, n=0):
-        tick = pygame.time.get_ticks()
-        if tick - self.last_update > UPDATE_TIME:
-            self.last_update = tick
-            look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
-            look += n
-            self.cur_frame = (self.cur_frame + 1) % len(self.__class__.frames[look])
-            self.image = self.__class__.frames[look][self.cur_frame]
 
 
 class WalkingMonster(Entity):
@@ -109,7 +73,7 @@ class WalkingMonster(Entity):
             self.look_direction_y = 0
 
         if self.dx or self.dy:
-            super().update()
+            self.update_frame_state()
 
 
 # TODO: Shooting class must be initialized here
