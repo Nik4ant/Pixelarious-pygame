@@ -1,13 +1,29 @@
 import pygame
 
+from entities.base_entity import Entity
 from engine import *
 from config import *
 
 
-class Player(pygame.sprite.Sprite):
+class Player(Entity):
     """
     Класс отвечающий за игрока
     """
+
+    # Кадры для анимации игрока
+    frames = cut_sheet(load_image('player_spritesheet.png', 'assets'), 4, 4)
+    # Словарь типа (направлениями взгляда): *индекс ряда в frames для анимации*
+    look_directions = {
+        (-1, -1): 3,
+        (-1, 0): 3,
+        (0, -1): 1,
+        (-1, 1): 3,
+        (0, 0): 0,
+        (0, 1): 0,
+        (1, -1): 2,
+        (1, 0): 2,
+        (1, 1): 2
+    }
 
     # время перезарядки дэша в миллисекундах
     dash_reload_time = 2000
@@ -34,14 +50,11 @@ class Player(pygame.sprite.Sprite):
     DASH_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "dash.wav"))
     DASH_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, x: float, y: float):
-        # Конструктор класса Sprite
-        super().__init__()
+    def __init__(self, x: float, y: float, *args):
+        # Конструктор класса Entity
+        super().__init__(x, y, *args)
 
-        # TODO: заменить на spritesheet
-        # Изображение
-        self.image = load_image("test_player.png", "assets")
-        self.image = pygame.transform.scale(self.image, (TILE_SIZE, TILE_SIZE))
+        # Ширина и высота изображения после инициализации
         self.width, self.height = self.image.get_size()
 
         # Графический прямоугольник
@@ -50,7 +63,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.centery = y
 
         # Скорость
-        self.speed = TILE_SIZE * 0.055
+        self.speed = TILE_SIZE * 0.06
         self.dx = self.dy = 0
 
         # Направление взгляда
@@ -80,7 +93,7 @@ class Player(pygame.sprite.Sprite):
         # Переменная отвечает за проверку на то, была ли нажата кнопка дэша.
         # (Но нет гарантии того, что дэш уже перезарядился, это проверяется при использовании)
         was_dash_activated = False
-        # Новая позиция для прицела игрока
+        # Новая позиция для прицела игрока (по умолчанию изменений нет)
         new_scope_x, new_scope_y = self.scope.rect.centerx, self.scope.rect.centery
 
         # Если джойстик подключен, то управление идёт с него
@@ -177,12 +190,15 @@ class Player(pygame.sprite.Sprite):
         '''
         # Проверка, что было было движение
         if current_direction_x != 0 or current_direction_y != 0:
-            # Передвижения игрока при обычной ходьбе
-            if self.dash_force_x == 0 and self.dash_force_y == 0:
-                # Обновление взгляда, совершается, только если игрок не дэшит
+            # FIXME: НИКИТА ОЧЕНЬ НАДЕЕТСЯ, ЧТО В ОПРЕДЕЛЁННЫЙ МОМЕНТ ЭТА ШТУКА НЕ СЛОМАЕТ ИГРУ, ПРИ БАГАХ
+            #  АНИМАЦИИ/ДЭША ПЕРВЫМ ДЕЛОМ СМОТРЕТЬ СЮДА
+            if abs(self.dx) > 0.5 or abs(self.dy) > 0.5:
+                # Обновление направления взгляда
                 self.look_direction_x = current_direction_x
                 self.look_direction_y = current_direction_y
 
+            # Передвижения игрока при обычной ходьбе
+            if self.dash_force_x == 0 and self.dash_force_y == 0:
                 # Плавное изменение ускорение по x (если движение присутствует)
                 if abs(self.dx) < Player.min_delta_to_start_run and current_direction_x:
                     self.dx += Player.delta_changer * current_direction_x
@@ -206,19 +222,34 @@ class Player(pygame.sprite.Sprite):
         # ускорение збрасывается
         elif self.dash_force_x == 0 and self.dash_force_y == 0:
             self.dx = self.dy = 0
+            self.set_first_frame()
 
         # Если игрок движется и при этом не совершается дэш,
         # то воспроизводится звук ходьбы
         # (При этом проверяется текущий канал со звуками, чтобы не
         # было наложения эффекта "наложения" звуков)
-        if ((self.dx != 0 or self.dy != 0)
+        if ((abs(self.dx) > Player.delta_changer or
+             abs(self.dy) > Player.delta_changer)
                 and self.dash_force_x == self.dash_force_y == 0 and
                 not Player.sounds_channel.get_busy()):
             Player.sounds_channel.play(Player.FOOTSTEP_SOUND)
 
+        # Если игрок движется по диагонали, то его скорость надо
+        if self.dx != 0 and self.dy != 0:
+            # 0.0388905 = 0.055 * 0.7071, где  0.055 - множитель для скорости
+            # относительн TILE_SIZE, а 0.7071 - приближённое значение корня
+            # из двух для выравнивание скорости при диагональном движении
+            self.speed = TILE_SIZE * 0.0388905
+        else:
+            self.speed = TILE_SIZE * 0.055
+
         # Перемещение игрока относительно центра
-        self.rect.centerx = self.rect.centerx + self.dx * self.speed
-        self.rect.centery = self.rect.centery + self.dy * self.speed
+        self.rect.centerx += self.dx * self.speed
+        self.rect.centery += self.dy * self.speed
+
+        # Если было хоть какое-то движение, то обновляется
+
+        self.update_frame_state()
 
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
@@ -241,7 +272,7 @@ class Player_scope(pygame.sprite.Sprite):
         self.rect.centery = y
         # Скорость перемещения
         # TODO: сделать как чуствительность у прицела
-        self.speed = 15
+        self.speed = 13
 
     def update(self, x=None, y=None):
         # Т.к. update вызывается ещё и в игровом цикле, то

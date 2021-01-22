@@ -23,14 +23,14 @@ class Camera:
         obj.rect.y += self.dy
 
     def apply_point(self, obj):
-        obj.start_posision = obj.start_posision[0] + self.dx, obj.start_posision[1] + self.dy
+        obj.start_position = obj.start_position[0] + self.dx, obj.start_position[1] + self.dy
         if obj.point:
             obj.point = obj.point[0] + self.dx, obj.point[1] + self.dy
 
     # позиционировать камеру на объекте target
     def update(self, target):
-        self.dx = -(target.rect.x + target.rect.w * 0.5 - self.screen_width * 0.5)
-        self.dy = -(target.rect.y + target.rect.h * 0.5 - self.screen_height * 0.5)
+        self.dx = -(target.rect.x + target.rect.width * 0.5 - self.screen_width * 0.5)
+        self.dy = -(target.rect.y + target.rect.height * 0.5 - self.screen_height * 0.5)
 
 
 def start(screen: pygame.surface.Surface):

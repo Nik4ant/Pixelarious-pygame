@@ -2,10 +2,12 @@ import pygame
 
 from random import choice, random
 
+from entities.base_entity import Entity
 from entities.tile import Tile
 from entities.player import Player
 from entities.enemies import random_monster
 from config import TILE_SIZE
+
 
 SHORT_BLOCK_CHANCE = 45
 LONG_BLOCK_CHANCE = 35
@@ -1081,6 +1083,10 @@ def initialise_level(level_map, all_sprites, barriers_group, enemies_group, door
     new_player = None
     level_map = [list(i) for i in level_map]
     monsters = []
+
+    # Установка общих физических объектов для всех сущностей
+    Entity.set_global_collisions_group(barriers_group)
+
     for y in range(len(level_map)):
         for x in range(len(level_map[y])):
             if level_map[y][x] == 'P':
