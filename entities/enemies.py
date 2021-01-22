@@ -252,8 +252,8 @@ class LongWizard(WalkingMonster):
 
 
 class Skeleton(WalkingMonster):
-    size = (int(TILE_SIZE * 1.5),) * 2
-    frames = cut_sheet(load_image('skelet.png', 'assets\\enemies'), 4, 4, size)
+    size = (int(TILE_SIZE * 1), int(TILE_SIZE * 2))
+    frames = cut_sheet(load_image('skelet_any.png', 'assets\\enemies'), 4, 4, size)
 
     look_directions = {
         (-1, -1): 1,
@@ -274,22 +274,22 @@ class Skeleton(WalkingMonster):
 
 
 def random_monster(x, y, all_sprites, enemies_group, seed=None):
-    n = randint(1, 7)
+    n = randint(1, 15)
     args = (x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5,
             all_sprites, enemies_group)
-    if n == 1:
+    if n in (1, 2):
         return Demon(*args)
-    elif n == 2:
+    elif n in (3, 4):
         return GreenSlime(*args)
-    elif n == 3:
+    elif n in (5, 6):
         return DirtySlime(*args)
-    elif n == 4:
+    elif n in (7, 8):
         return Zombie(*args)
-    elif n == 5:
+    elif n in (9, 10):
         return Wizard(*args)
-    elif n == 6:
+    elif n in (11,):
         return LongWizard(*args)
-    elif n == 7:
+    elif n in (12,):
         return Skeleton(*args)
     if seed:
         seed.append(str(n))
