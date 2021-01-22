@@ -811,7 +811,7 @@ LEVEL_7 = '''
 
 LEVEL_8 = '''
    RRRR
- ERR  R
+ RRR  R
 RR    R
  R    R
 RRRRE S
@@ -1075,10 +1075,13 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
 
 def initialise_level(level_map, all_sprites, barriers_group, enemies_group, doors_group):
     """
-    В ДУШЕ НЕ....
-    :param level_map: В ДУШЕ НЕ....
+    Функция для инициализации уровня
+    :param level_map: Уровень
     :param all_sprites: Группа со всеми спрайтами
     :param barriers_group: Группа для спрайтов с тайлами, сквозь которые нельзя ходить
+    
+    :return Player: Игрок, размещённый в нужном месте
+    :return monsters: Враги, размещённые в нужном месте
     """
     new_player = None
     level_map = [list(i) for i in level_map]

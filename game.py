@@ -6,14 +6,16 @@ from config import *
 from engine import *
 
 
-# TODO: В этом месте Никита впадает в ступор, т.к. куда запихать камеру,
-#  вроде бы в entities не хочется, но здесь хранить её как-то странно, наверное
-# FIXME: короче нужны идеи срочно
 class Camera:
-    # зададим начальный сдвиг камеры
+    """
+    Класс представляющий камеру
+    """
+    
     def __init__(self, screen_width, screen_height):
+        # инициализация начального сдвига для камеры
         self.dx = 0
         self.dy = 0
+        # размеры экрана
         self.screen_width = screen_width
         self.screen_height = screen_height
 
@@ -27,7 +29,7 @@ class Camera:
         if obj.point:
             obj.point = obj.point[0] + self.dx, obj.point[1] + self.dy
 
-    # позиционировать камеру на объекте target
+    # метод позиционирования камеры на объекте target
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.width * 0.5 - self.screen_width * 0.5)
         self.dy = -(target.rect.y + target.rect.height * 0.5 - self.screen_height * 0.5)
@@ -51,7 +53,9 @@ def start(screen: pygame.surface.Surface):
     clock = pygame.time.Clock()  # Часы
 
     level, new_seed = generate_new_level()
-    player, monsters = initialise_level(level, all_sprites, collidable_tiles_group, enemies_group, doors_group)
+    player, monsters = initialise_level(level, all_sprites, 
+                                        collidable_tiles_group, enemies_group,
+                                        doors_group)
     camera = Camera(screen_width, screen_height)
 
     # Группа со спрайтами игрока и прицелом
@@ -61,7 +65,7 @@ def start(screen: pygame.surface.Surface):
     all_sprites.add(player)
 
     # Фоновая музыка
-    pygame.mixer.music.load(os.path.join("assets/audio", "game_bg.ogg"))
+    pygame.mixer.music.load(concat_two_file_paths("assets/audio", "game_bg.ogg")))
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
@@ -74,7 +78,7 @@ def start(screen: pygame.surface.Surface):
             if event.type == pygame.QUIT:
                 is_game_open = False
 
-        # Обновление спрайтов игрока
+        # Обновление спрайтов
         player_sprites.update()
         all_sprites.update()
         enemies_group.update(player)
@@ -94,6 +98,3 @@ def start(screen: pygame.surface.Surface):
 
         clock.tick(FPS)
         pygame.display.flip()
-
-    # TODO: возможно забахать terminate, но ПОКА ЧТО он не нужен
-    #  (если не понятно почему так писать Никите, либо посмотрите стек вызова)

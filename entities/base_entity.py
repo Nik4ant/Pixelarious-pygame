@@ -13,11 +13,11 @@ class Entity(pygame.sprite.Sprite):
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
         super().__init__(*args)
-
+        
         self.last_update = pygame.time.get_ticks()
-        self.cur_frame = 0
-
+        
         # Изображение
+        self.cur_frame = 0
         self.image = self.__class__.frames[0][self.cur_frame]
         self.width, self.height = self.image.get_size()
 
@@ -36,15 +36,12 @@ class Entity(pygame.sprite.Sprite):
         self.look_direction_x = 0
         self.look_direction_y = 1
 
-    def update_frame_state(self, look=None):
+    def update_frane_state(self, n=0):
         tick = pygame.time.get_ticks()
-        if tick - self.last_update > 100:
+        if tick - self.last_update > UPDATE_TIME:
             self.last_update = tick
-            # Если индекс ряда в spritesheet, не был указано явно, то
-            # он определяется по навравлению взгяда (нужно, т.к. у игрока свои
-            # углы для определённых анимаций)
-            if look is None:
-                look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
+            look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
+            look += n
             self.cur_frame = (self.cur_frame + 1) % len(self.__class__.frames[look])
             self.image = self.__class__.frames[look][self.cur_frame]
 

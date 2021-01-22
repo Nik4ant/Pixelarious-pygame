@@ -53,7 +53,7 @@ def loading_screen(screen):
             pygame.time.wait(1)
 
 
-def cut_sheet(sheet, columns, rows):
+def cut_sheet(sheet, columns, rows, size=(TILE_SIZE, TILE_SIZE)):
     frames = [[] for _ in range(rows)]
     rect = pygame.Rect(0, 0, sheet.get_width() // columns,
                        sheet.get_height() // rows)
@@ -61,7 +61,7 @@ def cut_sheet(sheet, columns, rows):
         for i in range(columns):
             frame_location = (rect.w * i, rect.h * j)
             image = sheet.subsurface(pygame.Rect(frame_location, rect.size))
-            image = pygame.transform.scale(image, (TILE_SIZE, TILE_SIZE))
+            image = pygame.transform.scale(image, size)
             frames[j].append(image)
     return frames
 
