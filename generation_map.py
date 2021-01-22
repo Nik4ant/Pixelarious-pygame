@@ -809,7 +809,7 @@ LEVEL_7 = '''
 
 LEVEL_8 = '''
    RRRR
- ERR  R
+ RRR  R
 RR    R
  R    R
 RRRRE S
