@@ -10,6 +10,9 @@ class Entity(pygame.sprite.Sprite):
     # общими для всех сущностей.
     collisions_group: pygame.sprite.Group
 
+    WAITING_TIME = 2000
+    UPDATE_TIME = 120
+
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
         super().__init__(*args)
@@ -36,9 +39,9 @@ class Entity(pygame.sprite.Sprite):
         self.look_direction_x = 0
         self.look_direction_y = 1
 
-    def update_frane_state(self, n=0):
+    def update_frame_state(self, n=0):
         tick = pygame.time.get_ticks()
-        if tick - self.last_update > UPDATE_TIME:
+        if tick - self.last_update > Entity.UPDATE_TIME:
             self.last_update = tick
             look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
             look += n

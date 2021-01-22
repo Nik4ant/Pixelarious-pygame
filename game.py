@@ -65,7 +65,7 @@ def start(screen: pygame.surface.Surface):
     all_sprites.add(player)
 
     # Фоновая музыка
-    pygame.mixer.music.load(concat_two_file_paths("assets/audio", "game_bg.ogg")))
+    pygame.mixer.music.load(concat_two_file_paths("assets/audio", "game_bg.ogg"))
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 

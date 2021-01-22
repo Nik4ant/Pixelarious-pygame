@@ -7,10 +7,6 @@ from engine import load_image, cut_sheet
 from config import TILE_SIZE
 
 
-WAITING_TIME = 2000
-UPDATE_TIME = 120
-
-
 class WalkingMonster(Entity):
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
@@ -33,13 +29,13 @@ class WalkingMonster(Entity):
 
         # Если игрок далеко, крутимся у своей стартовой точки
         if line >= self.visibility_range:
-            if pygame.time.get_ticks() - self.stopping_time < WAITING_TIME:
+            if pygame.time.get_ticks() - self.stopping_time < Entity.WAITING_TIME:
                 super().update(2)
                 return
             if not self.point or self.point == (self.rect.centerx, self.rect.centery):
                 self.stopping_time = pygame.time.get_ticks()
-                self.point = self.start_posision[0] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75), \
-                             self.start_posision[1] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75)
+                self.point = self.start_position[0] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75), \
+                             self.start_position[1] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75)
             point_x, point_y = self.point
             line = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
 
@@ -99,7 +95,7 @@ class Demon(WalkingMonster):
 
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
-        self.speed = TILE_SIZE * 0.03
+        self.speed = TILE_SIZE * 0.025
         self.visibility_range = TILE_SIZE * 7
 
 
@@ -188,7 +184,7 @@ class Wizard(WalkingMonster):
 
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
-        self.speed = TILE_SIZE * 0.025
+        self.speed = TILE_SIZE * 0.022
         self.visibility_range = TILE_SIZE * 5
 
 
@@ -233,7 +229,7 @@ class Skeleton(WalkingMonster):
 
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
-        self.speed = TILE_SIZE * 0.03
+        self.speed = TILE_SIZE * 0.028
         self.visibility_range = TILE_SIZE * 7
 
 
