@@ -12,12 +12,14 @@ class WalkingMonster(Entity):
         # Конструктор класса Sprite
         super().__init__(x, y, *args)
 
+        self.player_observed = False
+
         # Значения по-умолчанию
         self.speed = TILE_SIZE * 0.016
         self.visibility_range = TILE_SIZE * 6
         self.stopping_time = pygame.time.get_ticks() + randint(-750, 750)
 
-    def update(self, player=None):
+    def update(self, player=None, collidable_group=None):
         if not player:
             return
 
@@ -34,8 +36,8 @@ class WalkingMonster(Entity):
                 return
             if not self.point or self.point == (self.rect.centerx, self.rect.centery):
                 self.stopping_time = pygame.time.get_ticks()
-                self.point = self.start_position[0] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75), \
-                             self.start_position[1] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75)
+                self.point = (self.start_position[0] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75),
+                              self.start_position[1] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75))
             point_x, point_y = self.point
             line = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
 
@@ -45,15 +47,15 @@ class WalkingMonster(Entity):
             if line > 1.5 * TILE_SIZE:
                 self.dx *= 3
                 self.dy *= 3
+            self.player_observed = False
 
         else:
             part_move = max(line / self.speed, 1)
             self.dx = (point_x - self_x) * 4 / part_move
             self.dy = (point_y - self_y) * 4 / part_move
+            self.player_observed = True
 
-        # Перемещение сущности относительно центра
-        self.rect.centerx = self.rect.centerx + self.dx
-        self.rect.centery = self.rect.centery + self.dy
+        self.move(collidable_group, self.dx, self.dy)
 
         if self.dx > 0:
             self.look_direction_x = 1
@@ -82,12 +84,14 @@ class ShootingMonster(Entity):
         self.visibility_range = TILE_SIZE * 13
         self.close_range = TILE_SIZE * 5
 
+        self.player_observed = False
+
         self.last_shot = pygame.time.get_ticks()
         self.reload_time = 3000
 
         self.stopping_time = pygame.time.get_ticks() + randint(-750, 750)
 
-    def update(self, player=None):
+    def update(self, player=None, collidable_group=None):
         if not player:
             return
 
@@ -105,8 +109,8 @@ class ShootingMonster(Entity):
                 return
             if not self.point or self.point == (self.rect.centerx, self.rect.centery):
                 self.stopping_time = pygame.time.get_ticks()
-                self.point = self.start_position[0] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75), \
-                             self.start_position[1] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75)
+                self.point = (self.start_position[0] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75),
+                              self.start_position[1] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75))
             point_x, point_y = self.point
             line = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
 
@@ -116,18 +120,19 @@ class ShootingMonster(Entity):
             if line > 1.5 * TILE_SIZE:
                 self.dx *= 3
                 self.dy *= 3
+            self.player_observed = False
 
         elif line <= self.close_range:
             part_move = max(line / self.speed, 1)
             self.dx = -(point_x - self_x) * 4 / part_move
             self.dy = -(point_y - self_y) * 4 / part_move
+            self.player_observed = True
 
         else:
             self.dx = self.dy = 0
+            self.player_observed = True
 
-        # Перемещение сущности относительно центра
-        self.rect.centerx = self.rect.centerx + self.dx
-        self.rect.centery = self.rect.centery + self.dy
+        self.move(collidable_group, self.dx, self.dy)
 
         if previous_pos == (self.rect.centerx, self.rect.centery):
             if pygame.time.get_ticks() - self.last_shot < self.reload_time:
@@ -154,7 +159,7 @@ class ShootingMonster(Entity):
 
 
 class Demon(WalkingMonster):
-    size = (int(TILE_SIZE // 8 * 7),) * 2
+    size = (int(TILE_SIZE // 4 * 3),) * 2
     frames = cut_sheet(load_image('demon_run.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('demon_idle.png', 'assets\\enemies'), 4, 2)
 
@@ -180,7 +185,7 @@ class Demon(WalkingMonster):
 
 
 class GreenSlime(WalkingMonster):
-    size = (int(TILE_SIZE // 8 * 10),) * 2
+    size = (int(TILE_SIZE // 8 * 8),) * 2
     frames = cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2, size)
 
@@ -206,7 +211,7 @@ class GreenSlime(WalkingMonster):
 
 
 class DirtySlime(WalkingMonster):
-    size = (int(TILE_SIZE // 8 * 10),) * 2
+    size = (int(TILE_SIZE // 8 * 8),) * 2
     frames = cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2, size)
 
@@ -257,7 +262,7 @@ class Zombie(WalkingMonster):
 
 
 class Wizard(ShootingMonster):
-    size = (TILE_SIZE // 8 * 7, ) * 2
+    size = (TILE_SIZE // 4 * 3,) * 2
     frames = cut_sheet(load_image('wizard_run.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('wizard_idle.png', 'assets\\enemies'), 4, 2, size)
 
@@ -311,7 +316,7 @@ class LongWizard(ShootingMonster):
 
 
 class Skeleton(WalkingMonster):
-    size = (int(TILE_SIZE * 1), int(TILE_SIZE * 2))
+    size = (int(TILE_SIZE // 8 * 7), int(TILE_SIZE // 8 * 14))
     frames = cut_sheet(load_image('skelet_any.png', 'assets\\enemies'), 4, 4, size)
 
     look_directions = {
