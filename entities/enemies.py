@@ -6,6 +6,8 @@ from random import randint
 
 WAITING_TIME = 2000
 UPDATE_TIME = 120
+HEALTH_LINE_WIDTH = 4
+HEALTH_LINE_TIME = 10000
 
 
 class Entity(pygame.sprite.Sprite):
@@ -22,6 +24,8 @@ class Entity(pygame.sprite.Sprite):
         self.image = self.__class__.frames[0][self.cur_frame]
         self.last_update = pygame.time.get_ticks()
         self.width, self.height = self.image.get_size()
+
+        self.last_damage_time = -HEALTH_LINE_TIME
 
         self.start_posision = x, y
         self.point = None
@@ -45,6 +49,19 @@ class Entity(pygame.sprite.Sprite):
             look += n
             self.cur_frame = (self.cur_frame + 1) % len(self.__class__.frames[look])
             self.image = self.__class__.frames[look][self.cur_frame]
+
+    def draw(self, screen):
+        if abs(pygame.time.get_ticks() - self.last_damage_time) < HEALTH_LINE_TIME:
+            line_width = HEALTH_LINE_WIDTH
+            x, y = self.rect.centerx, self.rect.centery
+            width, height = self.rect.size
+            pygame.draw.rect(screen, 'grey', (x - width * 0.5, y - height * 0.5 - 10, width, line_width))
+            health_length = width * self.health / self.full_health
+            pygame.draw.rect(screen, 'red', (x - width * 0.5, y - height * 0.5 - 10, health_length, line_width))
+
+    def get_damage(self, damage):
+        self.last_damage_time = pygame.time.get_ticks()
+        self.health -= damage
 
 
 class WalkingMonster(Entity):
@@ -118,6 +135,7 @@ class ShootingMonster(Entity):
 
 
 class Demon(WalkingMonster):
+    size = (int(TILE_SIZE // 8 * 7),) * 2
     frames = cut_sheet(load_image('demon_run.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('demon_idle.png', 'assets\\enemies'), 4, 2)
 
@@ -137,11 +155,14 @@ class Demon(WalkingMonster):
         super().__init__(x, y, *args)
         self.speed = TILE_SIZE * 0.03
         self.visibility_range = TILE_SIZE * 7
+        self.health = 40
+        self.full_health = 60
 
 
 class GreenSlime(WalkingMonster):
-    frames = cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2)
-    frames += cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2)
+    size = (int(TILE_SIZE // 8 * 10),) * 2
+    frames = cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2, size)
+    frames += cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2, size)
 
     look_directions = {
         (-1, -1): 1,
@@ -159,11 +180,14 @@ class GreenSlime(WalkingMonster):
         super().__init__(x, y, *args)
         self.speed = TILE_SIZE * 0.02
         self.visibility_range = TILE_SIZE * 5
+        self.health = 80
+        self.full_health = self.health
 
 
 class DirtySlime(WalkingMonster):
-    frames = cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2)
-    frames += cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2)
+    size = (int(TILE_SIZE // 8 * 10),) * 2
+    frames = cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2, size)
+    frames += cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2, size)
 
     look_directions = {
         (-1, -1): 1,
@@ -181,6 +205,8 @@ class DirtySlime(WalkingMonster):
         super().__init__(x, y, *args)
         self.speed = TILE_SIZE * 0.02
         self.visibility_range = TILE_SIZE * 5
+        self.health = 100
+        self.full_health = self.health
 
 
 class Zombie(WalkingMonster):
@@ -203,12 +229,15 @@ class Zombie(WalkingMonster):
         super().__init__(x, y, *args)
         self.speed = TILE_SIZE * 0.025
         self.visibility_range = TILE_SIZE * 5
+        self.health = 80
+        self.full_health = self.health
 
 
 # TODO: Shooting class must be here
 class Wizard(WalkingMonster):
-    frames = cut_sheet(load_image('wizard_run.png', 'assets\\enemies'), 4, 2)
-    frames += cut_sheet(load_image('wizard_idle.png', 'assets\\enemies'), 4, 2)
+    size = (TILE_SIZE // 8 * 7, ) * 2
+    frames = cut_sheet(load_image('wizard_run.png', 'assets\\enemies'), 4, 2, size)
+    frames += cut_sheet(load_image('wizard_idle.png', 'assets\\enemies'), 4, 2, size)
 
     look_directions = {
         (-1, -1): 1,
@@ -226,6 +255,8 @@ class Wizard(WalkingMonster):
         super().__init__(x, y, *args)
         self.speed = TILE_SIZE * 0.025
         self.visibility_range = TILE_SIZE * 5
+        self.health = 60
+        self.full_health = self.health
 
 
 # TODO: Shooting class must be here
@@ -249,6 +280,8 @@ class LongWizard(WalkingMonster):
         super().__init__(x, y, *args)
         self.speed = TILE_SIZE * 0.025
         self.visibility_range = TILE_SIZE * 5
+        self.health = 80
+        self.full_health = self.health
 
 
 class Skeleton(WalkingMonster):
@@ -271,25 +304,29 @@ class Skeleton(WalkingMonster):
         super().__init__(x, y, *args)
         self.speed = TILE_SIZE * 0.03
         self.visibility_range = TILE_SIZE * 7
+        self.health = 150
+        self.full_health = self.health
 
 
 def random_monster(x, y, all_sprites, enemies_group, seed=None):
-    n = randint(1, 15)
+    n = randint(1, 20)
     args = (x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5,
             all_sprites, enemies_group)
+
     if n in (1, 2):
         return Demon(*args)
-    elif n in (3, 4):
+    elif n in (3, 4, 5):
         return GreenSlime(*args)
-    elif n in (5, 6):
+    elif n in (6,):
         return DirtySlime(*args)
     elif n in (7, 8):
         return Zombie(*args)
-    elif n in (9, 10):
+    elif n in (9, 10, 11):
         return Wizard(*args)
-    elif n in (11,):
-        return LongWizard(*args)
     elif n in (12,):
+        return LongWizard(*args)
+    elif n in (13,):
         return Skeleton(*args)
+
     if seed:
         seed.append(str(n))
