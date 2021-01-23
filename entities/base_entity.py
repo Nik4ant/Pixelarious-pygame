@@ -11,28 +11,30 @@ class Entity(pygame.sprite.Sprite):
     collisions_group: pygame.sprite.Group
 
     WAITING_TIME = 2000
-    UPDATE_TIME = 120
+    UPDATE_TIME = 100
+    HEALTH_LINE_WIDTH = 4
+    HEALTH_LINE_TIME = 10000
 
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
         super().__init__(*args)
-        
-        self.last_update = pygame.time.get_ticks()
-        
+
         # Изображение
         self.cur_frame = 0
         self.image = self.__class__.frames[0][self.cur_frame]
+        self.last_update = pygame.time.get_ticks()
         self.width, self.height = self.image.get_size()
 
-        self.rect = self.image.get_rect()
-        self.rect.centerx = x
-        self.rect.centery = y
-        self.x, self.y = x, y
+        self.last_damage_time = -Entity.HEALTH_LINE_TIME
 
         self.start_position = x, y
         self.point = None
 
-        # Ускорение
+        self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.centery = y
+
+        # Скорость
         self.dx = self.dy = 0
 
         # Направление взгляда
@@ -47,6 +49,20 @@ class Entity(pygame.sprite.Sprite):
             look += n
             self.cur_frame = (self.cur_frame + 1) % len(self.__class__.frames[look])
             self.image = self.__class__.frames[look][self.cur_frame]
+
+    def draw_health_bar(self, screen):
+        # TODO: Никита пока временно убрал это, для тестов
+        # if abs(pygame.time.get_ticks() - self.last_damage_time) < Entity.HEALTH_LINE_TIME:
+        line_width = Entity.HEALTH_LINE_WIDTH
+        x, y = self.rect.centerx, self.rect.centery
+        width, height = self.rect.size
+        pygame.draw.rect(screen, 'grey', (x - width * 0.5, y - height * 0.5 - 10, width, line_width))
+        health_length = width * self.health / self.full_health
+        pygame.draw.rect(screen, 'red', (x - width * 0.5, y - height * 0.5 - 10, health_length, line_width))
+
+    def get_damage(self, damage):
+        self.last_damage_time = pygame.time.get_ticks()
+        self.health -= damage
 
     def set_first_frame(self):
         look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]

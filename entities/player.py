@@ -267,6 +267,9 @@ class Player_scope(pygame.sprite.Sprite):
         super().__init__()
 
         self.image = load_image("player_scope.png", path_to_folder="assets")
+        self.image = pygame.transform.scale(self.image,
+                                            (round(self.image.get_width() * 1.3),
+                                             round(self.image.get_height() * 1.3)))
         self.rect = self.image.get_rect()
         # Начальное местоположение
         self.rect.centerx = x
