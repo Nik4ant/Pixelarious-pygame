@@ -30,7 +30,7 @@ class WalkingMonster(Entity):
         # Если игрок далеко, крутимся у своей стартовой точки
         if line >= self.visibility_range:
             if pygame.time.get_ticks() - self.stopping_time < Entity.WAITING_TIME:
-                super().update(2)
+                super().update_frame_state(2)
                 return
             if not self.point or self.point == (self.rect.centerx, self.rect.centery):
                 self.stopping_time = pygame.time.get_ticks()
@@ -69,7 +69,7 @@ class WalkingMonster(Entity):
             self.look_direction_y = 0
 
         if self.dx or self.dy:
-            self.update_frame_state()
+            super().update_frame_state()
 
 
 # TODO: Shooting class must be initialized here
@@ -99,7 +99,7 @@ class Demon(WalkingMonster):
         self.speed = TILE_SIZE * 0.027
         self.visibility_range = TILE_SIZE * 7
         self.health = 40
-        self.full_health = 60
+        self.full_health = self.health
 
 
 class GreenSlime(WalkingMonster):
