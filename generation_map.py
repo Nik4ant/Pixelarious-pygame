@@ -1123,7 +1123,7 @@ def initialise_level(level_map, all_sprites, barriers_group, enemies_group, door
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 else:
                     Tile('.', x, y, all_sprites)
-                Tile(level_map[y][x], x, y, all_sprites)
+                Tile(level_map[y][x], x, y, all_sprites, barriers_group)
             elif level_map[y][x] in '1234567890-=':
                 Tile(level_map[y][x], x, y, all_sprites, barriers_group)
             elif level_map[y][x] in 'rbltT':

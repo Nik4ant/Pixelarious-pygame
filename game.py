@@ -69,6 +69,8 @@ def start(screen: pygame.surface.Surface):
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
+    fps_font = pygame.font.Font('assets\\UI\\pixel_font.ttf', 50)
+
     # Игровой цикл
     while is_game_open:
         # Очистка экрана
@@ -81,7 +83,7 @@ def start(screen: pygame.surface.Surface):
         # Обновление спрайтов
         player_sprites.update()
         all_sprites.update()
-        enemies_group.update(player)
+        enemies_group.update(player, collidable_tiles_group)
 
         # Обновление объектов относительно камеры
         camera.update(player)
@@ -90,12 +92,17 @@ def start(screen: pygame.surface.Surface):
 
         # Отрисовка всех спрайтов
         all_sprites.draw(screen)
+        doors_group.draw(screen)
         enemies_group.draw(screen)
         player_sprites.draw(screen)
 
         for enemy in enemies_group:
             camera.apply_point(enemy)
             enemy.draw_health_bar(screen)
+            enemy.draw_sign(screen)
+
+        fps_text = fps_font.render(str(int(clock.get_fps())), True, (100, 255, 100))
+        screen.blit(fps_text, (20, 10))
 
         clock.tick(FPS)
         pygame.display.flip()
