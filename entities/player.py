@@ -24,6 +24,7 @@ class Player(Entity):
         (1, 0): 2,
         (1, 1): 2
     }
+    MIN_VALUE_TO_CHANGE_FRAME_DIRECTION = 0.35
 
     # время перезарядки дэша в миллисекундах
     dash_reload_time = 2000
@@ -40,7 +41,6 @@ class Player(Entity):
     delta_changer = 0.036
 
     # Канал для звуков
-    # TODO: если не будет так много звуков может быть просто выпилить эту штуку?
     sounds_channel = pygame.mixer.Channel(1)
 
     # Звуки
@@ -192,7 +192,8 @@ class Player(Entity):
         if current_direction_x != 0 or current_direction_y != 0:
             # FIXME: НИКИТА ОЧЕНЬ НАДЕЕТСЯ, ЧТО В ОПРЕДЕЛЁННЫЙ МОМЕНТ ЭТА ШТУКА НЕ СЛОМАЕТ ИГРУ, ПРИ БАГАХ
             #  АНИМАЦИИ/ДЭША ПЕРВЫМ ДЕЛОМ СМОТРЕТЬ СЮДА
-            if abs(self.dx) > 0.5 or abs(self.dy) > 0.5:
+            if (abs(self.dx) > Player.MIN_VALUE_TO_CHANGE_FRAME_DIRECTION or
+                    abs(self.dy) > Player.MIN_VALUE_TO_CHANGE_FRAME_DIRECTION):
                 # Обновление направления взгляда
                 self.look_direction_x = current_direction_x
                 self.look_direction_y = current_direction_y
@@ -265,7 +266,7 @@ class Player_scope(pygame.sprite.Sprite):
         # Конструктор класса Sprite
         super().__init__()
 
-        self.image = load_image("scope_for_player.png", path_to_folder="assets")
+        self.image = load_image("player_scope.png", path_to_folder="assets")
         self.rect = self.image.get_rect()
         # Начальное местоположение
         self.rect.centerx = x
