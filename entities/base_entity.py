@@ -1,4 +1,6 @@
 import pygame
+from engine import load_image, cut_sheet
+from config import TILE_SIZE
 
 
 class Entity(pygame.sprite.Sprite):
@@ -15,6 +17,9 @@ class Entity(pygame.sprite.Sprite):
     HEALTH_LINE_WIDTH = 5
     HEALTH_LINE_TIME = 10000
 
+    size = (TILE_SIZE,) * 2
+    sleeping_frames = cut_sheet(load_image('sleep_icon_spritesheet.png', 'assets\\enemies\\'), 3, 1, size)
+
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
         super().__init__(*args)
@@ -26,6 +31,8 @@ class Entity(pygame.sprite.Sprite):
         self.width, self.height = self.image.get_size()
 
         self.last_damage_time = -Entity.HEALTH_LINE_TIME
+
+        self.sleeping_time = None
 
         self.start_position = x, y
         self.point = None
@@ -41,6 +48,15 @@ class Entity(pygame.sprite.Sprite):
         self.look_direction_x = 0
         self.look_direction_y = 1
 
+    def move(self, collidable_tiles_group, dx, dy):
+        pos = self.rect.x, self.rect.y
+        self.rect.x = self.rect.x + dx
+        if pygame.sprite.spritecollide(self, collidable_tiles_group, False):
+            self.rect.x = pos[0]
+        self.rect.y = self.rect.y + dy
+        if pygame.sprite.spritecollide(self, collidable_tiles_group, False):
+            self.rect.y = pos[1]
+
     def update_frame_state(self, n=0):
         tick = pygame.time.get_ticks()
         if tick - self.last_update > Entity.UPDATE_TIME:
@@ -51,8 +67,8 @@ class Entity(pygame.sprite.Sprite):
             self.image = self.__class__.frames[look][self.cur_frame]
 
     def draw_health_bar(self, screen):
-        # TODO: Никита пока временно убрал это, для тестов
-        # if abs(pygame.time.get_ticks() - self.last_damage_time) < Entity.HEALTH_LINE_TIME:
+        if abs(pygame.time.get_ticks() - self.last_damage_time) > Entity.HEALTH_LINE_TIME:
+            return
         line_width = Entity.HEALTH_LINE_WIDTH
         x, y = self.rect.centerx, self.rect.centery
         width, height = self.rect.size
@@ -61,6 +77,21 @@ class Entity(pygame.sprite.Sprite):
         health_length = width * self.health / self.full_health
         color = 'green' if str(self.__class__.__name__) == 'Player' else 'red'
         pygame.draw.rect(screen, color, (x1, y1 - 10, health_length, line_width))
+
+    def draw_sign(self, screen):
+        # TODO: оставить что-нибудь одно
+        if self.player_observed:
+            font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 96)
+            text = font.render("!", True, (250, 20, 20))
+            screen.blit(text, (self.rect.centerx, self.rect.y - 60))
+
+        if not self.player_observed:
+            if not self.sleeping_time or pygame.time.get_ticks() - self.sleeping_time >= 250:
+                if not self.sleeping_time:
+                    self.cur_sleeping_frame = 0
+                self.cur_sleeping_frame = (self.cur_sleeping_frame + 1) % len(Entity.sleeping_frames[0])
+                self.sleeping_time = pygame.time.get_ticks()
+            screen.blit(Entity.sleeping_frames[0][self.cur_sleeping_frame], (self.rect.centerx + 10, self.rect.y - 35))
 
     def get_damage(self, damage):
         self.last_damage_time = pygame.time.get_ticks()
