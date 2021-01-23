@@ -84,13 +84,15 @@ def start(screen: pygame.surface.Surface):
         for sprite in all_sprites:
             camera.apply(sprite)
 
-        for enemy in enemies_group:
-            camera.apply_point(enemy)
 
         # Отрисовка всех спрайтов
         all_sprites.draw(screen)
         enemies_group.draw(screen)
         player_sprites.draw(screen)
+
+        for enemy in enemies_group:
+            camera.apply_point(enemy)
+            enemy.draw(screen)
 
         clock.tick(FPS)
         pygame.display.flip()
