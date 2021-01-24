@@ -7,6 +7,10 @@ from config import DEFAULT_HOVER_SOUND_VOLUME
 
 
 class Button(pygame.sprite.Sprite):
+    """
+    Класс отвечающий за кнопку в UI элементах
+    """
+
     # Типы событий
     PRESS_TYPE = pygame.USEREVENT + 1
     HOVER_TYPE = pygame.USEREVENT + 2
@@ -14,8 +18,8 @@ class Button(pygame.sprite.Sprite):
     HOVER_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "button_hover.wav"))
     HOVER_SOUND.set_volume(DEFAULT_HOVER_SOUND_VOLUME)
 
-    def __init__(self, position: tuple, text: str, text_size: int):
-        super().__init__()
+    def __init__(self, position: tuple, text: str, text_size: int, *args):
+        super().__init__(*args)
 
         # События, которые будут вызываться pygame внутри update
         # (с помощью sender_text будет определено какая кнопка нажата)
@@ -65,3 +69,65 @@ class Button(pygame.sprite.Sprite):
 
         # Заного выводим текст поверх кнопки
         self.image.blit(self.text_surface, self.text_surface.get_rect(center=self.image.get_rect().center))
+
+
+class Message_box:
+    """
+    Класс представляющий диалог с сообщением, который закрывается
+    при нажатии в любую область экрана
+    """
+
+    def __init__(self, text: str, text_size: int, position: tuple, ui_elements=[]):
+        # Фон
+        self.image = load_image("dialog_box.png", path_to_folder="assets/UI")
+        size = (round(self.image.get_width() * 1.2),
+                round(self.image.get_height() * 1.2))
+        self.image = pygame.transform.smoothscale(self.image, size)
+        self.rect = self.image.get_rect()
+        # Корректирование позиции в соответствии с размерами фона
+        self.rect = self.rect.move(position[0] - self.image.get_width() * 0.5,
+                                                         position[1] - self.image.get_height() * 0.5)
+
+        # Группа с UI элементами
+        self.ui_elements_group = pygame.sprite.Group(*ui_elements)
+        # Текст для диалога
+        self.texts = text.split('\n')
+        self.font = pygame.font.Font("assets\\UI\\pixel_font.ttf", text_size)
+        # Так нужно для вывода сразу нескольких строк
+        self.text_surfaces = [self.font.render(part, True, pygame.Color("white")) for part in self.texts]
+
+        # Флаг для отрисовки (если True, то диалог рисуется)
+        self.need_to_draw = True
+
+    def update(self, was_click=False):
+        if was_click:
+            self.need_to_draw = False
+
+    def draw(self, screen: pygame.surface.Surface):
+        # Фоновое изображение
+        screen.blit(self.image, self.rect)
+
+        # Обновление и вывод UI (если есть)
+        self.ui_elements_group.update()
+        self.ui_elements_group.draw(screen)
+
+        # Вывод текста
+        MARGIN = 24
+        # Чтобы избежать пустого отступа
+        next_y = 0
+
+        for text_surface in self.text_surfaces:
+            y_pos = self.rect.centery + next_y - text_surface.get_height()
+            screen.blit(text_surface, text_surface.get_rect(center=(self.rect.centerx, y_pos)))
+            next_y += MARGIN
+
+
+class Logo_image(pygame.sprite.Sprite):
+    def __init__(self, position: tuple, *args):
+        super().__init__(*args)
+
+        # Изображение
+        self.image = load_image("game_logo.png", path_to_folder="assets/UI")
+        self.image = pygame.transform.scale2x(self.image)
+        self.rect = self.image.get_rect()
+        self.rect.centerx, self.rect.centery = position
