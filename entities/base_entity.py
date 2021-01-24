@@ -18,7 +18,7 @@ class Entity(pygame.sprite.Sprite):
     HEALTH_LINE_TIME = 10000
 
     size = (TILE_SIZE,) * 2
-    sleeping_frames = cut_sheet(load_image('sleep_icon_spritesheet.png', 'assets\\enemies\\'), 3, 1, size)
+    sleeping_frames = cut_sheet(load_image('sleep_icon_spritesheet.png', 'assets\\enemies\\'), 4, 1, size)
 
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite

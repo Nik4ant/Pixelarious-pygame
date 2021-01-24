@@ -11,7 +11,8 @@ class Player(Entity):
     """
 
     # Кадры для анимации игрока
-    frames = cut_sheet(load_image('player_spritesheet.png', 'assets'), 4, 4)
+    size = (TILE_SIZE * 3 // 4,) * 2
+    frames = cut_sheet(load_image('player_spritesheet.png', 'assets'), 4, 4, size)
     # Словарь типа (направлениями взгляда): *индекс ряда в frames для анимации*
     look_directions = {
         (-1, -1): 3,
@@ -63,7 +64,7 @@ class Player(Entity):
         self.rect.centery = y
 
         # Скорость
-        self.speed = TILE_SIZE * 0.06
+        self.speed = TILE_SIZE * 0.07
         self.dx = self.dy = 0
 
         # Направление взгляда
@@ -245,8 +246,7 @@ class Player(Entity):
             self.speed = TILE_SIZE * 0.055
 
         # Перемещение игрока относительно центра
-        self.rect.centerx += self.dx * self.speed
-        self.rect.centery += self.dy * self.speed
+        self.move(Entity.collisions_group, self.dx * self.speed, self.dy * self.speed)
 
         # Если было хоть какое-то движение, то обновляется
 
