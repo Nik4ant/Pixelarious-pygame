@@ -1,5 +1,5 @@
 import pygame
-from engine import load_tile
+from engine import load_tile, cut_sheet, load_image
 from config import TILE_SIZE
 
 
@@ -22,7 +22,6 @@ class Tile(pygame.sprite.Sprite):
         'B1': load_tile('BOX.png'),
         'P':  load_tile('UPSTAIRS.png'),
         'C':  load_tile('CHEST.png'),
-        'T':  load_tile('TORCH.png'),
         'E':  load_tile('DOWNSTAIRS.png'),
         '.':  load_tile('FLOOR.png'),
         '.0': load_tile('FLOOR_CRACKED_0.png'),
@@ -37,3 +36,21 @@ class Tile(pygame.sprite.Sprite):
         self.type = tile_type  # тип тайла
         self.image = Tile.IMAGES[self.type]
         self.rect = self.image.get_rect().move(x * TILE_SIZE, y * TILE_SIZE)
+
+
+class Torch(pygame.sprite.Sprite):
+    frames = cut_sheet(load_image('TORCH.png', 'assets\\tiles'), 8, 1, (TILE_SIZE // 4 * 3,) * 2)
+
+    def __init__(self, x: float, y: float, *groups):
+        super().__init__(*groups)
+        self.image = Torch.frames[0][0]
+        self.rect = self.image.get_rect().move(x * TILE_SIZE, y * TILE_SIZE)
+
+        self.cur_frame = 0
+        self.update_time = pygame.time.get_ticks()
+
+    def update(self) -> None:
+        if pygame.time.get_ticks() - self.update_time > 100:
+            self.update_time = pygame.time.get_ticks()
+            self.cur_frame = (self.cur_frame + 1) % len(Torch.frames[0])
+            self.image = Torch.frames[0][self.cur_frame]
