@@ -38,8 +38,10 @@ CONTROLS = {
     "JOYSTICK_DASH": 10,  # R1
     # эта кнопка для кликов по UI
     "JOYSTICK_UI_CLICK": 0,  # X
+    "JOYSTICK_UI_PAUSE": 5,  # кнопка PS
 
     # Для клавиатуры
+    "KEYBOARD_PAUSE": pygame.K_ESCAPE,
     "KEYBOARD_DASH": pygame.K_q,
     "KEYBOARD_LEFT": pygame.K_a,
     "KEYBOARD_RIGHT": pygame.K_d,

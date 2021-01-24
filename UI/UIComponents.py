@@ -18,7 +18,9 @@ class Button(pygame.sprite.Sprite):
     HOVER_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "button_hover.wav"))
     HOVER_SOUND.set_volume(DEFAULT_HOVER_SOUND_VOLUME)
 
-    def __init__(self, position: tuple, text: str, text_size: int, *args):
+    def __init__(self, position: tuple, text: str, text_size: int,
+                 base_button_filename="button.png",
+                 hover_button_filename="button_hover.png", *args):
         super().__init__(*args)
 
         # События, которые будут вызываться pygame внутри update
@@ -29,7 +31,12 @@ class Button(pygame.sprite.Sprite):
         # Свойство, чтобы при наведении звук воспроизводился только один раз
         self.was_sound_played = False
 
-        self.image = load_image("button.png", path_to_folder="assets/UI")
+        # Базовое изображение
+        self.base_image = load_image(base_button_filename, path_to_folder="assets/UI")
+        # Изображение при наведении
+        self.hover_image = load_image(hover_button_filename, path_to_folder="assets/UI")
+        # Текущее изображение
+        self.image = self.base_image
         # Текст
         self.text = text
         self.font = pygame.font.Font("assets\\UI\\pixel_font.ttf", text_size)
@@ -61,9 +68,9 @@ class Button(pygame.sprite.Sprite):
 
                 pygame.event.post(self.HOVER_EVENT)
             # Меняем изображение
-            self.image = load_image("button_hover.png", path_to_folder="assets/UI")
+            self.image = self.hover_image
         else:
-            self.image = load_image("button.png", path_to_folder="assets/UI")
+            self.image = self.base_image
             # Т.к. на кнопку наведения нет, то сбрасываем свойство
             self.was_sound_played = False
 
@@ -77,7 +84,7 @@ class Message_box:
     при нажатии в любую область экрана
     """
 
-    def __init__(self, text: str, text_size: int, position: tuple, ui_elements=[]):
+    def __init__(self, text: str, text_size: int, position: tuple):
         # Фон
         self.image = load_image("dialog_box.png", path_to_folder="assets/UI")
         size = (round(self.image.get_width() * 1.2),
@@ -86,10 +93,7 @@ class Message_box:
         self.rect = self.image.get_rect()
         # Корректирование позиции в соответствии с размерами фона
         self.rect = self.rect.move(position[0] - self.image.get_width() * 0.5,
-                                                         position[1] - self.image.get_height() * 0.5)
-
-        # Группа с UI элементами
-        self.ui_elements_group = pygame.sprite.Group(*ui_elements)
+                                   position[1] - self.image.get_height() * 0.5)
         # Текст для диалога
         self.texts = text.split('\n')
         self.font = pygame.font.Font("assets\\UI\\pixel_font.ttf", text_size)
@@ -106,10 +110,6 @@ class Message_box:
     def draw(self, screen: pygame.surface.Surface):
         # Фоновое изображение
         screen.blit(self.image, self.rect)
-
-        # Обновление и вывод UI (если есть)
-        self.ui_elements_group.update()
-        self.ui_elements_group.draw(screen)
 
         # Вывод текста
         MARGIN = 24

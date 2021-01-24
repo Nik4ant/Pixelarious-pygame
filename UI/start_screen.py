@@ -74,12 +74,12 @@ def execute(screen: pygame.surface.Surface) -> int:
     # Установка громкости
     pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
+    # Переменная, становящайся True если было нажатие курсора
+    # (предусмотрен как джойстик, так и обычная мышка)
+    was_click = False
+
     # Цикл окна
     while is_open:
-        # Переменная, становящайся True если было нажатие курсора
-        # (предусмотрен как джойстик, так и обычная мышка)
-        was_click = False
-
         # Обработка событий
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -170,4 +170,5 @@ def execute(screen: pygame.surface.Surface) -> int:
 
         # Обновляем состояние джойстика
         joystick = get_joystick() if check_any_joystick() else None
+        was_click = False
         clock.tick(FPS)

@@ -80,7 +80,7 @@ class Player(Entity):
         self.dash_last_time = pygame.time.get_ticks()
 
         # Инициализация прицеда для игрока
-        self.scope = Player_scope(self.rect.x - self.width, self.rect.y - self.height)
+        self.scope = Player_scope(x, y)
         # Установка начального состояния джойстика
         self.joystick = get_joystick() if check_any_joystick() else None
 
@@ -191,8 +191,6 @@ class Player(Entity):
         '''
         # Проверка, что было было движение
         if current_direction_x != 0 or current_direction_y != 0:
-            # FIXME: НИКИТА ОЧЕНЬ НАДЕЕТСЯ, ЧТО В ОПРЕДЕЛЁННЫЙ МОМЕНТ ЭТА ШТУКА НЕ СЛОМАЕТ ИГРУ, ПРИ БАГАХ
-            #  АНИМАЦИИ/ДЭША ПЕРВЫМ ДЕЛОМ СМОТРЕТЬ СЮДА
             if (abs(self.dx) > Player.MIN_VALUE_TO_CHANGE_FRAME_DIRECTION or
                     abs(self.dy) > Player.MIN_VALUE_TO_CHANGE_FRAME_DIRECTION):
                 # Обновление направления взгляда
@@ -259,7 +257,7 @@ class Player(Entity):
 class Player_scope(pygame.sprite.Sprite):
     """
     Этот класс отвечает за прицел игрока, нарпимер,
-    относительно него будут создаваться заклинаний
+    относительно него будут создаваться заклинания
     """
 
     def __init__(self, x: float, y: float):
@@ -281,6 +279,13 @@ class Player_scope(pygame.sprite.Sprite):
     def update(self, x=None, y=None):
         # Т.к. update вызывается ещё и в игровом цикле, то
         # стоит делать проверку на наличие аргументов x и y
-        # (но предполагается, что x и y - это float, либо int)
+        # (но предполагается, что x и y - это координаты)
         if x is not None and y is not None:
             self.rect.centerx, self.rect.centery = x, y
+
+    def init_scope_position(self, position: tuple):
+        """
+        Метод устанавливает позицию прицела
+        :param position: Кортеж с координатами
+        """
+        self.rect.centerx, self.rect.centery = position
