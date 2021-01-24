@@ -83,7 +83,7 @@ def start(screen: pygame.surface.Surface):
         # Обновление спрайтов
         player_sprites.update()
         all_sprites.update()
-        enemies_group.update(player, collidable_tiles_group)
+        enemies_group.update(player)
 
         # Обновление объектов относительно камеры
         camera.update(player)

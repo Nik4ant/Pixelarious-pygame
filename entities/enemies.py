@@ -19,11 +19,13 @@ class WalkingMonster(Entity):
         self.visibility_range = TILE_SIZE * 6
         self.stopping_time = pygame.time.get_ticks() + randint(-750, 750)
 
-    def update(self, player=None, collidable_group=None):
+    def update(self, player=None):
         if not player:
             return
 
         self_x, self_y = self.rect.centerx, self.rect.centery
+        previous_pos = (self_x, self_y)
+        delta = 0
 
         point_x, point_y = player.rect.centerx, player.rect.centery
         # Расстояние между врагом и игроком
@@ -36,8 +38,8 @@ class WalkingMonster(Entity):
                 return
             if not self.point or self.point == (self.rect.centerx, self.rect.centery):
                 self.stopping_time = pygame.time.get_ticks()
-                self.point = (self.start_position[0] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75),
-                              self.start_position[1] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75))
+                self.point = (self.start_position[0] + randint(-TILE_SIZE * 1, TILE_SIZE * 1),
+                              self.start_position[1] + randint(-TILE_SIZE * 1, TILE_SIZE * 1))
             point_x, point_y = self.point
             line = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
 
@@ -55,7 +57,7 @@ class WalkingMonster(Entity):
             self.dy = (point_y - self_y) * 4 / part_move
             self.player_observed = True
 
-        self.move(collidable_group, self.dx, self.dy)
+        self.move(Entity.collisions_group, self.dx, self.dy)
 
         if self.dx > 0:
             self.look_direction_x = 1
@@ -70,8 +72,12 @@ class WalkingMonster(Entity):
         else:
             self.look_direction_y = 0
 
+        if previous_pos == (self.rect.centerx, self.rect.centery):
+            delta = 2
+            self.point = None
+            self.stopping_time = pygame.time.get_ticks()
         if self.dx or self.dy:
-            super().update_frame_state()
+            super().update_frame_state(delta)
 
 
 class ShootingMonster(Entity):
@@ -91,12 +97,13 @@ class ShootingMonster(Entity):
 
         self.stopping_time = pygame.time.get_ticks() + randint(-750, 750)
 
-    def update(self, player=None, collidable_group=None):
+    def update(self, player=None):
         if not player:
             return
 
         self_x, self_y = self.rect.centerx, self.rect.centery
         previous_pos = self_x, self_y
+        delta = 0
 
         point_x, point_y = player.rect.centerx, player.rect.centery
         # Расстояние между врагом и игроком
@@ -132,9 +139,10 @@ class ShootingMonster(Entity):
             self.dx = self.dy = 0
             self.player_observed = True
 
-        self.move(collidable_group, self.dx, self.dy)
+        self.move(Entity.collisions_group, self.dx, self.dy)
 
         if previous_pos == (self.rect.centerx, self.rect.centery):
+            delta = 2
             if pygame.time.get_ticks() - self.last_shot < self.reload_time:
                 self.shoot(player)
 
@@ -151,17 +159,16 @@ class ShootingMonster(Entity):
         else:
             self.look_direction_y = 0
 
-        if self.dx or self.dy:
-            super().update_frame_state()
+        super().update_frame_state(delta)
 
     def shoot(self, player):
         pass
 
 
 class Demon(WalkingMonster):
-    size = (int(TILE_SIZE // 4 * 3),) * 2
-    frames = cut_sheet(load_image('demon_run.png', 'assets\\enemies'), 4, 2)
-    frames += cut_sheet(load_image('demon_idle.png', 'assets\\enemies'), 4, 2)
+    size = (int(TILE_SIZE // 8 * 5),) * 2
+    frames = cut_sheet(load_image('demon_run.png', 'assets\\enemies'), 4, 2, size)
+    frames += cut_sheet(load_image('demon_idle.png', 'assets\\enemies'), 4, 2, size)
 
     look_directions = {
         (-1, -1): 1,
@@ -185,7 +192,7 @@ class Demon(WalkingMonster):
 
 
 class GreenSlime(WalkingMonster):
-    size = (int(TILE_SIZE // 8 * 8),) * 2
+    size = (int(TILE_SIZE // 8 * 7),) * 2
     frames = cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2, size)
 
@@ -211,7 +218,7 @@ class GreenSlime(WalkingMonster):
 
 
 class DirtySlime(WalkingMonster):
-    size = (int(TILE_SIZE // 8 * 8),) * 2
+    size = (int(TILE_SIZE // 8 * 7),) * 2
     frames = cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2, size)
 
@@ -237,8 +244,9 @@ class DirtySlime(WalkingMonster):
 
 
 class Zombie(WalkingMonster):
-    frames = cut_sheet(load_image('zombie_run.png', 'assets\\enemies'), 4, 2)
-    frames += cut_sheet(load_image('zombie_idle.png', 'assets\\enemies'), 4, 2)
+    size = (int(TILE_SIZE // 4 * 3),) * 2
+    frames = cut_sheet(load_image('zombie_run.png', 'assets\\enemies'), 4, 2, size)
+    frames += cut_sheet(load_image('zombie_idle.png', 'assets\\enemies'), 4, 2, size)
 
     look_directions = {
         (-1, -1): 1,
@@ -262,7 +270,7 @@ class Zombie(WalkingMonster):
 
 
 class Wizard(ShootingMonster):
-    size = (TILE_SIZE // 4 * 3,) * 2
+    size = (TILE_SIZE // 8 * 5,) * 2
     frames = cut_sheet(load_image('wizard_run.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('wizard_idle.png', 'assets\\enemies'), 4, 2, size)
 
@@ -288,8 +296,9 @@ class Wizard(ShootingMonster):
 
 
 class LongWizard(ShootingMonster):
-    frames = cut_sheet(load_image('long_wizard_run.png', 'assets\\enemies'), 4, 2)
-    frames += cut_sheet(load_image('long_wizard_idle.png', 'assets\\enemies'), 4, 2)
+    size = (int(TILE_SIZE // 8 * 7),) * 2
+    frames = cut_sheet(load_image('long_wizard_run.png', 'assets\\enemies'), 4, 2, size)
+    frames += cut_sheet(load_image('long_wizard_idle.png', 'assets\\enemies'), 4, 2, size)
 
     look_directions = {
         (-1, -1): 1,
@@ -316,7 +325,7 @@ class LongWizard(ShootingMonster):
 
 
 class Skeleton(WalkingMonster):
-    size = (int(TILE_SIZE // 8 * 7), int(TILE_SIZE // 8 * 14))
+    size = (int(TILE_SIZE // 8 * 6), int(TILE_SIZE // 8 * 12))
     frames = cut_sheet(load_image('skelet_any.png', 'assets\\enemies'), 4, 4, size)
 
     look_directions = {
@@ -340,7 +349,7 @@ class Skeleton(WalkingMonster):
         self.full_health = self.health
 
 
-def random_monster(x, y, all_sprites, enemies_group, seed=None):
+def random_monster(x, y, all_sprites, enemies_group, seed=None, skelet=True):
     n = randint(1, 20)
     args = (x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5,
             all_sprites, enemies_group)
@@ -357,8 +366,9 @@ def random_monster(x, y, all_sprites, enemies_group, seed=None):
         return Wizard(*args)
     elif n in (12,):
         return LongWizard(*args)
-    elif n in (13,):
-        return Skeleton(*args)
+    elif n in range(20):
+        if skelet:
+            return Skeleton(x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE, all_sprites, enemies_group)
 
     if seed:
         seed.append(str(n))

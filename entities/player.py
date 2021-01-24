@@ -11,7 +11,8 @@ class Player(Entity):
     """
 
     # Кадры для анимации игрока
-    frames = cut_sheet(load_image('player_spritesheet.png', 'assets'), 4, 4)
+    size = (TILE_SIZE * 3 // 4,) * 2
+    frames = cut_sheet(load_image('player_spritesheet.png', 'assets'), 4, 4, size)
     # Словарь типа (направлениями взгляда): *индекс ряда в frames для анимации*
     look_directions = {
         (-1, -1): 3,
@@ -24,7 +25,7 @@ class Player(Entity):
         (1, 0): 2,
         (1, 1): 2
     }
-    MIN_VALUE_TO_CHANGE_FRAME_DIRECTION = 0.3
+    MIN_VALUE_TO_CHANGE_FRAME_DIRECTION = 0.35
 
     # время перезарядки дэша в миллисекундах
     dash_reload_time = 2000
@@ -63,12 +64,12 @@ class Player(Entity):
         self.rect.centery = y
 
         # Скорость
-        self.speed = TILE_SIZE * 0.06
+        self.speed = TILE_SIZE * 0.07
         self.dx = self.dy = 0
 
         # Направление взгляда
-        self.direction_x = 0
-        self.direction_y = 1
+        self.look_direction_x = 0
+        self.look_direction_y = 1
 
         # Дэш
         self.dash_direction_x = self.dash_direction_y = 0
@@ -143,8 +144,8 @@ class Player(Entity):
                 self.dash_direction_x = current_direction_x
                 self.dash_direction_y = current_direction_y
             else:
-                self.dash_direction_x = self.direction_x
-                self.dash_direction_y = self.direction_y
+                self.dash_direction_x = self.look_direction_x
+                self.dash_direction_y = self.look_direction_y
 
             # Установка силы дэша
             self.dx = self.dash_force_x * self.dash_direction_x
@@ -190,13 +191,11 @@ class Player(Entity):
         '''
         # Проверка, что было было движение
         if current_direction_x != 0 or current_direction_y != 0:
-            # Обновление направления взгляда (обычное)
-            self.direction_x = current_direction_x
-            self.direction_y = current_direction_y
-
+            # FIXME: НИКИТА ОЧЕНЬ НАДЕЕТСЯ, ЧТО В ОПРЕДЕЛЁННЫЙ МОМЕНТ ЭТА ШТУКА НЕ СЛОМАЕТ ИГРУ, ПРИ БАГАХ
+            #  АНИМАЦИИ/ДЭША ПЕРВЫМ ДЕЛОМ СМОТРЕТЬ СЮДА
             if (abs(self.dx) > Player.MIN_VALUE_TO_CHANGE_FRAME_DIRECTION or
                     abs(self.dy) > Player.MIN_VALUE_TO_CHANGE_FRAME_DIRECTION):
-                # Обновление направления взгляда (для анимации)
+                # Обновление направления взгляда
                 self.look_direction_x = current_direction_x
                 self.look_direction_y = current_direction_y
 
@@ -247,8 +246,7 @@ class Player(Entity):
             self.speed = TILE_SIZE * 0.055
 
         # Перемещение игрока относительно центра
-        self.rect.centerx += self.dx * self.speed
-        self.rect.centery += self.dy * self.speed
+        self.move(Entity.collisions_group, self.dx * self.speed, self.dy * self.speed)
 
         # Если было хоть какое-то движение, то обновляется
 
