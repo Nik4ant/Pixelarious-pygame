@@ -11,7 +11,7 @@ class Player(Entity):
     """
 
     # Кадры для анимации игрока
-    size = (TILE_SIZE * 3 // 4,) * 2
+    size = (TILE_SIZE * 6 // 8, TILE_SIZE * 7 // 8)
     frames = cut_sheet(load_image('player_spritesheet.png', 'assets'), 4, 4, size)
     # Словарь типа (направлениями взгляда): *индекс ряда в frames для анимации*
     look_directions = {
