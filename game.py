@@ -2,6 +2,7 @@ import os
 import pygame
 
 from generation_map import initialise_level, generate_new_level
+from UI import game_menu
 from config import *
 from engine import *
 
@@ -61,6 +62,7 @@ def start(screen: pygame.surface.Surface):
     # Группа со спрайтами игрока и прицелом
     player_sprites = pygame.sprite.Group()
     player_sprites.add(player)
+    player.scope.init_scope_position((screen_width * 0.5, screen_height * 0.5))
     player_sprites.add(player.scope)  # прицел игрока
     all_sprites.add(player)
 
@@ -73,12 +75,27 @@ def start(screen: pygame.surface.Surface):
 
     # Игровой цикл
     while is_game_open:
-        # Очистка экрана
-        screen.fill((20, 20, 20))
-    
+        was_pause_activated = False
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 is_game_open = False
+
+            if event.type == pygame.KEYDOWN:
+                # Проверка на активацию паузы
+                if event.key == CONTROLS["KEYBOARD_PAUSE"]:
+                    was_pause_activated = True
+
+        # Текущий джойстик находится в игроке, поэтому кнопки проверяем по нему же
+        if player.joystick:
+            # Только если joystick подключен проверяем нажатие кнопки
+            if player.joystick.get_button(CONTROLS["JOYSTICK_UI_PAUSE"]):
+                was_pause_activated = True
+
+        if was_pause_activated:
+            pygame.mixer.music.pause()
+            game_menu.execute(screen)
+            pygame.mixer.music.unpause()
 
         # Обновление спрайтов
         player_sprites.update()
@@ -89,6 +106,9 @@ def start(screen: pygame.surface.Surface):
         camera.update(player)
         for sprite in all_sprites:
             camera.apply(sprite)
+
+        # Очистка экрана
+        screen.fill((20, 20, 20))
 
         # Отрисовка всех спрайтов
         all_sprites.draw(screen)
