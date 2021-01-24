@@ -24,7 +24,7 @@ class Player(Entity):
         (1, 0): 2,
         (1, 1): 2
     }
-    MIN_VALUE_TO_CHANGE_FRAME_DIRECTION = 0.35
+    MIN_VALUE_TO_CHANGE_FRAME_DIRECTION = 0.3
 
     # время перезарядки дэша в миллисекундах
     dash_reload_time = 2000
@@ -67,8 +67,8 @@ class Player(Entity):
         self.dx = self.dy = 0
 
         # Направление взгляда
-        self.look_direction_x = 0
-        self.look_direction_y = 1
+        self.direction_x = 0
+        self.direction_y = 1
 
         # Дэш
         self.dash_direction_x = self.dash_direction_y = 0
@@ -143,8 +143,8 @@ class Player(Entity):
                 self.dash_direction_x = current_direction_x
                 self.dash_direction_y = current_direction_y
             else:
-                self.dash_direction_x = self.look_direction_x
-                self.dash_direction_y = self.look_direction_y
+                self.dash_direction_x = self.direction_x
+                self.dash_direction_y = self.direction_y
 
             # Установка силы дэша
             self.dx = self.dash_force_x * self.dash_direction_x
@@ -190,11 +190,13 @@ class Player(Entity):
         '''
         # Проверка, что было было движение
         if current_direction_x != 0 or current_direction_y != 0:
-            # FIXME: НИКИТА ОЧЕНЬ НАДЕЕТСЯ, ЧТО В ОПРЕДЕЛЁННЫЙ МОМЕНТ ЭТА ШТУКА НЕ СЛОМАЕТ ИГРУ, ПРИ БАГАХ
-            #  АНИМАЦИИ/ДЭША ПЕРВЫМ ДЕЛОМ СМОТРЕТЬ СЮДА
+            # Обновление направления взгляда (обычное)
+            self.direction_x = current_direction_x
+            self.direction_y = current_direction_y
+
             if (abs(self.dx) > Player.MIN_VALUE_TO_CHANGE_FRAME_DIRECTION or
                     abs(self.dy) > Player.MIN_VALUE_TO_CHANGE_FRAME_DIRECTION):
-                # Обновление направления взгляда
+                # Обновление направления взгляда (для анимации)
                 self.look_direction_x = current_direction_x
                 self.look_direction_y = current_direction_y
 
