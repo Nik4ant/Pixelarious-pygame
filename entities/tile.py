@@ -2,8 +2,8 @@ from random import randint
 
 import pygame
 
-from engine import load_tile, cut_sheet, load_image
-from config import TILE_SIZE
+from engine import load_tile, cut_sheet, load_image, concat_two_file_paths
+from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
 
 
 class Tile(pygame.sprite.Sprite):
@@ -44,6 +44,14 @@ class Tile(pygame.sprite.Sprite):
 class Torch(pygame.sprite.Sprite):
     frames = cut_sheet(load_image('TORCH.png', 'assets\\tiles'), 8, 1, (round(TILE_SIZE / 4 * 3),) * 2)
 
+    # Канал для звуков
+    sounds_channel = pygame.mixer.Channel(0)
+    min_distance_to_player = 100
+
+    # Звуки
+    BURNING_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "torch_sound.mp3"))
+    BURNING_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+
     def __init__(self, x: float, y: float, *groups):
         super().__init__(*groups)
         self.image = Torch.frames[0][randint(0, len(Torch.frames[0]) - 1)]
@@ -52,8 +60,17 @@ class Torch(pygame.sprite.Sprite):
         self.cur_frame = 0
         self.update_time = pygame.time.get_ticks()
 
-    def update(self) -> None:
+    def update(self, player=None) -> None:
+        if not player:
+            Torch.min_distance_to_player = 100000
+            return
         if pygame.time.get_ticks() - self.update_time > 100 + randint(-20, 20):
             self.update_time = pygame.time.get_ticks()
             self.cur_frame = (self.cur_frame + 1) % len(Torch.frames[0])
             self.image = Torch.frames[0][self.cur_frame]
+
+        dx, dy = player.rect.centerx - self.rect.centerx, player.rect.centery - self.rect.centery
+        Torch.min_distance_to_player = min(max((dx ** 2 + dy ** 2) ** 0.5, 0.000001), Torch.min_distance_to_player)
+        self.BURNING_SOUND.set_volume(min(DEFAULT_SOUNDS_VOLUME / (Torch.min_distance_to_player / TILE_SIZE) * 2, 1.2))
+        if not self.sounds_channel.get_busy():
+            self.sounds_channel.play(self.BURNING_SOUND)

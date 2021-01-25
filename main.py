@@ -18,8 +18,7 @@ if __name__ == '__main__':
     from UI import start_screen
 
     # Экран (он же будет использован везде)
-    # screen = pygame.display.set_mode(flags=pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF, vsync=True)
-    screen = pygame.display.set_mode((2200, 1200))
+    screen = pygame.display.set_mode(flags=pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF, vsync=True)
 
     # этот модуль нужно импортировать именно тут,
     # т.к. в нём происходит загрузка изображений (а это можно делать только

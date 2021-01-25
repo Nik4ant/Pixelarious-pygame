@@ -254,7 +254,7 @@ class DirtySlime(WalkingMonster):
     sounds_channel = pygame.mixer.Channel(5)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "slime_sound.mp3"))
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "slime_sound_1.ogg"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x, y, *args):
