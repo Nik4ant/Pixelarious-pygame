@@ -1,41 +1,131 @@
 import os
-
 import pygame
 
-from entities.player import Player
+from generation_map import initialise_level, generate_new_level
+from UI import game_menu
 from config import *
 from engine import *
 
 
+class Camera:
+    """
+    Класс представляющий камеру
+    """
+    
+    def __init__(self, screen_width, screen_height):
+        # инициализация начального сдвига для камеры
+        self.dx = 0
+        self.dy = 0
+        # размеры экрана
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+
+    # сдвинуть объект obj на смещение камеры
+    def apply(self, obj):
+        obj.rect.x += self.dx
+        obj.rect.y += self.dy
+
+    def apply_point(self, obj):
+        obj.start_position = obj.start_position[0] + self.dx, obj.start_position[1] + self.dy
+        if obj.point:
+            obj.point = obj.point[0] + self.dx, obj.point[1] + self.dy
+
+    # метод позиционирования камеры на объекте target
+    def update(self, target):
+        self.dx = -(target.rect.x + target.rect.width * 0.5 - self.screen_width * 0.5)
+        self.dy = -(target.rect.y + target.rect.height * 0.5 - self.screen_height * 0.5)
+
+
 def start(screen: pygame.surface.Surface):
+    loading_screen(screen)
+    
+    screen_width, screen_height = screen.get_size()
+
+    # Группа со всеми спрайтами
+    all_sprites = pygame.sprite.Group()
+    # Группа со спрайтами тайлов
+    collidable_tiles_group = pygame.sprite.Group()
+    # Группа со спрайтами врагов
+    enemies_group = pygame.sprite.Group()
+    # Группа со спрайтами дверей
+    doors_group = pygame.sprite.Group()
+    #
+    torches_group = pygame.sprite.Group()
+
     is_game_open = True
     clock = pygame.time.Clock()  # Часы
 
-    # Игрок
-    player = Player(screen.get_width() * 0.5, screen.get_height() * 0.5)
-    # Группа со спрайтами игрока и его приуела
+    level, new_seed = generate_new_level()
+    player, monsters = initialise_level(level, all_sprites, 
+                                        collidable_tiles_group, enemies_group,
+                                        doors_group, torches_group)
+    camera = Camera(screen_width, screen_height)
+
+    # Группа со спрайтами игрока и прицелом
     player_sprites = pygame.sprite.Group()
     player_sprites.add(player)
-    player_sprites.add(player.scope)
+    player.scope.init_scope_position((screen_width * 0.5, screen_height * 0.5))
+    player_sprites.add(player.scope)  # прицел игрока
+    all_sprites.add(player)
 
     # Фоновая музыка
-    # FIXME: место на котором игра пролагивает (Никита пофиксит)
-    pygame.mixer.music.load(os.path.join("assets/audio", "game_bg.ogg"))
+    pygame.mixer.music.load(concat_two_file_paths("assets/audio", "game_bg.ogg"))
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
+    fps_font = pygame.font.Font('assets\\UI\\pixel_font.ttf', 50)
+
     # Игровой цикл
     while is_game_open:
+        was_pause_activated = False
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                is_game_open = True
-                break
+                is_game_open = False
+
+            if event.type == pygame.KEYDOWN:
+                # Проверка на активацию паузы
+                if event.key == CONTROLS["KEYBOARD_PAUSE"]:
+                    was_pause_activated = True
+
+        # Текущий джойстик находится в игроке, поэтому кнопки проверяем по нему же
+        if player.joystick:
+            # Только если joystick подключен проверяем нажатие кнопки
+            if player.joystick.get_button(CONTROLS["JOYSTICK_UI_PAUSE"]):
+                was_pause_activated = True
+
+        if was_pause_activated:
+            pygame.mixer.music.pause()
+            game_menu.execute(screen)
+            pygame.mixer.music.unpause()
+
+        # Обновление спрайтов
+        player_sprites.update()
+        all_sprites.update()
+        enemies_group.update(player)
+        torches_group.update(player)
+
+        # Обновление объектов относительно камеры
+        camera.update(player)
+        for sprite in all_sprites:
+            camera.apply(sprite)
 
         # Очистка экрана
-        screen.fill((255, 255, 255))
-        # Обновляем и выводим все спрайты
-        player_sprites.update()
+        screen.fill((20, 20, 20))
+
+        # Отрисовка всех спрайтов
+        all_sprites.draw(screen)
+        doors_group.draw(screen)
+        enemies_group.draw(screen)
         player_sprites.draw(screen)
+
+        for enemy in enemies_group:
+            camera.apply_point(enemy)
+            enemy.draw_health_bar(screen)
+            enemy.draw_sign(screen)
+
+        fps_text = fps_font.render(str(int(clock.get_fps())), True, (100, 255, 100))
+        screen.blit(fps_text, (20, 10))
 
         clock.tick(FPS)
         pygame.display.flip()

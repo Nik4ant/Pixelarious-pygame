@@ -1,15 +1,18 @@
 import pygame
 
 
-# TODO: ЕСЛИ БУДЕТ ПРОИСХОДИТЬ ИЗМЕНЕНИЕ ПАРАМЕТРОВ, ТО ТОГДА НУЖНО БУДЕТ СДЕЛАТЬ RELOAD МОДУЛЯ!!!!
-# ВОТ ИНФА: https://stackoverflow.com/a/2029546/13940541
-# NOTE: Но если не делать этот файл как .py, то нужно внутри окна изменения настроек
 FPS = 60
-DEFAULT_MUSIC_VOLUME = 35
-DEFAULT_HOVER_SOUND_VOLUME = 15
+# Громкость музыки во всей игре по умолчанию
+DEFAULT_MUSIC_VOLUME = 0.45
+# Эта переменная нужна для увеличения громкости звука, если мелодия тихая.
+# Такое добавление будет дописываться вручную при установке громкости.
+MUSIC_VOLUME_ADDER = 0.2
+# Громкость звука наведения по умолчанию
+DEFAULT_HOVER_SOUND_VOLUME = 0.4
+# Громкость звуков внутри игры по умолчанию
+DEFAULT_SOUNDS_VOLUME = 0.5
 # Чуствительность джойстика
 # (только при достижении этого значения игра просчитает движения джойстика)
-# TODO: МАКСИМАЛЬНОЕ ЗНАЧЕНИЕ В НАСТРОЙКАХ ДЛЯ ЭТОГО 0.24
 JOYSTICK_SENSITIVITY = 0.11
 '''
 Cross Button    - Button 0
@@ -35,16 +38,15 @@ CONTROLS = {
     "JOYSTICK_DASH": 10,  # R1
     # эта кнопка для кликов по UI
     "JOYSTICK_UI_CLICK": 0,  # X
+    "JOYSTICK_UI_PAUSE": 5,  # кнопка PS
 
     # Для клавиатуры
+    "KEYBOARD_PAUSE": pygame.K_ESCAPE,
     "KEYBOARD_DASH": pygame.K_q,
     "KEYBOARD_LEFT": pygame.K_a,
     "KEYBOARD_RIGHT": pygame.K_d,
     "KEYBOARD_UP": pygame.K_w,
     "KEYBOARD_DOWN": pygame.K_s,
-    "KEYBOARD_RUN": pygame.K_LSHIFT,
 }
-# время перезарядки дэша
-DASH_RELOAD_TIME = 500  # в миллисекундах
-# сторона одного тайоа
-TILE_SIZE = 16
+# сторона одного тайла
+TILE_SIZE = 64
