@@ -3,8 +3,8 @@ from random import randint
 import pygame
 
 from entities.base_entity import Entity
-from engine import load_image, cut_sheet
-from config import TILE_SIZE
+from engine import load_image, cut_sheet, concat_two_file_paths
+from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
 
 
 class WalkingMonster(Entity):
@@ -29,7 +29,8 @@ class WalkingMonster(Entity):
 
         point_x, point_y = player.rect.centerx, player.rect.centery
         # Расстояние между врагом и игроком
-        line = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
+        self.distance_to_player = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
+        line = self.distance_to_player
 
         # Если игрок далеко, крутимся у своей стартовой точки
         if line >= self.visibility_range:
@@ -76,6 +77,7 @@ class WalkingMonster(Entity):
             delta = 2
             self.point = None
             self.stopping_time = pygame.time.get_ticks()
+
         if self.dx or self.dy:
             super().update_frame_state(delta)
 
@@ -107,7 +109,8 @@ class ShootingMonster(Entity):
 
         point_x, point_y = player.rect.centerx, player.rect.centery
         # Расстояние между врагом и игроком
-        line = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
+        self.distance_to_player = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
+        line = self.distance_to_player
 
         # Если игрок далеко, крутимся у своей стартовой точки
         if line >= self.visibility_range:
@@ -170,6 +173,8 @@ class Demon(WalkingMonster):
     frames = cut_sheet(load_image('demon_run.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('demon_idle.png', 'assets\\enemies'), 4, 2, size)
 
+    UPDATE_TIME = 60
+
     look_directions = {
         (-1, -1): 1,
         (-1, 0):  1,
@@ -181,10 +186,16 @@ class Demon(WalkingMonster):
         (1, 0):   0,
         (1, 1):   0
     }
+    # Канал для звуков
+    sounds_channel = pygame.mixer.Channel(3)
+
+    # Звуки
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "little_steps.mp3"))
+    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
-        self.speed = TILE_SIZE * 0.027
+        self.speed = TILE_SIZE * 0.023
         self.visibility_range = TILE_SIZE * 7
 
         self.health = 40
@@ -193,8 +204,8 @@ class Demon(WalkingMonster):
 
 class GreenSlime(WalkingMonster):
     size = (int(TILE_SIZE // 8 * 7),) * 2
-    frames = cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2, size)
-    frames += cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2, size)
+    frames = cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2)
+    frames += cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2)
 
     look_directions = {
         (-1, -1): 1,
@@ -207,6 +218,12 @@ class GreenSlime(WalkingMonster):
         (1, 0): 0,
         (1, 1): 0
     }
+    # Канал для звуков
+    sounds_channel = pygame.mixer.Channel(4)
+
+    # Звуки
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "slime_sound.mp3"))
+    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
@@ -219,8 +236,8 @@ class GreenSlime(WalkingMonster):
 
 class DirtySlime(WalkingMonster):
     size = (int(TILE_SIZE // 8 * 7),) * 2
-    frames = cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2, size)
-    frames += cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2, size)
+    frames = cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2)
+    frames += cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2)
 
     look_directions = {
         (-1, -1): 1,
@@ -233,6 +250,12 @@ class DirtySlime(WalkingMonster):
         (1, 0): 0,
         (1, 1): 0
     }
+    # Канал для звуков
+    sounds_channel = pygame.mixer.Channel(5)
+
+    # Звуки
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "slime_sound.mp3"))
+    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
@@ -245,8 +268,8 @@ class DirtySlime(WalkingMonster):
 
 class Zombie(WalkingMonster):
     size = (int(TILE_SIZE // 4 * 3),) * 2
-    frames = cut_sheet(load_image('zombie_run.png', 'assets\\enemies'), 4, 2, size)
-    frames += cut_sheet(load_image('zombie_idle.png', 'assets\\enemies'), 4, 2, size)
+    frames = cut_sheet(load_image('zombie_run.png', 'assets\\enemies'), 4, 2)
+    frames += cut_sheet(load_image('zombie_idle.png', 'assets\\enemies'), 4, 2)
 
     look_directions = {
         (-1, -1): 1,
@@ -259,10 +282,16 @@ class Zombie(WalkingMonster):
         (1, 0): 0,
         (1, 1): 0
     }
+    # Канал для звуков
+    sounds_channel = pygame.mixer.Channel(6)
+
+    # Звуки
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "stone_steps_1.mp3"))
+    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
-        self.speed = TILE_SIZE * 0.025
+        self.speed = TILE_SIZE * 0.02
         self.visibility_range = TILE_SIZE * 5
 
         self.health = 80
@@ -270,7 +299,7 @@ class Zombie(WalkingMonster):
 
 
 class Wizard(ShootingMonster):
-    size = (TILE_SIZE // 8 * 5,) * 2
+    size = (TILE_SIZE // 8 * 7,) * 2
     frames = cut_sheet(load_image('wizard_run.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('wizard_idle.png', 'assets\\enemies'), 4, 2, size)
 
@@ -285,6 +314,12 @@ class Wizard(ShootingMonster):
         (1, 0): 0,
         (1, 1): 0
     }
+    # Канал для звуков
+    sounds_channel = pygame.mixer.Channel(7)
+
+    # Звуки
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "wizard_rustle.mp3"))
+    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
@@ -297,8 +332,8 @@ class Wizard(ShootingMonster):
 
 class LongWizard(ShootingMonster):
     size = (int(TILE_SIZE // 8 * 7),) * 2
-    frames = cut_sheet(load_image('long_wizard_run.png', 'assets\\enemies'), 4, 2, size)
-    frames += cut_sheet(load_image('long_wizard_idle.png', 'assets\\enemies'), 4, 2, size)
+    frames = cut_sheet(load_image('long_wizard_run.png', 'assets\\enemies'), 4, 2)
+    frames += cut_sheet(load_image('long_wizard_idle.png', 'assets\\enemies'), 4, 2)
 
     look_directions = {
         (-1, -1): 1,
@@ -311,11 +346,17 @@ class LongWizard(ShootingMonster):
         (1, 0): 0,
         (1, 1): 0
     }
+    # Канал для звуков
+    sounds_channel = pygame.mixer.Channel(2)
+
+    # Звуки
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "wizard_rustle.mp3"))
+    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
 
-        self.speed = TILE_SIZE * 0.025
+        self.speed = TILE_SIZE * 0.02
         self.visibility_range = TILE_SIZE * 13
 
         self.health = 80
@@ -324,32 +365,7 @@ class LongWizard(ShootingMonster):
         self.reload_time = 5000
 
 
-class Skeleton(WalkingMonster):
-    size = (int(TILE_SIZE // 8 * 6), int(TILE_SIZE // 8 * 12))
-    frames = cut_sheet(load_image('skelet_any.png', 'assets\\enemies'), 4, 4, size)
-
-    look_directions = {
-        (-1, -1): 1,
-        (-1, 0): 1,
-        (-1, 1): 1,
-        (0, -1): 1,
-        (0, 0): 1,
-        (0, 1): 0,
-        (1, -1): 0,
-        (1, 0): 0,
-        (1, 1): 0
-    }
-
-    def __init__(self, x, y, *args):
-        super().__init__(x, y, *args)
-        self.speed = TILE_SIZE * 0.02
-        self.visibility_range = TILE_SIZE * 7
-
-        self.health = 150
-        self.full_health = self.health
-
-
-def random_monster(x, y, all_sprites, enemies_group, seed=None, skelet=True):
+def random_monster(x, y, all_sprites, enemies_group, seed=None):
     n = randint(1, 20)
     args = (x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5,
             all_sprites, enemies_group)
@@ -366,9 +382,6 @@ def random_monster(x, y, all_sprites, enemies_group, seed=None, skelet=True):
         return Wizard(*args)
     elif n in (12,):
         return LongWizard(*args)
-    elif n in range(20):
-        if skelet:
-            return Skeleton(x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE, all_sprites, enemies_group)
 
     if seed:
         seed.append(str(n))

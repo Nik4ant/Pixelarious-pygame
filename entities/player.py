@@ -11,7 +11,7 @@ class Player(Entity):
     """
 
     # Кадры для анимации игрока
-    size = (TILE_SIZE * 3 // 4,) * 2
+    size = (TILE_SIZE * 7 // 8, TILE_SIZE)
     frames = cut_sheet(load_image('player_spritesheet.png', 'assets'), 4, 4, size)
     # Словарь типа (направлениями взгляда): *индекс ряда в frames для анимации*
     look_directions = {
@@ -66,6 +66,7 @@ class Player(Entity):
         # Скорость
         self.speed = TILE_SIZE * 0.07
         self.dx = self.dy = 0
+        self.distance_to_player = 0.0001
 
         # Направление взгляда
         self.look_direction_x = 0

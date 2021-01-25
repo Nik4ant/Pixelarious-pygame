@@ -1106,21 +1106,18 @@ def initialise_level(level_map, all_sprites, barriers_group, enemies_group, door
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 else:
                     Tile('.', x, y, all_sprites)
-                if level_map[y - 1][x] != '.':
-                    monsters.append(random_monster(x, y, all_sprites, enemies_group))
-                else:
-                    monsters.append(random_monster(x, y, all_sprites, enemies_group, False))
+                monsters.append(random_monster(x, y, all_sprites, enemies_group))
             elif level_map[y][x] in 'F.':
                 if true_with_chance(CRACKED_FLOOR_CHANCE):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 else:
                     Tile('.', x, y, all_sprites)
-            elif level_map[y][x] == 'B':
+            elif level_map[y][x] in 'BC':
                 if true_with_chance(CRACKED_FLOOR_CHANCE):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 else:
                     Tile('.', x, y, all_sprites)
-                Tile(('B', 'B1')[true_with_chance(30)], x, y, all_sprites, barriers_group)
+                Tile(('B', 'B1', 'C')[true_with_chance(30) + true_with_chance(40)], x, y, all_sprites, barriers_group)
             elif level_map[y][x] == 'C':
                 if true_with_chance(CRACKED_FLOOR_CHANCE):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)

@@ -1,6 +1,6 @@
 import pygame
 from engine import load_image, cut_sheet
-from config import TILE_SIZE
+from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
 
 
 class Entity(pygame.sprite.Sprite):
@@ -66,12 +66,17 @@ class Entity(pygame.sprite.Sprite):
 
     def update_frame_state(self, n=0):
         tick = pygame.time.get_ticks()
-        if tick - self.last_update > Entity.UPDATE_TIME:
+        if tick - self.last_update > self.UPDATE_TIME:
             self.last_update = tick
             look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
             look += n
             self.cur_frame = (self.cur_frame + 1) % len(self.__class__.frames[look])
             self.image = self.__class__.frames[look][self.cur_frame]
+            if (self.__class__.__name__ != 'Player' and DEFAULT_SOUNDS_VOLUME * 200 / self.distance_to_player > 0.1
+                    and (look < 2 or 'Slime' in self.__class__.__name__ or 'Demon' in self.__class__.__name__)
+                    and not self.sounds_channel.get_busy()):
+                self.FOOTSTEP_SOUND.set_volume(min(DEFAULT_SOUNDS_VOLUME / (self.distance_to_player / TILE_SIZE) * 3, 1))
+                self.sounds_channel.play(self.FOOTSTEP_SOUND)
 
     def draw_health_bar(self, screen):
         if abs(pygame.time.get_ticks() - self.last_damage_time) > Entity.HEALTH_LINE_TIME:
@@ -145,8 +150,8 @@ class Collider(pygame.sprite.Sprite):
     """
     Класс, который будет невидимым, но будет использоваться для просчёта колизий у сущности
     """
-    def __init__(self, x: float, y: float):
-        self.image = pygame.surface.Surface((round(TILE_SIZE * 0.5), round(TILE_SIZE * 0.5)))
+    def __init__(self, x: float, y: float, size=(round(TILE_SIZE * 0.5), round(TILE_SIZE * 0.5))):
+        self.image = pygame.surface.Surface(size)
         self.rect = self.image.get_rect()
         self.rect.centerx, self.rect.centery = x, y
 

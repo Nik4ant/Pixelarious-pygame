@@ -24,7 +24,7 @@ class Tile(pygame.sprite.Sprite):
         'B':  load_tile('BARREL.png'),
         'B1': load_tile('BOX.png'),
         'P':  load_tile('UPSTAIRS.png'),
-        'C':  load_tile('CHEST.png'),
+        'C':  load_tile('BOX_1.png'),
         'E':  load_tile('DOWNSTAIRS.png'),
         '.':  load_tile('FLOOR.png'),
         '.0': load_tile('FLOOR_CRACKED_0.png'),
