@@ -49,6 +49,8 @@ def start(screen: pygame.surface.Surface):
     enemies_group = pygame.sprite.Group()
     # Группа со спрайтами дверей
     doors_group = pygame.sprite.Group()
+    #
+    torches_group = pygame.sprite.Group()
 
     is_game_open = True
     clock = pygame.time.Clock()  # Часы
@@ -56,7 +58,7 @@ def start(screen: pygame.surface.Surface):
     level, new_seed = generate_new_level()
     player, monsters = initialise_level(level, all_sprites, 
                                         collidable_tiles_group, enemies_group,
-                                        doors_group)
+                                        doors_group, torches_group)
     camera = Camera(screen_width, screen_height)
 
     # Группа со спрайтами игрока и прицелом
@@ -101,6 +103,7 @@ def start(screen: pygame.surface.Surface):
         player_sprites.update()
         all_sprites.update()
         enemies_group.update(player)
+        torches_group.update(player)
 
         # Обновление объектов относительно камеры
         camera.update(player)

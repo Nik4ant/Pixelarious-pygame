@@ -1073,7 +1073,7 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
     return bool(int(seed[-1]))
 
 
-def initialise_level(level_map, all_sprites, barriers_group, enemies_group, doors_group):
+def initialise_level(level_map, all_sprites, barriers_group, enemies_group, doors_group, torches_group):
     """
     Функция для инициализации уровня
     :param level_map: Уровень
@@ -1137,7 +1137,7 @@ def initialise_level(level_map, all_sprites, barriers_group, enemies_group, door
                 elif level_map[y][x] == 't':
                     Tile('D', x, y - 0.5, all_sprites, doors_group)
                 elif level_map[y][x] == 'T':
-                    Torch(x + 0.12, y, all_sprites)
+                    Torch(x + 0.12, y, all_sprites, torches_group)
             elif level_map[y][x] != ' ':
                 Tile(level_map[y][x], x, y, all_sprites)
     # вернем игрока и монстров
