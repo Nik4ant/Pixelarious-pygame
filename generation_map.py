@@ -3,7 +3,7 @@ import pygame
 from random import choice, random
 
 from entities.base_entity import Entity
-from entities.tile import Tile
+from entities.tile import Tile, Torch
 from entities.player import Player
 from entities.enemies import random_monster
 from config import TILE_SIZE
@@ -1140,7 +1140,7 @@ def initialise_level(level_map, all_sprites, barriers_group, enemies_group, door
                 elif level_map[y][x] == 't':
                     Tile('D', x, y - 0.5, all_sprites, doors_group)
                 elif level_map[y][x] == 'T':
-                    Tile(level_map[y][x], x + 0.12, y, all_sprites)
+                    Torch(x + 0.12, y, all_sprites)
             elif level_map[y][x] != ' ':
                 Tile(level_map[y][x], x, y, all_sprites)
     # вернем игрока и монстров

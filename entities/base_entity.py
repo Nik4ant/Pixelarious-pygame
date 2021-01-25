@@ -40,6 +40,7 @@ class Entity(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.centery = y
+        self.collider = Collider(self.rect.centerx, self.rect.centery)
 
         # Скорость
         self.dx = self.dy = 0
@@ -51,10 +52,16 @@ class Entity(pygame.sprite.Sprite):
     def move(self, collidable_tiles_group, dx, dy):
         pos = self.rect.x, self.rect.y
         self.rect.x = self.rect.x + dx
-        if pygame.sprite.spritecollide(self, collidable_tiles_group, False):
+        self.collider.update(self.rect.centerx, self.rect.centery)
+
+        if pygame.sprite.spritecollide(self.collider, collidable_tiles_group, False):
             self.rect.x = pos[0]
+
         self.rect.y = self.rect.y + dy
-        if pygame.sprite.spritecollide(self, collidable_tiles_group, False):
+
+        self.collider.update(self.rect.centerx, self.rect.centery)
+
+        if pygame.sprite.spritecollide(self.collider, collidable_tiles_group, False):
             self.rect.y = pos[1]
 
     def update_frame_state(self, n=0):
@@ -132,3 +139,16 @@ class Entity(pygame.sprite.Sprite):
         :param group: Новая группа
         """
         Entity.collisions_group = group
+
+
+class Collider(pygame.sprite.Sprite):
+    """
+    Класс, который будет невидимым, но будет использоваться для просчёта колизий у сущности
+    """
+    def __init__(self, x: float, y: float):
+        self.image = pygame.surface.Surface((round(TILE_SIZE * 0.5), round(TILE_SIZE * 0.5)))
+        self.rect = self.image.get_rect()
+        self.rect.centerx, self.rect.centery = x, y
+
+    def update(self, x: float, y: float):
+        self.rect.centerx, self.rect.centery = x, y
