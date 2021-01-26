@@ -40,7 +40,16 @@ CONTROLS = {
     "JOYSTICK_UI_CLICK": 0,  # X
     "JOYSTICK_UI_PAUSE": 5,  # кнопка PS
 
+    "JOYSTICK_SPELL_FIRE": 0,  # X
+    "JOYSTICK_SPELL_ICE": 1,  # кнопка круг
+    "JOYSTICK_SPELL_LIGHT": 2,  # кнопка квадрат
+    "JOYSTICK_SPELL_POISON": 3,  # кнопка треугольник
+    
     # Для клавиатуры
+    "KEYBOARD_SPELL_FIRE": pygame.K_1,  # 1
+    "KEYBOARD_SPELL_ICE": pygame.K_2,  # 2
+    "KEYBOARD_SPELL_LIGHT": pygame.K_3,  # 3
+    "KEYBOARD_SPELL_POISON": pygame.K_4,  # 4
     "KEYBOARD_PAUSE": pygame.K_ESCAPE,
     "KEYBOARD_DASH": pygame.K_q,
     "KEYBOARD_LEFT": pygame.K_a,

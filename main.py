@@ -12,34 +12,30 @@ if __name__ == '__main__':
     # Инициализация mixer'а
     pygame.mixer.init(44100, -16, 12, 64)
 
-    # этот модуль нужно импортировать именно тут,
-    # т.к. в нём происходит загрузка звуков (а это можно делать только
-    # после инициализации pygame.mixer)
-    from UI import start_screen
-
     # Экран (он же будет использован везде)
     screen = pygame.display.set_mode(flags=pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF, vsync=True)
 
-    # этот модуль нужно импортировать именно тут,
-    # т.к. в нём происходит загрузка изображений (а это можно делать только
-    # после установки экрана выше)
+    # эти модули нужно импортировать именно тут,
+    # т.к. в них происходит загрузка картинок, а в UI ещё и звуков.
+    # (А это можно сделать только после инициализации pygame.mixer и экрана)
     import game
+    from UI import start_screen
 
     # Вызов начального экрана
     code = start_screen.execute(screen)
-    # Кортеж с действиями, которые зависят от кода из главного меню
-    ACTIONS = (
-        # выход из игры
-        lambda: None,
-        # Запуск игры
-        lambda: game.start(screen),
-        # TODO: туториал
-        lambda: None,
-        # TODO: настройки
-        lambda: None,
-    )
     # Выполнение действия по коду
-    ACTIONS[code]()
+    if code != 0:
+        # Сид сохранения, который будет считан при запуске игры
+        seed = None
+        # Читаем файл сохранения, если он существует
+        if os.path.isfile("data/save.txt"):
+            with open('data/save.txt', 'r', encoding="utf-8") as file:
+                seed = ' '.join(file.readlines())
+
+        # Если seed пустой, то присваем ему None
+        if not seed:
+            seed = None
+        game.start(screen, seed)
 
     # Закрытие pygame
     pygame.quit()
