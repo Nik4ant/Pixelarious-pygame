@@ -1,6 +1,6 @@
 import pygame
 from engine import load_image, cut_sheet
-from config import TILE_SIZE
+from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
 
 
 class Entity(pygame.sprite.Sprite):
@@ -31,7 +31,6 @@ class Entity(pygame.sprite.Sprite):
         self.width, self.height = self.image.get_size()
 
         self.last_damage_time = -Entity.HEALTH_LINE_TIME
-
         self.sleeping_time = None
 
         self.start_position = x, y
@@ -49,31 +48,59 @@ class Entity(pygame.sprite.Sprite):
         self.look_direction_x = 0
         self.look_direction_y = 1
 
-    def move(self, collidable_tiles_group, dx, dy):
+    def move(self, dx, dy):
+        """
+        Метод передвижения
+        Сдвинется на указанные параметры, если там свободно
+
+        :param dx: Изменение координаты по Х
+        :param dy: Изменение координаты по Y
+        :return: None
+        """
+        # Запоминаем координаты
         pos = self.rect.x, self.rect.y
+
         self.rect.x = self.rect.x + dx
         self.collider.update(self.rect.centerx, self.rect.centery)
 
-        if pygame.sprite.spritecollide(self.collider, collidable_tiles_group, False):
+        # Если плохо, возвращаем к исходному
+        if pygame.sprite.spritecollide(self.collider, Entity.collisions_group, False):
             self.rect.x = pos[0]
 
         self.rect.y = self.rect.y + dy
-
         self.collider.update(self.rect.centerx, self.rect.centery)
 
-        if pygame.sprite.spritecollide(self.collider, collidable_tiles_group, False):
+        # Если плохо, возвращаем к исходному
+        if pygame.sprite.spritecollide(self.collider, Entity.collisions_group, False):
             self.rect.y = pos[1]
 
     def update_frame_state(self, n=0):
+        """
+        Воспроизводит звук и сменяет кадр анимации
+
+        :param n: если есть, сдвигает номер анимации (стояние вместо движения)
+        :return: None
+        """
         tick = pygame.time.get_ticks()
-        if tick - self.last_update > Entity.UPDATE_TIME:
+        if tick - self.last_update > self.UPDATE_TIME:
             self.last_update = tick
             look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
             look += n
             self.cur_frame = (self.cur_frame + 1) % len(self.__class__.frames[look])
             self.image = self.__class__.frames[look][self.cur_frame]
+            if (self.__class__.__name__ != 'Player' and DEFAULT_SOUNDS_VOLUME * 200 / self.distance_to_player > 0.1
+                    and (look < 2 or 'Slime' in self.__class__.__name__ or 'Demon' in self.__class__.__name__)
+                    and not self.sounds_channel.get_busy()):
+                self.FOOTSTEP_SOUND.set_volume(min(DEFAULT_SOUNDS_VOLUME / (self.distance_to_player / TILE_SIZE) * 3, 1))
+                self.sounds_channel.play(self.FOOTSTEP_SOUND)
 
     def draw_health_bar(self, screen):
+        """
+        Функция отрисовки полоски здоровья
+
+        :param screen: Экран отрисовки
+        :return: None
+        """
         if abs(pygame.time.get_ticks() - self.last_damage_time) > Entity.HEALTH_LINE_TIME:
             return
         line_width = Entity.HEALTH_LINE_WIDTH
@@ -86,6 +113,12 @@ class Entity(pygame.sprite.Sprite):
         pygame.draw.rect(screen, color, (x1, y1 - 10, health_length, line_width))
 
     def draw_sign(self, screen):
+        """
+        Отрисовка знака сна (Z-Z-Z) или восклицательного знака.
+
+        :param screen: Экран отрисовки
+        :return: None
+        """
         # TODO: оставить что-нибудь одно
         if self.player_observed:
             font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 96)
@@ -101,15 +134,31 @@ class Entity(pygame.sprite.Sprite):
             screen.blit(Entity.sleeping_frames[0][self.cur_sleeping_frame], (self.rect.centerx + 10, self.rect.y - 35))
 
     def get_damage(self, damage):
+        """
+        Получение дамага
+
+        :param damage: Столько здоровья надо отнять
+        :return: None
+        """
         self.last_damage_time = pygame.time.get_ticks()
         self.health -= damage
 
     def set_first_frame(self):
+        """
+        Установка первого спрайта
+
+        :return: None
+        """
         look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
         self.cur_frame = 0
         self.image = self.__class__.frames[look][self.cur_frame]
 
     def apply_base_collisions(self):
+        """
+        ???
+
+        :return: None
+        """
         hits = pygame.sprite.spritecollide(self, Entity.collisions_group, False)
         # FIXME: Никита сделал тут совсем сырой метод копипасту, т.к. попытка сделать как я писал в группе не удалась
         # FIXME: Тем неменее нормальный способ для колизий всё ещё нужен, поэтому SOS
@@ -145,8 +194,8 @@ class Collider(pygame.sprite.Sprite):
     """
     Класс, который будет невидимым, но будет использоваться для просчёта колизий у сущности
     """
-    def __init__(self, x: float, y: float):
-        self.image = pygame.surface.Surface((round(TILE_SIZE * 0.5), round(TILE_SIZE * 0.5)))
+    def __init__(self, x: float, y: float, size=(round(TILE_SIZE * 0.5), round(TILE_SIZE * 0.5))):
+        self.image = pygame.surface.Surface(size)
         self.rect = self.image.get_rect()
         self.rect.centerx, self.rect.centery = x, y
 

@@ -1,5 +1,3 @@
-import pygame
-
 from entities.base_entity import Entity
 from engine import *
 from config import *
@@ -11,8 +9,8 @@ class Player(Entity):
     """
 
     # Кадры для анимации игрока
-    size = (TILE_SIZE * 3 // 4,) * 2
-    frames = cut_sheet(load_image('player_spritesheet.png', 'assets'), 4, 4, size)
+    size = (TILE_SIZE * 7 // 8, TILE_SIZE)
+    frames = cut_sheet(load_image('player_sprite_sheet.png', 'assets'), 4, 4, size)
     # Словарь типа (направлениями взгляда): *индекс ряда в frames для анимации*
     look_directions = {
         (-1, -1): 3,
@@ -66,6 +64,7 @@ class Player(Entity):
         # Скорость
         self.speed = TILE_SIZE * 0.07
         self.dx = self.dy = 0
+        self.distance_to_player = 0.0001
 
         # Направление взгляда
         self.look_direction_x = 0
@@ -80,7 +79,7 @@ class Player(Entity):
         self.dash_last_time = pygame.time.get_ticks()
 
         # Инициализация прицеда для игрока
-        self.scope = Player_scope(x, y)
+        self.scope = PlayerScope(x, y)
         # Установка начального состояния джойстика
         self.joystick = get_joystick() if check_any_joystick() else None
 
@@ -91,9 +90,6 @@ class Player(Entity):
         # Ниже переменные, нужные для общей обработки игрока внезависимости от
         # типа управления (геймпад/клавиатура)
 
-        # Переменная отвечает за проверку на то, была ли нажата кнопка дэша.
-        # (Но нет гарантии того, что дэш уже перезарядился, это проверяется при использовании)
-        was_dash_activated = False
         # Новая позиция для прицела игрока (по умолчанию изменений нет)
         new_scope_x, new_scope_y = self.scope.rect.centerx, self.scope.rect.centery
 
@@ -108,6 +104,8 @@ class Player(Entity):
             axis_right_y = self.joystick.get_axis(3)
 
             # Проверка на использование дэша
+            # Переменная отвечает за проверку на то, была ли нажата кнопка дэша.
+            # (Но нет гарантии того, что дэш уже перезарядился, это проверяется при использовании)
             was_dash_activated = self.joystick.get_button(CONTROLS["JOYSTICK_DASH"])
 
             # Проверяем, что действительно игрок подвигал правую ось
@@ -244,7 +242,7 @@ class Player(Entity):
             self.speed = TILE_SIZE * 0.055
 
         # Перемещение игрока относительно центра
-        self.move(Entity.collisions_group, self.dx * self.speed, self.dy * self.speed)
+        self.move(self.dx * self.speed, self.dy * self.speed)
 
         # Если было хоть какое-то движение, то обновляется
 
@@ -254,7 +252,7 @@ class Player(Entity):
         self.scope.update(new_scope_x, new_scope_y)
 
 
-class Player_scope(pygame.sprite.Sprite):
+class PlayerScope(pygame.sprite.Sprite):
     """
     Этот класс отвечает за прицел игрока, нарпимер,
     относительно него будут создаваться заклинания
