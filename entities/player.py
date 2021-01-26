@@ -79,7 +79,7 @@ class Player(Entity):
         self.dash_last_time = pygame.time.get_ticks()
 
         # Инициализация прицеда для игрока
-        self.scope = PlayerScope(x, y)
+        self.scope = Player_scope(x, y)
         # Установка начального состояния джойстика
         self.joystick = get_joystick() if check_any_joystick() else None
 
@@ -220,7 +220,6 @@ class Player(Entity):
         # ускорение збрасывается
         elif self.dash_force_x == 0 and self.dash_force_y == 0:
             self.dx = self.dy = 0
-            self.set_first_frame()
 
         # Если игрок движется и при этом не совершается дэш,
         # то воспроизводится звук ходьбы
@@ -244,15 +243,17 @@ class Player(Entity):
         # Перемещение игрока относительно центра
         self.move(self.dx * self.speed, self.dy * self.speed)
 
-        # Если было хоть какое-то движение, то обновляется
-
-        self.update_frame_state()
+        # Если было хоть какое-то движение, то анимация меняется
+        if self.dx or self.dy:
+            self.update_frame_state()
+        else:
+            self.set_first_frame()
 
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
 
 
-class PlayerScope(pygame.sprite.Sprite):
+class Player_scope(pygame.sprite.Sprite):
     """
     Этот класс отвечает за прицел игрока, нарпимер,
     относительно него будут создаваться заклинания
@@ -271,8 +272,7 @@ class PlayerScope(pygame.sprite.Sprite):
         self.rect.centerx = x
         self.rect.centery = y
         # Скорость перемещения
-        # TODO: сделать как чуствительность у прицела
-        self.speed = 13
+        self.speed = 15
 
     def update(self, x=None, y=None):
         # Т.к. update вызывается ещё и в игровом цикле, то
