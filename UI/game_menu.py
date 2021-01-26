@@ -7,11 +7,12 @@ from config import FPS, CONTROLS, JOYSTICK_SENSITIVITY
 from engine import load_image, check_any_joystick, get_joystick
 
 
-def execute(screen: pygame.surface.Surface) -> None:
+def execute(screen: pygame.surface.Surface):
     """
     Функция запускает меню игры на паузе на переданном экране. В
     зависимости от действий закрывает всю игру, либо продолжает дальше
     :param screen: Экран на котором надо отрисовывать менюв
+    :return: Возвращает -1, если игру надо закрыть, None если нет
     """
     is_open = True
     clock = pygame.time.Clock()
@@ -21,6 +22,7 @@ def execute(screen: pygame.surface.Surface) -> None:
     UI_MARGIN = 20
     # Фоновое изображение для всего экрана
     background_image = load_image("pause_menu_BG.png", "assets/UI")
+    background_image = pygame.transform.scale(background_image, screen.get_size())
     # Фоновое игображение
     ui_background_image = load_image("pause_menu_UI_BG.png", "assets/UI")
     # Центральная координата всего меню на экране
@@ -82,7 +84,7 @@ def execute(screen: pygame.surface.Surface) -> None:
 
                 # Выход
                 if sender_text == button_exit.text:
-                    sys.exit(0)
+                    return -1
 
         # Определение местоположения для курсора
         if joystick:

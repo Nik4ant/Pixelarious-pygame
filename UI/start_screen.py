@@ -11,9 +11,9 @@ from UI.UIComponents import Button, Logo_image, Message_box
 def execute(screen: pygame.surface.Surface) -> int:
     """
     Функция запускает главное меню игры на переданном экране. В
-    зависимости от действий возвращает свой код\n
-    0 - была нажата кнопка выйти\n
-    1 - была нажата кнопка играть\n
+    зависимости от действий возвращает свой код
+    0 - была нажата кнопка выйти
+    1 - была нажата кнопка играть
     :param screen: Экран на котором надо отрисовывать менюв
     :return: Код
     """
@@ -110,7 +110,7 @@ def execute(screen: pygame.surface.Surface) -> int:
                     text = str("Игра жанра Rogulite, в \n"
                                "которой надо пройти \n" +
                                "сквозь подземелье, заполненное врагами.\n"
-                               "Желаем удачи")
+                               "Желаем удачи\n")
                     current_message_box = Message_box(text,
                                                       30,
                                                       (screen.get_width() * 0.5,
@@ -120,8 +120,7 @@ def execute(screen: pygame.surface.Surface) -> int:
                 # Авторы
                 if sender_text == button_authors.text:
                     text = str("Никита Сошнев (Nik4ant)\n"
-                               "Максим Рудаков (Massering)\n" +
-                               "Яна Егорова (Yanok05)")
+                               "Максим Рудаков (Massering)")
                     current_message_box = Message_box(text,
                                                       30,
                                                       (screen.get_width() * 0.5,

@@ -3,7 +3,7 @@ import os
 import pygame
 
 from engine import load_image, concat_two_file_paths
-from config import DEFAULT_HOVER_SOUND_VOLUME
+from config import DEFAULT_HOVER_SOUND_VOLUME, CONTROLS
 
 
 class Button(pygame.sprite.Sprite):
@@ -122,7 +122,53 @@ class Message_box:
             next_y += MARGIN
 
 
+class Spell_container:
+    """Класс представляет UI элемент с отображением данных о заклинании."""
+
+    # В этом случае фонт всегда будет общий у всех, поэтому это атрибут класса
+    font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 64)
+    # Иконки кнопок джойстика, чтобы отображать кнопки для переключения заклиананий
+    JOYSTICK_ICONS = {
+        "o": load_image("joystick_o.png", path_to_folder="assets/UI/icons"),
+        "x": load_image("joystick_x.png", path_to_folder="assets/UI/icons"),
+        "triangle": load_image("joystick_triangle.png", path_to_folder="assets/UI/icons"),
+        "square": load_image("joystick_square.png", path_to_folder="assets/UI/icons"),
+    }
+
+    def __init__(self, icon_filename: str, position: tuple):
+        self.spell_icon = load_image(icon_filename, "assets/UI/icons")
+        self.position = position
+
+    def draw(self, screen: pygame.surface.Surface, is_joystick: bool, spell_key: str):
+        """
+        Рисует UI элемент на экране screen
+        :param screen: Экран для отрисовки
+        :param is_joystick: Подключен ли джойстик
+        :param spell_key: Строка, представляющая либо ключ для вывода иконки
+        для джойстика, либо текст для вывода возле иконки заклинания
+        """
+        # Иконка заклинания
+        screen.blit(self.spell_icon, self.position)
+        # Смещение между иконкой заклинания и кнопкой для переключение
+        MARGIN = 25
+        pos = (self.position[0] + self.spell_icon.get_width() + MARGIN,
+               self.position[1] + MARGIN)
+
+        # Если подключён джойстик, то рисуется специальная иконка
+        if is_joystick:
+            screen.blit(Spell_container.JOYSTICK_ICONS[spell_key], pos)
+        # Иначе просто текст
+        else:
+            text_surface = Spell_container.font.render(spell_key, True,
+                                                       pygame.Color("white"))
+            screen.blit(text_surface, pos)
+
+
 class Logo_image(pygame.sprite.Sprite):
+    """
+    UI элемент с лого игры. Является классом,
+    т.к. может быть нужен не один раз."""
+
     def __init__(self, position: tuple, *args):
         super().__init__(*args)
 
