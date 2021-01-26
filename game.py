@@ -120,7 +120,7 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
         all_sprites.update()
         enemies_group.update(player)
         torches_group.update(player)
-        doors_group.update(player, enemies_group, player_sprites)
+        doors_group.update(player, enemies_group, [player])
 
         # Обновление объектов относительно камеры
         camera.update(player)
