@@ -89,7 +89,7 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
-    fps_font = pygame.font.Font('assets\\UI\\pixel_font.ttf', 50)    # Шрифт вывода фпс
+    fps_font = pygame.font.Font('assets\\UI\\pixel_font.ttf', 32)    # Шрифт вывода фпс
 
     # Игровой цикл
     while is_game_open:
