@@ -8,7 +8,6 @@ class Camera:
     """
     Класс представляющий камеру
     """
-    
     def __init__(self, screen_width, screen_height):
         # инициализация начального сдвига для камеры
         self.dx = 0
@@ -35,6 +34,13 @@ class Camera:
 
 
 def start(screen: pygame.surface.Surface, user_seed: str = None):
+    """
+    Сама игра (генерация уровня и затем цикл)
+
+    :param screen: экран
+    :param user_seed: если есть, создаем по нему уровень и мобов
+    :return: None
+    """
     # Ставим загрузочный экран
     loading_screen(screen)
     
@@ -57,9 +63,9 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
     # Создаем уровень с помощью функции из generation_map
     level, level_seed = generate_new_level(user_seed.split('\n')[0].split() if user_seed else 0)
     # Создаем монстров и плитки, проходя по уровню
-    player, monsters, monsters_seed = initialise_level(level, all_sprites, collidable_tiles_group,
-                                                       enemies_group, doors_group, torches_group,
-                                                       user_seed.split('\n')[1].split() if user_seed else 0)
+    player, monsters_seed = initialise_level(level, all_sprites, collidable_tiles_group,
+                                             enemies_group, doors_group, torches_group,
+                                             user_seed.split('\n')[1].split() if user_seed else 0)
     # Сохранение созданного уровня
     if 'data' not in os.listdir():
         os.mkdir('data')
@@ -114,6 +120,7 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
         all_sprites.update()
         enemies_group.update(player)
         torches_group.update(player)
+        doors_group.update(player, enemies_group, player_sprites)
 
         # Обновление объектов относительно камеры
         camera.update(player)
