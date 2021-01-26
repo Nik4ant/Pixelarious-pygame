@@ -138,6 +138,11 @@ class ShootingMonster(Entity):
             self.dy = -(point_y - self_y) * 4 / part_move
             self.player_observed = True
 
+        elif line >= self.visibility_range - 2 * TILE_SIZE:
+            part_move = max(line / self.speed, 1)
+            self.dx = (point_x - self_x) * 4 / part_move
+            self.dy = (point_y - self_y) * 4 / part_move
+
         else:
             self.dx = self.dy = 0
             self.player_observed = True
@@ -365,23 +370,29 @@ class LongWizard(ShootingMonster):
         self.reload_time = 5000
 
 
-def random_monster(x, y, all_sprites, enemies_group, seed=None):
-    n = randint(1, 20)
+def random_monster(x, y, all_sprites, enemies_group, seed, user_seed=None):
+    if user_seed:
+        n = int(user_seed[0])
+        del user_seed[0]
+    else:
+        n = randint(1, 20)
+    seed.append(str(n))
     args = (x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5,
             all_sprites, enemies_group)
 
     if n in (1, 2):
-        return Demon(*args)
+        monster = Demon(*args)
     elif n in (3, 4, 5):
-        return GreenSlime(*args)
+        monster = GreenSlime(*args)
     elif n in (6,):
-        return DirtySlime(*args)
+        monster = DirtySlime(*args)
     elif n in (7, 8):
-        return Zombie(*args)
+        monster = Zombie(*args)
     elif n in (9, 10, 11):
-        return Wizard(*args)
+        monster = Wizard(*args)
     elif n in (12,):
-        return LongWizard(*args)
-
-    if seed:
-        seed.append(str(n))
+        monster = LongWizard(*args)
+    else:
+        return None
+    monster.index_in_seed = len(seed) - 1
+    return monster

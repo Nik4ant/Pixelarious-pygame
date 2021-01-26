@@ -1073,17 +1073,22 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
     return bool(int(seed[-1]))
 
 
-def initialise_level(level_map, all_sprites, barriers_group, enemies_group, doors_group, torches_group):
+def initialise_level(level_map, all_sprites, barriers_group, enemies_group, doors_group, torches_group, user_seed=None):
     """
     Функция для инициализации уровня
     :param level_map: Уровень
     :param all_sprites: Группа со всеми спрайтами
     :param barriers_group: Группа для спрайтов с тайлами, сквозь которые нельзя ходить
+    :param enemies_group: Группа врагов
+    :param doors_group: Группа дверей
+    :param torches_group: Группа с факелами
+    :param user_seed: Сид, по которому будут расставлены монстры
     
     :return Player: Игрок, размещённый в нужном месте
     :return monsters: Враги, размещённые в нужном месте
     """
     new_player = None
+    seed = []
     level_map = [list(i) for i in level_map]
     monsters = []
 
@@ -1106,7 +1111,7 @@ def initialise_level(level_map, all_sprites, barriers_group, enemies_group, door
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
                 else:
                     Tile('.', x, y, all_sprites)
-                monsters.append(random_monster(x, y, all_sprites, enemies_group))
+                monsters.append(random_monster(x, y, all_sprites, enemies_group, seed, user_seed))
             elif level_map[y][x] in 'F.':
                 if true_with_chance(CRACKED_FLOOR_CHANCE):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
@@ -1118,12 +1123,15 @@ def initialise_level(level_map, all_sprites, barriers_group, enemies_group, door
                 else:
                     Tile('.', x, y, all_sprites)
                 Tile(('B', 'B1', 'C')[true_with_chance(30) + true_with_chance(40)], x, y, all_sprites, barriers_group)
-            elif level_map[y][x] == 'C':
-                if true_with_chance(CRACKED_FLOOR_CHANCE):
-                    Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
-                else:
-                    Tile('.', x, y, all_sprites)
-                Tile(level_map[y][x], x, y, all_sprites, barriers_group)
+            # Если добавим сундуки
+            #
+            # elif level_map[y][x] == 'C':
+            #     if true_with_chance(CRACKED_FLOOR_CHANCE):
+            #         Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites)
+            #     else:
+            #         Tile('.', x, y, all_sprites)
+            #     Tile(level_map[y][x], x, y, all_sprites, barriers_group)
+            #
             elif level_map[y][x] in '1234567890-=':
                 Tile(level_map[y][x], x, y, all_sprites, barriers_group)
             elif level_map[y][x] in 'rbltT':
@@ -1140,5 +1148,5 @@ def initialise_level(level_map, all_sprites, barriers_group, enemies_group, door
                     Torch(x + 0.12, y, all_sprites, torches_group)
             elif level_map[y][x] != ' ':
                 Tile(level_map[y][x], x, y, all_sprites)
-    # вернем игрока и монстров
-    return new_player, monsters
+    # вернем игрока, монстров и сид сонстров
+    return new_player, monsters, seed
