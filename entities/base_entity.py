@@ -31,7 +31,6 @@ class Entity(pygame.sprite.Sprite):
         self.width, self.height = self.image.get_size()
 
         self.last_damage_time = -Entity.HEALTH_LINE_TIME
-
         self.sleeping_time = None
 
         self.start_position = x, y
@@ -49,22 +48,39 @@ class Entity(pygame.sprite.Sprite):
         self.look_direction_x = 0
         self.look_direction_y = 1
 
-    def move(self, collidable_tiles_group, dx, dy):
+    def move(self, dx, dy):
+        """
+        Метод передвижения
+        Сдвинется на указанные параметры, если там свободно
+
+        :param dx: Изменение координаты по Х
+        :param dy: Изменение координаты по Y
+        :return: None
+        """
+        # Запоминаем координаты
         pos = self.rect.x, self.rect.y
+
         self.rect.x = self.rect.x + dx
         self.collider.update(self.rect.centerx, self.rect.centery)
 
-        if pygame.sprite.spritecollide(self.collider, collidable_tiles_group, False):
+        # Если плохо, возвращаем к исходному
+        if pygame.sprite.spritecollide(self.collider, Entity.collisions_group, False):
             self.rect.x = pos[0]
 
         self.rect.y = self.rect.y + dy
-
         self.collider.update(self.rect.centerx, self.rect.centery)
 
-        if pygame.sprite.spritecollide(self.collider, collidable_tiles_group, False):
+        # Если плохо, возвращаем к исходному
+        if pygame.sprite.spritecollide(self.collider, Entity.collisions_group, False):
             self.rect.y = pos[1]
 
     def update_frame_state(self, n=0):
+        """
+        Воспроизводит звук и сменяет кадр анимации
+
+        :param n: если есть, сдвигает номер анимации (стояние вместо движения)
+        :return: None
+        """
         tick = pygame.time.get_ticks()
         if tick - self.last_update > self.UPDATE_TIME:
             self.last_update = tick
@@ -79,6 +95,12 @@ class Entity(pygame.sprite.Sprite):
                 self.sounds_channel.play(self.FOOTSTEP_SOUND)
 
     def draw_health_bar(self, screen):
+        """
+        Функция отрисовки полоски здоровья
+
+        :param screen: Экран отрисовки
+        :return: None
+        """
         if abs(pygame.time.get_ticks() - self.last_damage_time) > Entity.HEALTH_LINE_TIME:
             return
         line_width = Entity.HEALTH_LINE_WIDTH

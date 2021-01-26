@@ -1,6 +1,3 @@
-import os
-import pygame
-
 from generation_map import initialise_level, generate_new_level
 from UI import game_menu
 from config import *
@@ -25,6 +22,7 @@ class Camera:
         obj.rect.x += self.dx
         obj.rect.y += self.dy
 
+    # Функция сдвигает точку спавна существа и точку, к которой он идет
     def apply_point(self, obj):
         obj.start_position = obj.start_position[0] + self.dx, obj.start_position[1] + self.dy
         if obj.point:
@@ -63,6 +61,8 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
                                                        enemies_group, doors_group, torches_group,
                                                        user_seed.split('\n')[1].split() if user_seed else 0)
     # Сохранение созданного уровня
+    if 'data' not in os.listdir():
+        os.mkdir('data')
     with open('data/data.txt', 'w') as data:
         data.write(' '.join(level_seed))
         data.write('\n')
