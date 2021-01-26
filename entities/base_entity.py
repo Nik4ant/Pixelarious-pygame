@@ -113,6 +113,12 @@ class Entity(pygame.sprite.Sprite):
         pygame.draw.rect(screen, color, (x1, y1 - 10, health_length, line_width))
 
     def draw_sign(self, screen):
+        """
+        Отрисовка знака сна (Z-Z-Z) или восклицательного знака.
+
+        :param screen: Экран отрисовки
+        :return: None
+        """
         # TODO: оставить что-нибудь одно
         if self.player_observed:
             font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 96)
@@ -128,15 +134,31 @@ class Entity(pygame.sprite.Sprite):
             screen.blit(Entity.sleeping_frames[0][self.cur_sleeping_frame], (self.rect.centerx + 10, self.rect.y - 35))
 
     def get_damage(self, damage):
+        """
+        Получение дамага
+
+        :param damage: Столько здоровья надо отнять
+        :return: None
+        """
         self.last_damage_time = pygame.time.get_ticks()
         self.health -= damage
 
     def set_first_frame(self):
+        """
+        Установка первого спрайта
+
+        :return: None
+        """
         look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
         self.cur_frame = 0
         self.image = self.__class__.frames[look][self.cur_frame]
 
     def apply_base_collisions(self):
+        """
+        ???
+
+        :return: None
+        """
         hits = pygame.sprite.spritecollide(self, Entity.collisions_group, False)
         # FIXME: Никита сделал тут совсем сырой метод копипасту, т.к. попытка сделать как я писал в группе не удалась
         # FIXME: Тем неменее нормальный способ для колизий всё ещё нужен, поэтому SOS
