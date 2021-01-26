@@ -60,14 +60,14 @@ class Entity(pygame.sprite.Sprite):
         # Запоминаем координаты
         pos = self.rect.x, self.rect.y
 
-        self.rect.x = self.rect.x + dx
+        self.rect.x = round(self.rect.x + dx)
         self.collider.update(self.rect.centerx, self.rect.centery)
 
         # Если плохо, возвращаем к исходному
         if pygame.sprite.spritecollide(self.collider, Entity.collisions_group, False):
             self.rect.x = pos[0]
 
-        self.rect.y = self.rect.y + dy
+        self.rect.y = round(self.rect.y + dy)
         self.collider.update(self.rect.centerx, self.rect.centery)
 
         # Если плохо, возвращаем к исходному
