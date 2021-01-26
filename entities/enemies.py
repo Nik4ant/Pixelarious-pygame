@@ -3,6 +3,7 @@ from random import randint
 import pygame
 
 from entities.base_entity import Entity
+from entities.spells import FireSpell
 from engine import load_image, cut_sheet, concat_two_file_paths
 from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
 
@@ -25,7 +26,9 @@ class WalkingMonster(Entity):
         self.stopping_time = pygame.time.get_ticks() + randint(-750, 750)
         self.distance_to_player = 100
 
-    def update(self, player=None):
+        self.spells = pygame.sprite.Group()
+
+    def update(self, screenddddddd, player=None):
         if not player:
             return
 
@@ -119,12 +122,14 @@ class ShootingMonster(Entity):
         self.distance_to_player = 100
         self.player_observed = False
 
-        self.last_shot = pygame.time.get_ticks()
-        self.reload_time = 3000
+        self.spells = pygame.sprite.Group()
+
+        self.last_shot_time = pygame.time.get_ticks()
+        self.reload_time = 700
 
         self.stopping_time = pygame.time.get_ticks() + randint(-750, 750)
 
-    def update(self, player=None):
+    def update(self, screen, player=None):
         if not player:
             return
 
@@ -182,7 +187,9 @@ class ShootingMonster(Entity):
         if previous_pos == (self.rect.centerx, self.rect.centery):
             # Выбираем спрайты стояния
             delta = 2
-            if pygame.time.get_ticks() - self.last_shot < self.reload_time:
+            if self.distance_to_player <= self.visibility_range and \
+                    pygame.time.get_ticks() - self.last_shot_time > self.reload_time:
+                self.last_shot_time = pygame.time.get_ticks()
                 # Стреляем в игрока
                 self.shoot(player)
 
@@ -203,8 +210,11 @@ class ShootingMonster(Entity):
         # Обновление спрайта
         super().update_frame_state(delta)
 
+        self.spells.update()
+
     def shoot(self, player):
-        pass
+        FireSpell(self.rect.centerx, self.rect.centery,
+                  player.rect.centerx, player.rect.centery, [player], self.spells)
 
 
 class Demon(WalkingMonster):
