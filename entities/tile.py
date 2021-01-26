@@ -65,7 +65,11 @@ class Torch(pygame.sprite.Sprite):
             return
         if pygame.time.get_ticks() - self.update_time > 100 + randint(-20, 20):
             self.update_time = pygame.time.get_ticks()
-            self.cur_frame = (self.cur_frame + 1) % len(Torch.frames[0])
+            while 1:
+                n = randint(0, 7)
+                if n != self.cur_frame:
+                    self.cur_frame = n
+                    break
             self.image = Torch.frames[0][self.cur_frame]
 
         dx, dy = player.rect.centerx - self.rect.centerx, player.rect.centery - self.rect.centery
