@@ -99,9 +99,9 @@ class Door(pygame.sprite.Sprite):
         if not player:
             Door.min_distance_to_player = 100000
             return
-        collide = pygame.sprite.spritecollideany
+        collide = pygame.sprite.spritecollide
 
-        if not self.opened and (collide(self, enemies_group) or collide(self, [player])):
+        if not self.opened and (collide(self, enemies_group, False) or collide(self, player_group, False)):
             dx, dy = player.rect.centerx - self.rect.centerx, player.rect.centery - self.rect.centery
             Door.min_distance_to_player = min(max((dx ** 2 + dy ** 2) ** 0.5, 0.000001), Door.min_distance_to_player)
 
@@ -113,11 +113,11 @@ class Door(pygame.sprite.Sprite):
             self.opened = True
             self.image = Door.frames[1]
 
-        elif self.opened and not (collide(self, enemies_group) or collide(self, [player])):
+        elif self.opened and not (collide(self, enemies_group, False) or collide(self, player_group, False)):
             dx, dy = player.rect.centerx - self.rect.centerx, player.rect.centery - self.rect.centery
             Door.min_distance_to_player = min(max((dx ** 2 + dy ** 2) ** 0.5, 0.000001), Door.min_distance_to_player)
 
-            volume = min(DEFAULT_SOUNDS_VOLUME / (Door.min_distance_to_player / TILE_SIZE) * 2, 1.2)
+            volume = min(DEFAULT_SOUNDS_VOLUME / (Door.min_distance_to_player / TILE_SIZE) * 10, 1.2)
             self.CLOSE_SOUND.set_volume(volume)
             if self.sounds_channel.get_busy():
                 self.sounds_channel.stop()

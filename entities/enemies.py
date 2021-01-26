@@ -368,7 +368,7 @@ class Zombie(WalkingMonster):
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
         self.speed = TILE_SIZE * 0.02
-        self.visibility_range = TILE_SIZE * 5
+        self.visibility_range = TILE_SIZE * 6
 
         self.health = 80
         self.full_health = self.health
