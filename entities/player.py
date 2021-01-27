@@ -1,3 +1,5 @@
+from math import atan2, degrees
+
 from entities.base_entity import Entity
 from engine import *
 from config import *
@@ -23,10 +25,9 @@ class Player(Entity):
         (1, 0): 2,
         (1, 1): 2
     }
-    MIN_VALUE_TO_CHANGE_FRAME_DIRECTION = 0.35
 
     # время перезарядки дэша в миллисекундах
-    dash_reload_time = 2000
+    dash_reload_time = 2500
     # сила дэша, которая устанавливается в самом начале
     dash_force_base = 1.8
     # сила замедляющая дэш со временем
@@ -84,6 +85,8 @@ class Player(Entity):
 
         # Инициализация прицеда для игрока
         self.scope = PlayerScope(x, y)
+        # Инициализация оружия для игрока
+        self.wand = Player_wand()
         # Установка начального состояния джойстика
         self.joystick = get_joystick() if check_any_joystick() else None
 
@@ -193,11 +196,9 @@ class Player(Entity):
         '''
         # Проверка, что было было движение
         if current_direction_x != 0 or current_direction_y != 0:
-            if (abs(self.dx) > Player.MIN_VALUE_TO_CHANGE_FRAME_DIRECTION or
-                    abs(self.dy) > Player.MIN_VALUE_TO_CHANGE_FRAME_DIRECTION):
-                # Обновление направления взгляда
-                self.look_direction_x = current_direction_x
-                self.look_direction_y = current_direction_y
+            # Обновление направления взгляда
+            self.look_direction_x = current_direction_x
+            self.look_direction_y = current_direction_y
 
             # Передвижения игрока при обычной ходьбе
             if self.dash_force_x == 0 and self.dash_force_y == 0:
@@ -224,7 +225,6 @@ class Player(Entity):
         # ускорение збрасывается
         elif self.dash_force_x == 0 and self.dash_force_y == 0:
             self.dx = self.dy = 0
-            self.set_first_frame()
 
         # Если игрок движется и при этом не совершается дэш,
         # то воспроизводится звук ходьбы
@@ -249,11 +249,18 @@ class Player(Entity):
         self.move(self.dx * self.speed, self.dy * self.speed)
 
         # Если было хоть какое-то движение, то обновляется
-
-        self.update_frame_state()
+        if self.dx and self.dy:
+            self.update_frame_state()
+        else:
+            self.set_first_frame()
 
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
+        # Обновление волшебной палочки
+        self.wand.update(self.rect.center, self.scope.rect.center)
+
+    def shoot(self):
+        pass
 
 
 class PlayerScope(pygame.sprite.Sprite):
@@ -275,8 +282,7 @@ class PlayerScope(pygame.sprite.Sprite):
         self.rect.centerx = x
         self.rect.centery = y
         # Скорость перемещения
-        # TODO: сделать как чуствительность у прицела
-        self.speed = 13
+        self.speed = 15
 
     def update(self, x=None, y=None):
         # Т.к. update вызывается ещё и в игровом цикле, то
@@ -291,3 +297,29 @@ class PlayerScope(pygame.sprite.Sprite):
         :param position: Кортеж с координатами
         """
         self.rect.centerx, self.rect.centery = position
+
+
+class Player_wand(pygame.sprite.Sprite):
+    """Класс представляющий оружие игрока - волшебную палочку"""
+
+    def __init__(self):
+        super().__init__()
+
+        self.image = load_image("magic_wand.png")
+        self.image = pygame.transform.scale2x(self.image)
+        self.original_image = self.image
+        self.rect = self.image.get_rect()
+
+    def update(self, player_position: tuple =None, player_scope_position: tuple =None):
+        # Если были переданны координаты прицела, то обновляем угол
+        if player_scope_position and player_position:
+            # Получение угла относительно прицела и оружия
+            angle = degrees(atan2(self.rect.centery - player_scope_position[1],
+                                  self.rect.centerx - player_scope_position[0]))
+            self.rotate_wand(player_position, angle)
+
+    def rotate_wand(self, player_position: tuple, angle: float) -> None:
+        self.image = pygame.transform.rotate(self.original_image, int(angle))
+        self.rect = self.image.get_rect(center=self.rect.center)
+        self.rect.centerx = player_position[0] + TILE_SIZE * 0.5
+        self.rect.centery = player_position[1] + TILE_SIZE * 0.5

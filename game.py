@@ -73,6 +73,7 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
     player_sprites.add(player)
     player.scope.init_scope_position((screen_width * 0.5, screen_height * 0.5))
     player_sprites.add(player.scope)
+    player_sprites.add(player.wand)
     all_sprites.add(player)
 
     # Фоновая музыка
@@ -82,7 +83,7 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
 
     fps_font = pygame.font.Font('assets\\UI\\pixel_font.ttf', 32)
     
-     # Иконки для отображения частей UI с заклинаниями
+    # Иконки для отображения частей UI с заклинаниями
     spells_containers = (
         UIComponents.Spell_container("fire_spell.png", (120, 150)),
         UIComponents.Spell_container("ice_spell.png", (120, 250)),
@@ -102,12 +103,30 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
                 # Проверка на активацию паузы
                 if event.key == CONTROLS["KEYBOARD_PAUSE"]:
                     was_pause_activated = True
+                # FIXME: HELP PLEASE!!!!!!!!!!!!
+                elif event.key == CONTROLS["KEYBOARD_SPELL_FIRE"]:
+                    pass
+                elif event.key == CONTROLS["KEYBOARD_SPELL_ICE"]:
+                    pass
+                elif event.key == CONTROLS["KEYBOARD_SPELL_LIGHT"]:
+                    pass
+                elif event.key == CONTROLS["KEYBOARD_SPELL_POISON"]:
+                    pass
 
         # Текущий джойстик находится в игроке, поэтому кнопки проверяем по нему же
         if player.joystick:
             # Только если joystick подключен проверяем нажатие кнопки
             if player.joystick.get_button(CONTROLS["JOYSTICK_UI_PAUSE"]):
                 was_pause_activated = True
+
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_FIRE"]):
+                pass
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_ICE"]):
+                pass
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_LIGHT"]):
+                pass
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_POISON"]):
+                pass
 
         if was_pause_activated:
             pygame.mixer.music.pause()
