@@ -20,7 +20,8 @@ class Camera:
 
     # Функция сдвигает точку спавна существа и точку, к которой он идет
     def apply_point(self, obj):
-        obj.start_position = obj.start_position[0] + self.dx, obj.start_position[1] + self.dy
+        if obj.start_position:
+            obj.start_position = obj.start_position[0] + self.dx, obj.start_position[1] + self.dy
         if obj.point:
             obj.point = obj.point[0] + self.dx, obj.point[1] + self.dy
 
@@ -119,8 +120,8 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
         screen.fill((20, 20, 20))
 
         # Обновление спрайтов
+        enemies_group.update(all_sprites, player)
         player_sprites.update()
-        enemies_group.update(screen, player)
         torches_group.update(player)
         doors_group.update(player, enemies_group, [player])
 
@@ -136,12 +137,16 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
         doors_group.draw(screen)
         enemies_group.draw(screen)
         player_sprites.draw(screen)
-        
+        player.draw_health_bar(screen)
+        player.spells.draw(screen)
+
         # Индивидуальная обработка спрайтов врагов
         for enemy in enemies_group:
             camera.apply_point(enemy)
             enemy.draw_health_bar(screen)
             enemy.draw_sign(screen)
+            for spell in enemy.spells:
+                camera.apply_point(spell)
             enemy.spells.draw(screen)
         
         # Определение параметров для отрисовки контейнеров с заклинаниями
