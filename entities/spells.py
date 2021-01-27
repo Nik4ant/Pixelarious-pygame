@@ -98,7 +98,7 @@ class Spell(pygame.sprite.Sprite):
 
 
 class IceSpell(Spell):
-    damage = 40
+    damage = 30
     spell_type = Spell.ICE
     UPDATE_TIME = 50
 
@@ -124,7 +124,7 @@ class FireSpell(Spell):
 
 
 class FlashSpell(Spell):
-    damage = 40
+    damage = 50
     spell_type = Spell.FLASH
     UPDATE_TIME = 60
 
@@ -139,7 +139,7 @@ class FlashSpell(Spell):
 
 
 class PoisonSpell(Spell):
-    damage = 40
+    damage = 30
     spell_type = Spell.POISON
     UPDATE_TIME = 50
 
@@ -153,7 +153,7 @@ class PoisonSpell(Spell):
 
 
 class VoidSpell(Spell):
-    damage = 40
+    damage = 70
     spell_type = Spell.VOID
 
     size = (TILE_SIZE // 4 * 3,) * 2

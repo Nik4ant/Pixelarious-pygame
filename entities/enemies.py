@@ -125,7 +125,7 @@ class ShootingMonster(Entity):
         self.spells = pygame.sprite.Group()
 
         self.last_shot_time = pygame.time.get_ticks()
-        self.reload_time = 700
+        self.reload_time = 1500
 
         self.stopping_time = pygame.time.get_ticks() + randint(-750, 750)
 
@@ -471,7 +471,7 @@ class LongWizard(ShootingMonster):
         self.health = 80
         self.full_health = self.health
 
-        self.reload_time = 5000
+        self.reload_time = self.reload_time * 4 / 3
 
 
 def random_monster(x, y, all_sprites, enemies_group, seed, user_seed=None):

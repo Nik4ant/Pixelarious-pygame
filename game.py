@@ -39,7 +39,7 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
     """
     # Ставим загрузочный экран
     loading_screen(screen)
-    
+
     screen_width, screen_height = screen.get_size()
 
     # Группа со всеми спрайтами
@@ -90,7 +90,7 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
         UIComponents.Spell_container("light_spell.png", (120, 350)),
         UIComponents.Spell_container("poison_spell.png", (120, 450)),
     )
-    
+
     # Игровой цикл
     while is_game_open:
         was_pause_activated = False
@@ -99,34 +99,25 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
             if event.type == pygame.QUIT:
                 is_game_open = False
 
-            if event.type == pygame.KEYUP:
+            if event.type == pygame.KEYDOWN:
                 # Проверка на активацию паузы
                 if event.key == CONTROLS["KEYBOARD_PAUSE"]:
                     was_pause_activated = True
                 # FIXME: HELP PLEASE!!!!!!!!!!!!
                 elif event.key == CONTROLS["KEYBOARD_SPELL_FIRE"]:
-                    pass
+                    player.shoot('fire', enemies_group)
                 elif event.key == CONTROLS["KEYBOARD_SPELL_ICE"]:
-                    pass
+                    player.shoot('ice', enemies_group)
                 elif event.key == CONTROLS["KEYBOARD_SPELL_LIGHT"]:
-                    pass
+                    player.shoot('flash', enemies_group)
                 elif event.key == CONTROLS["KEYBOARD_SPELL_POISON"]:
-                    pass
+                    player.shoot('poison', enemies_group)
 
         # Текущий джойстик находится в игроке, поэтому кнопки проверяем по нему же
         if player.joystick:
             # Только если joystick подключен проверяем нажатие кнопки
             if player.joystick.get_button(CONTROLS["JOYSTICK_UI_PAUSE"]):
                 was_pause_activated = True
-
-            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_FIRE"]):
-                pass
-            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_ICE"]):
-                pass
-            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_LIGHT"]):
-                pass
-            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_POISON"]):
-                pass
 
         if was_pause_activated:
             pygame.mixer.music.pause()
@@ -149,6 +140,10 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
         for sprite in all_sprites:
             camera.apply(sprite)
 
+        for spell in player.spells:
+            camera.apply(spell)
+            camera.apply_point(spell)
+
         # Отрисовка всех спрайтов
         tiles_group.draw(screen)
         collidable_tiles_group.draw(screen)
@@ -157,6 +152,7 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
         enemies_group.draw(screen)
         player_sprites.draw(screen)
         player.draw_health_bar(screen)
+        player.spells.update()
         player.spells.draw(screen)
 
         # Индивидуальная обработка спрайтов врагов
@@ -167,16 +163,15 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
             for spell in enemy.spells:
                 camera.apply_point(spell)
             enemy.spells.draw(screen)
-        
+
         # Определение параметров для отрисовки контейнеров с заклинаниями
-        is_joystick = player.joystick is not None
-        if is_joystick:
+        if player.joystick:
             spell_args = ("o", "x", "triangle", "square")
         else:
             spell_args = ("1", "2", "3", "4")
         # Отрисовка контейнеров с заклинаниями
         for i in range(len(spells_containers)):
-            spells_containers[i].draw(screen, is_joystick, spell_args[i])
+            spells_containers[i].draw(screen, bool(player.joystick), spell_args[i])
 
         # Отрисовка фпс
         fps_text = fps_font.render(str(int(clock.get_fps())), True, (100, 255, 100))
@@ -184,7 +179,7 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
 
         clock.tick(FPS)
         pygame.display.flip()
-    
+
     # Сохранение данных
     if 'data' not in os.listdir():
         os.mkdir('data')

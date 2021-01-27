@@ -23,6 +23,7 @@ class Entity(pygame.sprite.Sprite):
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
         super().__init__(*args)
+        self.alive = True
 
         # Изображение
         self.cur_frame = 0
@@ -42,6 +43,7 @@ class Entity(pygame.sprite.Sprite):
         self.collider = Collider(self.rect.centerx, self.rect.centery)
 
         # Скорость
+        self.speed = TILE_SIZE * 0.1
         self.dx = self.dy = 0
 
         # Направление взгляда
@@ -84,6 +86,9 @@ class Entity(pygame.sprite.Sprite):
         tick = pygame.time.get_ticks()
         if tick - self.last_update > self.UPDATE_TIME:
             self.last_update = tick
+            self.cur_frame = self.cur_frame + 1
+            if not self.alive:
+                pass
             look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
             look += n
             self.cur_frame = (self.cur_frame + 1) % len(self.__class__.frames[look])
@@ -142,6 +147,13 @@ class Entity(pygame.sprite.Sprite):
         """
         self.last_damage_time = pygame.time.get_ticks()
         self.health -= damage
+        if self.height <= 0:
+            self.death()
+
+    def death(self):
+        self.speed = 0
+        self.alive = False
+        self.cur_frame = 0
 
     def set_first_frame(self):
         """

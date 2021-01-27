@@ -1,6 +1,7 @@
-from math import atan2, degrees
+from math import *
 
 from entities.base_entity import Entity
+from entities.spells import *
 from engine import *
 from config import *
 
@@ -25,9 +26,10 @@ class Player(Entity):
         (1, 0): 2,
         (1, 1): 2
     }
+    MIN_VALUE_TO_CHANGE_FRAME_DIRECTION = 0.35
 
     # время перезарядки дэша в миллисекундах
-    dash_reload_time = 2500
+    dash_reload_time = 2000
     # сила дэша, которая устанавливается в самом начале
     dash_force_base = 1.8
     # сила замедляющая дэш со временем
@@ -50,9 +52,9 @@ class Player(Entity):
     DASH_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "dash.wav"))
     DASH_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, x: float, y: float, *args):
+    def __init__(self, x: float, y: float, all_sprites, *args):
         # Конструктор класса Entity
-        super().__init__(x, y, *args)
+        super().__init__(x, y, all_sprites, *args)
 
         # Ширина и высота изображения после инициализации
         self.width, self.height = self.image.get_size()
@@ -83,10 +85,10 @@ class Player(Entity):
         # (Нужно для определения перезарядился дэш или нет)
         self.dash_last_time = pygame.time.get_ticks()
 
+        self.wand = PlayerWand(all_sprites)
+
         # Инициализация прицеда для игрока
         self.scope = PlayerScope(x, y)
-        # Инициализация оружия для игрока
-        self.wand = Player_wand()
         # Установка начального состояния джойстика
         self.joystick = get_joystick() if check_any_joystick() else None
 
@@ -196,9 +198,11 @@ class Player(Entity):
         '''
         # Проверка, что было было движение
         if current_direction_x != 0 or current_direction_y != 0:
-            # Обновление направления взгляда
-            self.look_direction_x = current_direction_x
-            self.look_direction_y = current_direction_y
+            if (abs(self.dx) > Player.MIN_VALUE_TO_CHANGE_FRAME_DIRECTION or
+                    abs(self.dy) > Player.MIN_VALUE_TO_CHANGE_FRAME_DIRECTION):
+                # Обновление направления взгляда
+                self.look_direction_x = current_direction_x
+                self.look_direction_y = current_direction_y
 
             # Передвижения игрока при обычной ходьбе
             if self.dash_force_x == 0 and self.dash_force_y == 0:
@@ -222,9 +226,10 @@ class Player(Entity):
                 self.dy += current_direction_y * 0.4
 
         # Если игрок не совершает дэш и направления движения нет, то
-        # ускорение збрасывается
+        # ускорение cбрасывается
         elif self.dash_force_x == 0 and self.dash_force_y == 0:
             self.dx = self.dy = 0
+            self.set_first_frame()
 
         # Если игрок движется и при этом не совершается дэш,
         # то воспроизводится звук ходьбы
@@ -249,18 +254,53 @@ class Player(Entity):
         self.move(self.dx * self.speed, self.dy * self.speed)
 
         # Если было хоть какое-то движение, то обновляется
-        if self.dx and self.dy:
-            self.update_frame_state()
-        else:
-            self.set_first_frame()
+
+        self.update_frame_state()
 
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
-        # Обновление волшебной палочки
-        self.wand.update(self.rect.center, self.scope.rect.center)
+        
+        self.wand.update()
 
-    def shoot(self):
-        pass
+    def shoot(self, type, enemies_group):
+        args = (self.wand.rect.centerx, self.wand.rect.y,
+                self.scope.rect.centerx, self.scope.rect.centery, enemies_group, self.spells)
+        print(args[:2])
+        if type == 'fire':
+            FireSpell(*args)
+        elif type == 'ice':
+            IceSpell(*args)
+        elif type == 'flash':
+            FlashSpell(*args)
+        elif type == 'poison':
+            PoisonSpell(*args)
+
+
+class PlayerWand(pygame.sprite.Sprite):
+    """
+    Класс представляющий оружие игрока - волшебную палочку
+    """
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        self.image = load_image("magic_wand.png")
+        self.image = pygame.transform.scale2x(self.image)
+        self.original_image = self.image
+        self.rect = self.image.get_rect()
+
+    def update(self, player_position: tuple =None, player_scope_position: tuple =None):
+        # Если были переданны координаты прицела, то обновляем угол
+        if player_scope_position and player_position:
+            # Получение угла относительно прицела и оружия
+            angle = degrees(atan2(self.rect.centery - player_scope_position[1],
+            self.rect.centerx - player_scope_position[0]))
+            self.rotate_wand(player_position, angle)
+
+    def rotate_wand(self, player_position: tuple, angle: float) -> None:
+        self.image = pygame.transform.rotate(self.original_image, int(angle))
+        self.rect = self.image.get_rect(center=self.rect.center)
+        self.rect.centerx = player_position[0] + TILE_SIZE * 0.5
+        self.rect.centery = player_position[1] + TILE_SIZE * 0.5
 
 
 class PlayerScope(pygame.sprite.Sprite):
@@ -282,7 +322,8 @@ class PlayerScope(pygame.sprite.Sprite):
         self.rect.centerx = x
         self.rect.centery = y
         # Скорость перемещения
-        self.speed = 15
+        # TODO: сделать как чуствительность у прицела
+        self.speed = 13
 
     def update(self, x=None, y=None):
         # Т.к. update вызывается ещё и в игровом цикле, то
@@ -297,29 +338,3 @@ class PlayerScope(pygame.sprite.Sprite):
         :param position: Кортеж с координатами
         """
         self.rect.centerx, self.rect.centery = position
-
-
-class Player_wand(pygame.sprite.Sprite):
-    """Класс представляющий оружие игрока - волшебную палочку"""
-
-    def __init__(self):
-        super().__init__()
-
-        self.image = load_image("magic_wand.png")
-        self.image = pygame.transform.scale2x(self.image)
-        self.original_image = self.image
-        self.rect = self.image.get_rect()
-
-    def update(self, player_position: tuple =None, player_scope_position: tuple =None):
-        # Если были переданны координаты прицела, то обновляем угол
-        if player_scope_position and player_position:
-            # Получение угла относительно прицела и оружия
-            angle = degrees(atan2(self.rect.centery - player_scope_position[1],
-                                  self.rect.centerx - player_scope_position[0]))
-            self.rotate_wand(player_position, angle)
-
-    def rotate_wand(self, player_position: tuple, angle: float) -> None:
-        self.image = pygame.transform.rotate(self.original_image, int(angle))
-        self.rect = self.image.get_rect(center=self.rect.center)
-        self.rect.centerx = player_position[0] + TILE_SIZE * 0.5
-        self.rect.centery = player_position[1] + TILE_SIZE * 0.5

@@ -1110,7 +1110,7 @@ def initialise_level(level_map, all_sprites, tiles_group, barriers_group, enemie
                     Tile('.', x, y, all_sprites, tiles_group)
                 # Помещаем игрока в центр текущего тайла
                 new_player = Player(x * TILE_SIZE + TILE_SIZE * 0.5,
-                                    y * TILE_SIZE + TILE_SIZE * 0.5)
+                                    y * TILE_SIZE + TILE_SIZE * 0.5, all_sprites)
                 Tile(level_map[y][x], x, y, all_sprites, tiles_group)
             elif level_map[y][x] in 'M':
                 if true_with_chance(CRACKED_FLOOR_CHANCE):
