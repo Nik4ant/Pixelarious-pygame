@@ -113,7 +113,7 @@ class Entity(pygame.sprite.Sprite):
         width, height = self.rect.size
         x1, y1 = x - width * 0.5, y - height * 0.5
         pygame.draw.rect(screen, 'grey', (x1 - 1, y1 - 10 - 1, width + 2, line_width + 2))
-        health_length = width * self.health / self.full_health
+        health_length = width * max(self.health, 0) / self.full_health
         color = '#00b300' if str(self.__class__.__name__) == 'Player' else 'red'
         pygame.draw.rect(screen, color, (x1, y1 - 10, health_length, line_width))
 
@@ -124,7 +124,6 @@ class Entity(pygame.sprite.Sprite):
         :param screen: Экран отрисовки
         :return: None
         """
-        # TODO: оставить что-нибудь одно
         if self.player_observed:
             font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 96)
             text = font.render("!", True, (250, 20, 20))
@@ -147,13 +146,15 @@ class Entity(pygame.sprite.Sprite):
         """
         self.last_damage_time = pygame.time.get_ticks()
         self.health -= damage
-        if self.height <= 0:
+        if self.health <= 0:
             self.death()
 
     def death(self):
         self.speed = 0
         self.alive = False
         self.cur_frame = 0
+        for group in self.groups():
+            group.remove(self)
 
     def set_first_frame(self):
         """
@@ -164,30 +165,6 @@ class Entity(pygame.sprite.Sprite):
         look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
         self.cur_frame = 0
         self.image = self.__class__.frames[look][self.cur_frame]
-
-    def apply_base_collisions(self):
-        """
-        ???
-
-        :return: None
-        """
-        hits = pygame.sprite.spritecollide(self, Entity.collisions_group, False)
-        # FIXME: Никита сделал тут совсем сырой метод копипасту, т.к. попытка сделать как я писал в группе не удалась
-        # FIXME: Тем неменее нормальный способ для колизий всё ещё нужен, поэтому SOS
-        if hits:
-            if self.dx > 0:
-                self.x = hits[0].rect.left - self.rect.width
-            if self.dx < 0:
-                self.x = hits[0].rect.right
-            self.dx = 0
-            self.rect.x = self.x
-
-            if self.dy > 0:
-                self.y = hits[0].rect.top - self.rect.height
-            if self.dy < 0:
-                self.y = hits[0].rect.bottom
-            self.dy = 0
-            self.rect.y = self.y
 
     @staticmethod
     def set_global_collisions_group(group: pygame.sprite.Group):

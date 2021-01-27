@@ -26,8 +26,10 @@ class Player(Entity):
         (1, 0): 2,
         (1, 1): 2
     }
-    MIN_VALUE_TO_CHANGE_FRAME_DIRECTION = 0.35
 
+    # время перезарядки заклинания в миллисекундах
+    spell_reload_time = 1000
+    
     # время перезарядки дэша в миллисекундах
     dash_reload_time = 2000
     # сила дэша, которая устанавливается в самом начале
@@ -71,7 +73,9 @@ class Player(Entity):
         self.health = 300
         self.full_health = self.health
 
+        # Группа со спрайтами заклинаний
         self.spells = pygame.sprite.Group()
+        self.shoot_last_time = pygame.time.get_ticks()
 
         # Направление взгляда
         self.look_direction_x = 0
@@ -198,11 +202,9 @@ class Player(Entity):
         '''
         # Проверка, что было было движение
         if current_direction_x != 0 or current_direction_y != 0:
-            if (abs(self.dx) > Player.MIN_VALUE_TO_CHANGE_FRAME_DIRECTION or
-                    abs(self.dy) > Player.MIN_VALUE_TO_CHANGE_FRAME_DIRECTION):
-                # Обновление направления взгляда
-                self.look_direction_x = current_direction_x
-                self.look_direction_y = current_direction_y
+            # Обновление направления взгляда
+            self.look_direction_x = current_direction_x
+            self.look_direction_y = current_direction_y
 
             # Передвижения игрока при обычной ходьбе
             if self.dash_force_x == 0 and self.dash_force_y == 0:
@@ -226,7 +228,7 @@ class Player(Entity):
                 self.dy += current_direction_y * 0.4
 
         # Если игрок не совершает дэш и направления движения нет, то
-        # ускорение cбрасывается
+        # ускорение збрасывается
         elif self.dash_force_x == 0 and self.dash_force_y == 0:
             self.dx = self.dy = 0
             self.set_first_frame()
@@ -253,27 +255,49 @@ class Player(Entity):
         # Перемещение игрока относительно центра
         self.move(self.dx * self.speed, self.dy * self.speed)
 
-        # Если было хоть какое-то движение, то обновляется
-
+        # Обновление анимации
         self.update_frame_state()
 
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
-        
-        self.wand.update()
+        self.wand.update(self.rect.center, self.scope.rect.center)
 
-    def shoot(self, type, enemies_group):
-        args = (self.wand.rect.centerx, self.wand.rect.y,
+    def shoot(self, spell_type: str, enemies_group):
+        current_ticks = pygame.time.get_ticks()
+        # Если не прошло время перезарядки, то заклинания не создаются
+        if current_ticks - Player.spell_reload_time < self.shoot_last_time:
+            return
+
+        # Получение угла относительно прицела и оружия
+        angle = degrees(atan2(self.wand.rect.centery - self.scope.rect.centerx,
+                              self.wand.rect.centerx - self.scope.rect.centery))
+        fixer = 1
+        if angle >= 180:
+            fixer = -1
+        args = (self.wand.rect.centerx, self.wand.rect.centery + self.wand.offset.y * fixer,
                 self.scope.rect.centerx, self.scope.rect.centery, enemies_group, self.spells)
-        print(args[:2])
-        if type == 'fire':
+
+        if spell_type == 'fire':
             FireSpell(*args)
-        elif type == 'ice':
+        elif spell_type == 'ice':
             IceSpell(*args)
-        elif type == 'flash':
+        elif spell_type == 'flash':
             FlashSpell(*args)
-        elif type == 'poison':
+        elif spell_type == 'poison':
             PoisonSpell(*args)
+
+        self.shoot_last_time = current_ticks
+
+    def death(self):
+        # Уаделние прицела
+        for group in self.scope.groups():
+            group.remove(self.scope)
+
+        # Удаление палочки
+        for group in self.wand.groups():
+            group.remove(self.wand)
+        # Удаление себя же
+        super().death()
 
 
 class PlayerWand(pygame.sprite.Sprite):
@@ -287,20 +311,22 @@ class PlayerWand(pygame.sprite.Sprite):
         self.image = pygame.transform.scale2x(self.image)
         self.original_image = self.image
         self.rect = self.image.get_rect()
+        self.offset = pygame.math.Vector2(0, self.rect.height * -0.5)
 
     def update(self, player_position: tuple =None, player_scope_position: tuple =None):
         # Если были переданны координаты прицела, то обновляем угол
         if player_scope_position and player_position:
+            self.rect.centerx = player_position[0] + TILE_SIZE * 0.5
+            self.rect.centery = player_position[1] + TILE_SIZE * 0.5
             # Получение угла относительно прицела и оружия
             angle = degrees(atan2(self.rect.centery - player_scope_position[1],
-            self.rect.centerx - player_scope_position[0]))
-            self.rotate_wand(player_position, angle)
+                                  self.rect.centerx - player_scope_position[0]))
+            self.rotate_wand(angle)
 
-    def rotate_wand(self, player_position: tuple, angle: float) -> None:
-        self.image = pygame.transform.rotate(self.original_image, int(angle))
-        self.rect = self.image.get_rect(center=self.rect.center)
-        self.rect.centerx = player_position[0] + TILE_SIZE * 0.5
-        self.rect.centery = player_position[1] + TILE_SIZE * 0.5
+    def rotate_wand(self, angle: float) -> None:
+        self.image = pygame.transform.rotozoom(self.original_image, -angle, 1)
+        offset_rotated = self.offset.rotate(angle)
+        self.rect = self.image.get_rect(center=self.rect.center + offset_rotated)
 
 
 class PlayerScope(pygame.sprite.Sprite):
@@ -322,8 +348,7 @@ class PlayerScope(pygame.sprite.Sprite):
         self.rect.centerx = x
         self.rect.centery = y
         # Скорость перемещения
-        # TODO: сделать как чуствительность у прицела
-        self.speed = 13
+        self.speed = 15
 
     def update(self, x=None, y=None):
         # Т.к. update вызывается ещё и в игровом цикле, то

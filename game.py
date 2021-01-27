@@ -99,11 +99,11 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
             if event.type == pygame.QUIT:
                 is_game_open = False
 
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN and not player.joystick:
                 # Проверка на активацию паузы
                 if event.key == CONTROLS["KEYBOARD_PAUSE"]:
                     was_pause_activated = True
-                # FIXME: HELP PLEASE!!!!!!!!!!!!
+
                 elif event.key == CONTROLS["KEYBOARD_SPELL_FIRE"]:
                     player.shoot('fire', enemies_group)
                 elif event.key == CONTROLS["KEYBOARD_SPELL_ICE"]:
@@ -119,19 +119,35 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
             if player.joystick.get_button(CONTROLS["JOYSTICK_UI_PAUSE"]):
                 was_pause_activated = True
 
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_FIRE"]):
+                player.shoot('fire', enemies_group)
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_ICE"]):
+                player.shoot('ice', enemies_group)
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_LIGHT"]):
+                player.shoot('flash', enemies_group)
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_POISON"]):
+                player.shoot('poison', enemies_group)
+
         if was_pause_activated:
+            # Останавливаем все звуки (даже музыку)
+            pygame.mixer.pause()
             pygame.mixer.music.pause()
             # Если была нажата кнопка выйти из игры, то цикл прерывается
             if game_menu.execute(screen) == -1:
                 break
+            pygame.mixer.unpause()
             pygame.mixer.music.unpause()
 
         # Очистка экрана
         screen.fill((20, 20, 20))
 
         # Обновление спрайтов
-        enemies_group.update(all_sprites, player)
         player_sprites.update()
+        # Если игрок умер, то игра заканчивается
+        if not player.alive:
+            is_game_open = False
+
+        enemies_group.update(all_sprites, player)
         torches_group.update(player)
         doors_group.update(player, enemies_group, [player])
 
