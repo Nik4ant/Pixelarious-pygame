@@ -15,7 +15,7 @@ class Entity(pygame.sprite.Sprite):
     WAITING_TIME = 2000
     UPDATE_TIME = 120
     HEALTH_LINE_WIDTH = 5
-    HEALTH_LINE_TIME = 10000
+    HEALTH_LINE_TIME = 5000
 
     size = (TILE_SIZE,) * 2
     sleeping_frames = cut_sheet(load_image('sleep_icon_spritesheet.png', 'assets\\enemies\\'), 4, 1, size)
@@ -109,7 +109,7 @@ class Entity(pygame.sprite.Sprite):
         x1, y1 = x - width * 0.5, y - height * 0.5
         pygame.draw.rect(screen, 'grey', (x1 - 1, y1 - 10 - 1, width + 2, line_width + 2))
         health_length = width * self.health / self.full_health
-        color = 'green' if str(self.__class__.__name__) == 'Player' else 'red'
+        color = '#00b300' if str(self.__class__.__name__) == 'Player' else 'red'
         pygame.draw.rect(screen, color, (x1, y1 - 10, health_length, line_width))
 
     def draw_sign(self, screen):

@@ -66,6 +66,9 @@ class Player(Entity):
         self.dx = self.dy = 0
         self.distance_to_player = 0.0001
         self.health = 300
+        self.full_health = self.health
+
+        self.spells = pygame.sprite.Group()
 
         # Направление взгляда
         self.look_direction_x = 0

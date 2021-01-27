@@ -3,7 +3,7 @@ from random import randint
 import pygame
 
 from entities.base_entity import Entity
-from entities.spells import FireSpell
+from entities.spells import *
 from engine import load_image, cut_sheet, concat_two_file_paths
 from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
 
@@ -129,7 +129,7 @@ class ShootingMonster(Entity):
 
         self.stopping_time = pygame.time.get_ticks() + randint(-750, 750)
 
-    def update(self, screen, player=None):
+    def update(self, all_sprites, player=None):
         if not player:
             return
 
@@ -146,6 +146,7 @@ class ShootingMonster(Entity):
         if line >= self.visibility_range:
             if pygame.time.get_ticks() - self.stopping_time < Entity.WAITING_TIME:
                 super().update_frame_state(2)
+                self.spells.update()
                 return
             if not self.point or self.point == (self.rect.centerx, self.rect.centery):
                 self.stopping_time = pygame.time.get_ticks()
@@ -191,7 +192,7 @@ class ShootingMonster(Entity):
                     pygame.time.get_ticks() - self.last_shot_time > self.reload_time:
                 self.last_shot_time = pygame.time.get_ticks()
                 # Стреляем в игрока
-                self.shoot(player)
+                self.shoot(player, all_sprites)
 
         # Направление взгляда
         if self.dx > 0:
@@ -212,9 +213,13 @@ class ShootingMonster(Entity):
 
         self.spells.update()
 
-    def shoot(self, player):
-        FireSpell(self.rect.centerx, self.rect.centery,
-                  player.rect.centerx, player.rect.centery, [player], self.spells)
+    def shoot(self, player, all_sprites):
+        args = (self.rect.centerx, self.rect.centery, player.rect.centerx,
+                player.rect.centery, [player], self.spells, all_sprites)
+        if self.__class__.__name__ == 'Wizard':
+            FireSpell(*args)
+        else:
+            VoidSpell(*args)
 
 
 class Demon(WalkingMonster):
@@ -225,7 +230,7 @@ class Demon(WalkingMonster):
     Быстрый
     Больно бьёт
     Устойчивойть к огню
-    Слабость к воде
+    Слабость к льду
     """
     size = (int(TILE_SIZE // 8 * 5),) * 2
     frames = cut_sheet(load_image('demon_run.png', 'assets\\enemies'), 4, 2, size)
@@ -267,7 +272,7 @@ class GreenSlime(WalkingMonster):
     Медленный
     Среднее количество жизней
     Не очень большой урон
-    Устойчивость к воде и отравлению (я сам отравление)
+    Устойчивость к льду и отравлению (я сам отравление)
     Слабость к молниям
     """
     size = (int(TILE_SIZE // 8 * 7),) * 2
@@ -309,7 +314,7 @@ class DirtySlime(WalkingMonster):
     Медленный
     Много жизней
     Не очень большой урон
-    Устойчивость к воде и отравлению
+    Устойчивость к льду и отравлению
     Слабость к молниям
     """
     size = (int(TILE_SIZE // 8 * 7),) * 2
