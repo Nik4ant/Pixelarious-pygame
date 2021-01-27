@@ -35,12 +35,13 @@ class Player(Entity):
     # время перезарядки дэша в миллисекундах
     dash_reload_time = 2000
     # сила дэша, которая устанавливается в самом начале
-    dash_force_base = 1.8
+    dash_force_base = 2.8
     # сила замедляющая дэш со временем
     dash_force_slower = 0.04
+    dash_minimum_speed = 0.4
 
     # отметка при превышении которой, скорость игрока автоматически возврастает
-    min_delta_to_start_run = 1.96
+    min_delta_to_start_run = 1.5
     # Максимальное ускорение игрока (при перемещении, на дэш не влияет)
     max_delta_movements = 2
     # сила с которой игрок будет набирать/уменьшать свою скорость
@@ -59,6 +60,7 @@ class Player(Entity):
     def __init__(self, x: float, y: float, all_sprites, *args):
         # Конструктор класса Entity
         super().__init__(x, y, all_sprites, *args)
+        self.alive = True
 
         # Ширина и высота изображения после инициализации
         self.width, self.height = self.image.get_size()
@@ -175,14 +177,14 @@ class Player(Entity):
 
         # Обработка силы дэша, действующей на игрока
         # по x
-        if self.dash_force_x > self.dash_force_slower:
+        if self.dash_force_x > self.dash_minimum_speed:
             self.dash_force_x -= self.dash_force_slower
             self.dx = self.dash_force_x * self.dash_direction_x
         else:
             self.dash_force_x = 0
             self.dash_direction_x = 0
         # по y
-        if self.dash_force_y > self.dash_force_slower:
+        if self.dash_force_y > self.dash_minimum_speed:
             self.dash_force_y -= self.dash_force_slower
             self.dy = self.dash_force_y * self.dash_direction_y
         else:
@@ -265,9 +267,12 @@ class Player(Entity):
         self.wand.update(self.rect.center, self.scope.rect.center)
 
     def shoot(self, spell_type: str, enemies_group):
+        if not self.alive:
+            return
+
         current_ticks = pygame.time.get_ticks()
         # Если не прошло время перезарядки, то заклинания не создаются
-        if current_ticks - Player.spell_reload_time < self.shoot_last_time or not self.alive:
+        if current_ticks - Player.spell_reload_time < self.shoot_last_time:
             return
 
         # Получение угла относительно прицела и оружия
@@ -293,6 +298,10 @@ class Player(Entity):
         self.shoot_last_time = current_ticks
 
     def death(self):
+        self.alive = False
+        self.cur_frame = 0
+        self.speed = 1
+
         # Уделние прицела
         # for group in self.scope.groups():
         #     group.remove(self.scope)

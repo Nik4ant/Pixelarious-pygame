@@ -99,6 +99,14 @@ class WalkingMonster(Entity):
         # Обновляем спрайт
         super().update_frame_state(delta)
 
+    def death(self):
+        if not self.alive:
+            return
+
+        self.alive = False
+        self.cur_frame = 0
+        self.speed = 1
+
 
 class ShootingMonster(Entity):
     """
@@ -215,12 +223,22 @@ class ShootingMonster(Entity):
         self.spells.update()
 
     def shoot(self, player, all_sprites):
+        if not self.alive:
+            return
         args = (self.rect.centerx, self.rect.centery, player.rect.centerx,
                 player.rect.centery, [player], self.spells, all_sprites)
         if self.__class__.__name__ == 'Wizard':
             FireSpell(*args)
         else:
             VoidSpell(*args)
+
+    def death(self):
+        if not self.alive:
+            return
+
+        self.alive = False
+        self.cur_frame = 0
+        self.speed = 1
 
 
 class Demon(WalkingMonster):
@@ -261,6 +279,7 @@ class Demon(WalkingMonster):
 
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
+        self.alive = True
         self.speed = TILE_SIZE * 0.023
         self.visibility_range = TILE_SIZE * 7
 
@@ -304,6 +323,7 @@ class GreenSlime(WalkingMonster):
 
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
+        self.alive = True
         self.speed = TILE_SIZE * 0.02
         self.visibility_range = TILE_SIZE * 5
 
@@ -348,6 +368,7 @@ class DirtySlime(WalkingMonster):
 
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
+        self.alive = True
         self.speed = TILE_SIZE * 0.02
         self.visibility_range = TILE_SIZE * 5
 
@@ -391,6 +412,7 @@ class Zombie(WalkingMonster):
 
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
+        self.alive = True
         self.speed = TILE_SIZE * 0.02
         self.visibility_range = TILE_SIZE * 6
 
@@ -434,6 +456,7 @@ class Wizard(ShootingMonster):
 
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
+        self.alive = True
         self.speed = TILE_SIZE * 0.022
         self.visibility_range = TILE_SIZE * 9
 

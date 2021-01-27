@@ -23,7 +23,6 @@ class Entity(pygame.sprite.Sprite):
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
         super().__init__(*args)
-        self.alive = True
 
         # Изображение
         self.cur_frame = 0
@@ -155,11 +154,6 @@ class Entity(pygame.sprite.Sprite):
         self.health -= damage
         if self.health <= 0:
             self.death()
-
-    def death(self):
-        self.alive = False
-        self.cur_frame = 0
-        self.speed = 1
 
     def set_first_frame(self):
         """

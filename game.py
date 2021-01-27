@@ -95,6 +95,7 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
     # Игровой цикл
     while is_game_open:
         was_pause_activated = False
+        keys = pygame.key.get_pressed()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -105,16 +106,16 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
                 if event.key == CONTROLS["KEYBOARD_PAUSE"]:
                     was_pause_activated = True
 
-                elif event.key == CONTROLS["KEYBOARD_SPELL_FIRE"]:
-                    player.shoot('fire', enemies_group)
-                elif event.key == CONTROLS["KEYBOARD_SPELL_ICE"]:
-                    player.shoot('ice', enemies_group)
-                elif event.key == CONTROLS["KEYBOARD_SPELL_LIGHT"]:
-                    player.shoot('flash', enemies_group)
-                elif event.key == CONTROLS["KEYBOARD_SPELL_POISON"]:
-                    player.shoot('poison', enemies_group)
-                elif event.key == CONTROLS["KEYBOARD_SPELL_VOID"]:
-                    player.shoot('void', enemies_group)
+        if keys[CONTROLS["KEYBOARD_SPELL_FIRE"]]:
+            player.shoot('fire', enemies_group)
+        elif keys[CONTROLS["KEYBOARD_SPELL_ICE"]]:
+            player.shoot('ice', enemies_group)
+        elif keys[CONTROLS["KEYBOARD_SPELL_LIGHT"]]:
+            player.shoot('flash', enemies_group)
+        elif keys[CONTROLS["KEYBOARD_SPELL_POISON"]]:
+            player.shoot('poison', enemies_group)
+        elif keys[CONTROLS["KEYBOARD_SPELL_VOID"]]:
+            player.shoot('void', enemies_group)
 
         # Текущий джойстик находится в игроке, поэтому кнопки проверяем по нему же
         if player.joystick:
