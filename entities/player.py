@@ -14,6 +14,8 @@ class Player(Entity):
     # Кадры для анимации игрока
     size = (TILE_SIZE * 7 // 8, TILE_SIZE)
     frames = cut_sheet(load_image('player_sprite_sheet.png', 'assets'), 4, 4, size)
+    death_frames = []
+
     # Словарь типа (направлениями взгляда): *индекс ряда в frames для анимации*
     look_directions = {
         (-1, -1): 3,
@@ -38,11 +40,11 @@ class Player(Entity):
     dash_force_slower = 0.04
 
     # отметка при превышении которой, скорость игрока автоматически возврастает
-    min_delta_to_start_run = 0.96
+    min_delta_to_start_run = 1.96
     # Максимальное ускорение игрока (при перемещении, на дэш не влияет)
-    max_delta_movements = 1
+    max_delta_movements = 2
     # сила с которой игрок будет набирать/уменьшать свою скорость
-    delta_changer = 0.036
+    delta_changer = 0.06
 
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(1)
@@ -67,7 +69,7 @@ class Player(Entity):
         self.rect.centery = y
 
         # Скорость
-        self.speed = TILE_SIZE * 10
+        self.speed = TILE_SIZE * 50
         self.dx = self.dy = 0
         self.distance_to_player = 0.0001
         self.health = 300
@@ -265,7 +267,7 @@ class Player(Entity):
     def shoot(self, spell_type: str, enemies_group):
         current_ticks = pygame.time.get_ticks()
         # Если не прошло время перезарядки, то заклинания не создаются
-        if current_ticks - Player.spell_reload_time < self.shoot_last_time:
+        if current_ticks - Player.spell_reload_time < self.shoot_last_time or not self.alive:
             return
 
         # Получение угла относительно прицела и оружия
@@ -275,7 +277,7 @@ class Player(Entity):
         if angle >= 180:
             fixer = -1
         args = (self.wand.rect.centerx, self.wand.rect.centery + self.wand.offset.y * fixer,
-                self.scope.rect.centerx, self.scope.rect.centery, enemies_group, self.spells)
+                self.scope.rect.right, self.scope.rect.centery, enemies_group, self.spells)
 
         if spell_type == 'fire':
             FireSpell(*args)
@@ -285,19 +287,19 @@ class Player(Entity):
             FlashSpell(*args)
         elif spell_type == 'poison':
             PoisonSpell(*args)
+        elif spell_type == 'void':
+            VoidSpell(*args)
 
         self.shoot_last_time = current_ticks
 
     def death(self):
-        # Уаделние прицела
-        for group in self.scope.groups():
-            group.remove(self.scope)
+        # Уделние прицела
+        # for group in self.scope.groups():
+        #     group.remove(self.scope)
 
         # Удаление палочки
         for group in self.wand.groups():
             group.remove(self.wand)
-        # Удаление себя же
-        super().death()
 
 
 class PlayerWand(pygame.sprite.Sprite):
@@ -317,14 +319,14 @@ class PlayerWand(pygame.sprite.Sprite):
         # Если были переданны координаты прицела, то обновляем угол
         if player_scope_position and player_position:
             self.rect.centerx = player_position[0] + TILE_SIZE * 0.5
-            self.rect.centery = player_position[1] + TILE_SIZE * 0.5
+            self.rect.centery = player_position[1] + TILE_SIZE * 0.1
             # Получение угла относительно прицела и оружия
-            angle = degrees(atan2(self.rect.centery - player_scope_position[1],
-                                  self.rect.centerx - player_scope_position[0]))
+            dx, dy = self.rect.centery - player_scope_position[1], self.rect.centerx - player_scope_position[0]
+            angle = degrees(atan2(dx, 0.00001 if dy == 0 else dy))
             self.rotate_wand(angle)
 
     def rotate_wand(self, angle: float) -> None:
-        self.image = pygame.transform.rotozoom(self.original_image, -angle, 1)
+        self.image = pygame.transform.rotate(self.original_image, 90 - angle)
         offset_rotated = self.offset.rotate(angle)
         self.rect = self.image.get_rect(center=self.rect.center + offset_rotated)
 

@@ -43,7 +43,6 @@ class Entity(pygame.sprite.Sprite):
         self.collider = Collider(self.rect.centerx, self.rect.centery)
 
         # Скорость
-        self.speed = TILE_SIZE * 0.1
         self.dx = self.dy = 0
 
         # Направление взгляда
@@ -59,6 +58,8 @@ class Entity(pygame.sprite.Sprite):
         :param dy: Изменение координаты по Y
         :return: None
         """
+        if not self.alive:
+            return
         # Запоминаем координаты
         pos = self.rect.x, self.rect.y
 
@@ -86,9 +87,13 @@ class Entity(pygame.sprite.Sprite):
         tick = pygame.time.get_ticks()
         if tick - self.last_update > self.UPDATE_TIME:
             self.last_update = tick
-            self.cur_frame = self.cur_frame + 1
             if not self.alive:
-                pass
+                self.cur_frame = self.cur_frame + 1
+                if self.cur_frame >= len(self.__class__.death_frames) - 1:
+                    for group in self.groups():
+                        group.remove(self)
+                self.image = self.__class__.death_frames[self.cur_frame]
+                return
             look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
             look += n
             self.cur_frame = (self.cur_frame + 1) % len(self.__class__.frames[look])
@@ -124,6 +129,8 @@ class Entity(pygame.sprite.Sprite):
         :param screen: Экран отрисовки
         :return: None
         """
+        if not self.alive:
+            return
         if self.player_observed:
             font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 96)
             text = font.render("!", True, (250, 20, 20))
@@ -150,11 +157,9 @@ class Entity(pygame.sprite.Sprite):
             self.death()
 
     def death(self):
-        self.speed = 0
         self.alive = False
         self.cur_frame = 0
-        for group in self.groups():
-            group.remove(self)
+        self.speed = 1
 
     def set_first_frame(self):
         """

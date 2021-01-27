@@ -89,6 +89,7 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
         UIComponents.Spell_container("ice_spell.png", (120, 250)),
         UIComponents.Spell_container("light_spell.png", (120, 350)),
         UIComponents.Spell_container("poison_spell.png", (120, 450)),
+        UIComponents.Spell_container("void_spell.png", (120, 550))
     )
 
     # Игровой цикл
@@ -112,6 +113,8 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
                     player.shoot('flash', enemies_group)
                 elif event.key == CONTROLS["KEYBOARD_SPELL_POISON"]:
                     player.shoot('poison', enemies_group)
+                elif event.key == CONTROLS["KEYBOARD_SPELL_VOID"]:
+                    player.shoot('void', enemies_group)
 
         # Текущий джойстик находится в игроке, поэтому кнопки проверяем по нему же
         if player.joystick:
@@ -184,7 +187,7 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
         if player.joystick:
             spell_args = ("o", "x", "triangle", "square")
         else:
-            spell_args = ("1", "2", "3", "4")
+            spell_args = ("1", "2", "3", "4", "5")
         # Отрисовка контейнеров с заклинаниями
         for i in range(len(spells_containers)):
             spells_containers[i].draw(screen, bool(player.joystick), spell_args[i])

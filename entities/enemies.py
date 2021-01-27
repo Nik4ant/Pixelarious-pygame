@@ -192,7 +192,8 @@ class ShootingMonster(Entity):
                     pygame.time.get_ticks() - self.last_shot_time > self.reload_time:
                 self.last_shot_time = pygame.time.get_ticks()
                 # Стреляем в игрока
-                self.shoot(player, all_sprites)
+                if self.alive:
+                    self.shoot(player, all_sprites)
 
         # Направление взгляда
         if self.dx > 0:
@@ -235,6 +236,8 @@ class Demon(WalkingMonster):
     size = (int(TILE_SIZE // 8 * 5),) * 2
     frames = cut_sheet(load_image('demon_run.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('demon_idle.png', 'assets\\enemies'), 4, 2, size)
+
+    death_frames = cut_sheet(load_image('demon_dying.png', 'assets\\enemies'), 16, 1)[0]
 
     UPDATE_TIME = 60
 
@@ -279,6 +282,8 @@ class GreenSlime(WalkingMonster):
     frames = cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2)
 
+    death_frames = cut_sheet(load_image('green_slime_dying.png', 'assets\\enemies'), 16, 1)[0]
+
     look_directions = {
         (-1, -1): 1,
         (-1, 0): 1,
@@ -321,6 +326,8 @@ class DirtySlime(WalkingMonster):
     frames = cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2)
 
+    death_frames = cut_sheet(load_image('dirty_slime_dying.png', 'assets\\enemies'), 16, 1)[0]
+
     look_directions = {
         (-1, -1): 1,
         (-1, 0): 1,
@@ -361,6 +368,8 @@ class Zombie(WalkingMonster):
     size = (int(TILE_SIZE // 4 * 3),) * 2
     frames = cut_sheet(load_image('zombie_run.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('zombie_idle.png', 'assets\\enemies'), 4, 2)
+
+    death_frames = cut_sheet(load_image('zombie_dying.png', 'assets\\enemies'), 16, 1)[0]
 
     look_directions = {
         (-1, -1): 1,
@@ -403,6 +412,8 @@ class Wizard(ShootingMonster):
     frames = cut_sheet(load_image('wizard_run.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('wizard_idle.png', 'assets\\enemies'), 4, 2, size)
 
+    death_frames = cut_sheet(load_image('wizard_dying.png', 'assets\\enemies'), 16, 1)[0]
+
     look_directions = {
         (-1, -1): 1,
         (-1, 0): 1,
@@ -443,6 +454,8 @@ class LongWizard(ShootingMonster):
     size = (int(TILE_SIZE // 8 * 7),) * 2
     frames = cut_sheet(load_image('long_wizard_run.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('long_wizard_idle.png', 'assets\\enemies'), 4, 2)
+
+    death_frames = cut_sheet(load_image('long_wizard_dying.png', 'assets\\enemies'), 16, 1)[0]
 
     look_directions = {
         (-1, -1): 1,
