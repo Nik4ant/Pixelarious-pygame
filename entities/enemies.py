@@ -21,16 +21,17 @@ class WalkingMonster(Entity):
         self.player_observed = False
 
         # Значения по-умолчанию
-        self.speed = TILE_SIZE * 0.016
+        self.stun_time = 0
         self.visibility_range = TILE_SIZE * 6
         self.stopping_time = pygame.time.get_ticks() + randint(-750, 750)
         self.distance_to_player = 100
 
         self.spells = pygame.sprite.Group()
 
-    def update(self, screenddddddd, player=None):
+    def update(self, screen, player=None):
         if not player:
             return
+        super().update()
 
         # Сокращаем написание координат объекта
         self_x, self_y = self.rect.centerx, self.rect.centery
@@ -73,7 +74,15 @@ class WalkingMonster(Entity):
             self.dy = (point_y - self_y) * 4 / part_move
             self.player_observed = True
 
-        self.move(self.dx, self.dy)
+        if pygame.time.get_ticks() - self.stun_time > 300:
+            self.move(self.dx, self.dy)
+
+        self.collider.update(self.rect.centerx, self.rect.centery)
+
+        if pygame.sprite.collide_rect(self.collider, player.collider):
+            player.boost(self.rect.centerx - player.rect.centerx, self.rect.centerx - player.rect.centery)
+            self.rect.centerx, self.rect.centery = previous_pos
+            self.stun_time = pygame.time.get_ticks()
 
         # Определяем направление взгляда
         if self.dx > 0:
@@ -105,7 +114,7 @@ class WalkingMonster(Entity):
 
         self.alive = False
         self.cur_frame = 0
-        self.speed = 1
+        self.speed = 0.00001
 
 
 class ShootingMonster(Entity):
@@ -124,11 +133,12 @@ class ShootingMonster(Entity):
         super().__init__(x, y, *args)
 
         # Значения по-умолчанию
-        self.speed = TILE_SIZE * 0.012
         self.visibility_range = TILE_SIZE * 13
         self.close_range = TILE_SIZE * 5
         self.distance_to_player = 100
         self.player_observed = False
+
+        self.collider = Collider(self.rect.centerx, self.rect.centery, self.size)
 
         self.spells = pygame.sprite.Group()
 
@@ -140,6 +150,8 @@ class ShootingMonster(Entity):
     def update(self, all_sprites, player=None):
         if not player:
             return
+
+        super().update()
 
         self_x, self_y = self.rect.centerx, self.rect.centery
         previous_pos = self_x, self_y
@@ -191,7 +203,6 @@ class ShootingMonster(Entity):
             self.player_observed = True
 
         self.move(self.dx, self.dy)
-
         # Если не сдвинулись с места
         if previous_pos == (self.rect.centerx, self.rect.centery):
             # Выбираем спрайты стояния
@@ -258,6 +269,7 @@ class Demon(WalkingMonster):
     death_frames = cut_sheet(load_image('demon_dying.png', 'assets\\enemies'), 16, 1)[0]
 
     UPDATE_TIME = 60
+    default_speed = TILE_SIZE * 0.023
 
     look_directions = {
         (-1, -1): 1,
@@ -280,7 +292,6 @@ class Demon(WalkingMonster):
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
         self.alive = True
-        self.speed = TILE_SIZE * 0.023
         self.visibility_range = TILE_SIZE * 7
 
         self.health = 40
@@ -303,6 +314,7 @@ class GreenSlime(WalkingMonster):
 
     death_frames = cut_sheet(load_image('green_slime_dying.png', 'assets\\enemies'), 16, 1)[0]
 
+    default_speed = TILE_SIZE * 0.02
     look_directions = {
         (-1, -1): 1,
         (-1, 0): 1,
@@ -324,7 +336,6 @@ class GreenSlime(WalkingMonster):
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
         self.alive = True
-        self.speed = TILE_SIZE * 0.02
         self.visibility_range = TILE_SIZE * 5
 
         self.health = 80
@@ -348,6 +359,7 @@ class DirtySlime(WalkingMonster):
 
     death_frames = cut_sheet(load_image('dirty_slime_dying.png', 'assets\\enemies'), 16, 1)[0]
 
+    default_speed = TILE_SIZE * 0.02
     look_directions = {
         (-1, -1): 1,
         (-1, 0): 1,
@@ -369,7 +381,6 @@ class DirtySlime(WalkingMonster):
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
         self.alive = True
-        self.speed = TILE_SIZE * 0.02
         self.visibility_range = TILE_SIZE * 5
 
         self.health = 100
@@ -392,6 +403,7 @@ class Zombie(WalkingMonster):
 
     death_frames = cut_sheet(load_image('zombie_dying.png', 'assets\\enemies'), 16, 1)[0]
 
+    default_speed = TILE_SIZE * 0.02
     look_directions = {
         (-1, -1): 1,
         (-1, 0): 1,
@@ -413,7 +425,6 @@ class Zombie(WalkingMonster):
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
         self.alive = True
-        self.speed = TILE_SIZE * 0.02
         self.visibility_range = TILE_SIZE * 6
 
         self.health = 80
@@ -436,6 +447,7 @@ class Wizard(ShootingMonster):
 
     death_frames = cut_sheet(load_image('wizard_dying.png', 'assets\\enemies'), 16, 1)[0]
 
+    default_speed = TILE_SIZE * 0.022
     look_directions = {
         (-1, -1): 1,
         (-1, 0): 1,
@@ -457,7 +469,6 @@ class Wizard(ShootingMonster):
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
         self.alive = True
-        self.speed = TILE_SIZE * 0.022
         self.visibility_range = TILE_SIZE * 9
 
         self.health = 60
@@ -480,6 +491,7 @@ class LongWizard(ShootingMonster):
 
     death_frames = cut_sheet(load_image('long_wizard_dying.png', 'assets\\enemies'), 16, 1)[0]
 
+    default_speed = TILE_SIZE * 0.02
     look_directions = {
         (-1, -1): 1,
         (-1, 0): 1,
@@ -501,7 +513,6 @@ class LongWizard(ShootingMonster):
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
 
-        self.speed = TILE_SIZE * 0.02
         self.visibility_range = TILE_SIZE * 13
 
         self.health = 80

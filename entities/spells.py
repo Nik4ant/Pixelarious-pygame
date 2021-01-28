@@ -18,10 +18,12 @@ class Spell(pygame.sprite.Sprite):
     ICE = 'ice'
     POISON = 'poison'
     VOID = 'void'
+    spell_type = None
 
     UPDATE_TIME = 30
     frames = []
     damage = 40
+    speed = TILE_SIZE * 0.22
     damage_frame = 0
 
     start_position = None
@@ -29,9 +31,13 @@ class Spell(pygame.sprite.Sprite):
     def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, object_group, *groups):
         super().__init__(*groups)
 
-        self.point = (object_x, object_y)
         dx = object_x - subject_x
         dy = object_y - subject_y
+        while (abs(dx) < 5000 or abs(dy) < 5000) and not isinstance(self, FlashSpell):
+            dx *= 2
+            dy *= 2
+        self.point = (subject_x + dx, subject_y + dy)
+
         if dx >= 0:
             self.angle = -degrees(atan(dy / max(dx, 0.00001)))
         else:
@@ -64,7 +70,7 @@ class Spell(pygame.sprite.Sprite):
             if self.cur_frame == self.damage_frame:
                 self.collider.update(self.rect.centerx, self.rect.centery)
                 for obj in pygame.sprite.spritecollide(self.collider, self.object_group, False):
-                    obj.get_damage(self.damage)
+                    obj.get_damage(self.damage, self.spell_type)
             self.cur_frame += 1
             if self.cur_frame == len(self.__class__.frames[self.cur_list]):
                 self.kill()
@@ -98,7 +104,8 @@ class IceSpell(Spell):
     damage = 30
     spell_type = Spell.ICE
     UPDATE_TIME = 50
-    speed = TILE_SIZE * 0.2
+    speed = TILE_SIZE * 0.5
+    acceleration = 4
 
     size = (TILE_SIZE // 4 * 3,) * 2
     frames = cut_sheet(load_image('ice_laser.png', 'assets\\spells'), 30, 1, size)
@@ -112,7 +119,8 @@ class FireSpell(Spell):
     damage = 50
     spell_type = Spell.FIRE
     UPDATE_TIME = 40
-    speed = TILE_SIZE * 0.2
+    speed = TILE_SIZE * 0.22
+    acceleration = 2
 
     size = (TILE_SIZE // 4 * 3,) * 2
     frames = cut_sheet(load_image('fire_laser.png', 'assets\\spells'), 6, 1, size)
@@ -127,6 +135,7 @@ class FlashSpell(Spell):
     spell_type = Spell.FLASH
     UPDATE_TIME = 60
     speed = TILE_SIZE * 10
+    acceleration = 0
 
     size = (TILE_SIZE // 4 * 5,) * 2
     frames = cut_sheet(load_image('EMPTY.png', 'assets\\tiles'), 1, 1, size)
@@ -142,7 +151,8 @@ class PoisonSpell(Spell):
     damage = 30
     spell_type = Spell.POISON
     UPDATE_TIME = 50
-    speed = TILE_SIZE * 0.2
+    speed = TILE_SIZE * 0.12
+    acceleration = 1.5
 
     size = (TILE_SIZE // 4 * 3,) * 2
     frames = cut_sheet(load_image('poison_laser.png', 'assets\\spells'), 7, 1, size)
@@ -156,7 +166,8 @@ class PoisonSpell(Spell):
 class VoidSpell(Spell):
     damage = 70
     spell_type = Spell.VOID
-    speed = TILE_SIZE * 0.2
+    speed = TILE_SIZE * 0.24
+    acceleration = 3
 
     size = (TILE_SIZE // 4 * 3,) * 2
     frames = cut_sheet(load_image('void_laser.png', 'assets\\spells'), 10, 1, size)

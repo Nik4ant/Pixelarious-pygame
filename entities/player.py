@@ -15,6 +15,7 @@ class Player(Entity):
     size = (TILE_SIZE * 7 // 8, TILE_SIZE)
     frames = cut_sheet(load_image('player_sprite_sheet.png', 'assets'), 4, 4, size)
     death_frames = []
+    cast_frames = cut_sheet(load_image('player_cast_sprite_sheet.png', 'assets'), 5, 4, size)
 
     # Словарь типа (направлениями взгляда): *индекс ряда в frames для анимации*
     look_directions = {
@@ -40,6 +41,7 @@ class Player(Entity):
     dash_force_slower = 0.04
     dash_minimum_speed = 0.4
 
+    default_speed = TILE_SIZE * 2
     # отметка при превышении которой, скорость игрока автоматически возврастает
     min_delta_to_start_run = 1.5
     # Максимальное ускорение игрока (при перемещении, на дэш не влияет)
@@ -72,6 +74,7 @@ class Player(Entity):
 
         # Скорость
         self.speed = TILE_SIZE * 50
+        self.default_speed = TILE_SIZE * 50
         self.dx = self.dy = 0
         self.distance_to_player = 0.0001
         self.health = 300
@@ -80,6 +83,7 @@ class Player(Entity):
         # Группа со спрайтами заклинаний
         self.spells = pygame.sprite.Group()
         self.shoot_last_time = pygame.time.get_ticks()
+        self.last_hit_time = 0
 
         # Направление взгляда
         self.look_direction_x = 0
@@ -88,6 +92,7 @@ class Player(Entity):
         # Дэш
         self.dash_direction_x = self.dash_direction_y = 0
         self.dash_force_x = self.dash_force_y = 0
+        self.was_dash_activated = 0
 
         # Время последнего использования дэша
         # (Нужно для определения перезарядился дэш или нет)
@@ -123,7 +128,8 @@ class Player(Entity):
             # Проверка на использование дэша
             # Переменная отвечает за проверку на то, была ли нажата кнопка дэша.
             # (Но нет гарантии того, что дэш уже перезарядился, это проверяется при использовании)
-            was_dash_activated = self.joystick.get_button(CONTROLS["JOYSTICK_DASH"])
+            was_dash_activated = (self.joystick.get_button(CONTROLS["JOYSTICK_DASH"])
+                                  or self.was_dash_activated)
 
             # Проверяем, что действительно игрок подвигал правую ось
             if (abs(axis_right_x) > JOYSTICK_SENSITIVITY or
@@ -143,10 +149,16 @@ class Player(Entity):
                                       + int(keys[CONTROLS["KEYBOARD_DOWN"]]))
 
             # Проверка на использование дэша
-            was_dash_activated = keys[CONTROLS["KEYBOARD_DASH"]]
+            was_dash_activated = (keys[CONTROLS["KEYBOARD_DASH"]] or self.was_dash_activated)
 
             # Позиция для прицела
             new_scope_x, new_scope_y = pygame.mouse.get_pos()
+        self.was_dash_activated = False
+
+        if pygame.time.get_ticks() - self.shoot_last_time < 200:
+            self.speed = 0.8 * self.default_speed
+        else:
+            self.speed = self.default_speed
 
         # Обработка активации дэша
         if (was_dash_activated and pygame.time.get_ticks() -
@@ -235,7 +247,8 @@ class Player(Entity):
         # ускорение збрасывается
         elif self.dash_force_x == 0 and self.dash_force_y == 0:
             self.dx = self.dy = 0
-            self.set_first_frame()
+            if pygame.time.get_ticks() - self.shoot_last_time > 5000:
+                self.set_first_frame()
 
         # Если игрок движется и при этом не совершается дэш,
         # то воспроизводится звук ходьбы
@@ -260,7 +273,8 @@ class Player(Entity):
         self.move(self.dx * self.speed, self.dy * self.speed)
 
         # Обновление анимации
-        self.update_frame_state()
+        if pygame.time.get_ticks() - self.shoot_last_time > 5000:
+            self.update_frame_state()
 
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
@@ -276,12 +290,9 @@ class Player(Entity):
             return
 
         # Получение угла относительно прицела и оружия
-        angle = degrees(atan2(self.wand.rect.centery - self.scope.rect.centerx,
-                              self.wand.rect.centerx - self.scope.rect.centery))
-        fixer = 1
-        if angle >= 180:
-            fixer = -1
-        args = (self.wand.rect.centerx, self.wand.rect.centery + self.wand.offset.y * fixer,
+        dx, dy = self.rect.centerx - self.scope.rect.centerx, self.rect.centery - self.scope.rect.centery
+        angle = (degrees(atan2(dx, 0.00001 if not dy else dy)) + 360) % 360
+        args = (self.rect.centerx, self.rect.centery,
                 self.scope.rect.right, self.scope.rect.centery, enemies_group, self.spells)
 
         if spell_type == 'fire':
@@ -294,6 +305,9 @@ class Player(Entity):
             PoisonSpell(*args)
         elif spell_type == 'void':
             VoidSpell(*args)
+
+        number_of_frame = (round((angle - 0) / 18) + 47) % 20
+        self.image = Player.cast_frames[number_of_frame // 5][number_of_frame % 5]
 
         self.shoot_last_time = current_ticks
 
@@ -310,6 +324,9 @@ class Player(Entity):
         for group in self.wand.groups():
             group.remove(self.wand)
 
+    def boost(self, *args):
+        self.last_hit_time = pygame.time.get_ticks()
+
 
 class PlayerWand(pygame.sprite.Sprite):
     """
@@ -325,19 +342,21 @@ class PlayerWand(pygame.sprite.Sprite):
         self.offset = pygame.math.Vector2(0, self.rect.height * -0.5)
 
     def update(self, player_position: tuple =None, player_scope_position: tuple =None):
+        pass
         # Если были переданны координаты прицела, то обновляем угол
-        if player_scope_position and player_position:
-            self.rect.centerx = player_position[0] + TILE_SIZE * 0.5
-            self.rect.centery = player_position[1] + TILE_SIZE * 0.1
-            # Получение угла относительно прицела и оружия
-            dx, dy = self.rect.centery - player_scope_position[1], self.rect.centerx - player_scope_position[0]
-            angle = degrees(atan2(dx, 0.00001 if dy == 0 else dy))
-            self.rotate_wand(angle)
+        # if player_scope_position and player_position:
+        #     self.rect.centerx = player_position[0] + TILE_SIZE * 0.5
+        #     self.rect.centery = player_position[1] + TILE_SIZE * 0.1
+        #     # Получение угла относительно прицела и оружия
+        #     dx, dy = self.rect.centery - player_scope_position[1], self.rect.centerx - player_scope_position[0]
+        #     angle = degrees(atan2(dx, 0.00001 if dy == 0 else dy))
+        #     self.rotate_wand(angle)
 
     def rotate_wand(self, angle: float) -> None:
-        self.image = pygame.transform.rotate(self.original_image, 90 - angle)
-        offset_rotated = self.offset.rotate(angle)
-        self.rect = self.image.get_rect(center=self.rect.center + offset_rotated)
+        pass
+        # self.image = pygame.transform.rotate(self.original_image, 90 - angle)
+        # offset_rotated = self.offset.rotate(angle)
+        # self.rect = self.image.get_rect(center=self.rect.center + offset_rotated)
 
 
 class PlayerScope(pygame.sprite.Sprite):

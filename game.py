@@ -101,36 +101,15 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
             if event.type == pygame.QUIT:
                 is_game_open = False
 
-            if event.type == pygame.KEYDOWN and not player.joystick:
+            elif event.type == pygame.KEYDOWN and not player.joystick:
                 # Проверка на активацию паузы
                 if event.key == CONTROLS["KEYBOARD_PAUSE"]:
                     was_pause_activated = True
-
-        if keys[CONTROLS["KEYBOARD_SPELL_FIRE"]]:
-            player.shoot('fire', enemies_group)
-        elif keys[CONTROLS["KEYBOARD_SPELL_ICE"]]:
-            player.shoot('ice', enemies_group)
-        elif keys[CONTROLS["KEYBOARD_SPELL_LIGHT"]]:
-            player.shoot('flash', enemies_group)
-        elif keys[CONTROLS["KEYBOARD_SPELL_POISON"]]:
-            player.shoot('poison', enemies_group)
-        elif keys[CONTROLS["KEYBOARD_SPELL_VOID"]]:
-            player.shoot('void', enemies_group)
-
-        # Текущий джойстик находится в игроке, поэтому кнопки проверяем по нему же
-        if player.joystick:
-            # Только если joystick подключен проверяем нажатие кнопки
-            if player.joystick.get_button(CONTROLS["JOYSTICK_UI_PAUSE"]):
-                was_pause_activated = True
-
-            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_FIRE"]):
-                player.shoot('fire', enemies_group)
-            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_ICE"]):
-                player.shoot('ice', enemies_group)
-            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_LIGHT"]):
-                player.shoot('flash', enemies_group)
-            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_POISON"]):
-                player.shoot('poison', enemies_group)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    player.shoot('fire', enemies_group)
+                else:
+                    player.shoot('poison', enemies_group)
 
         if was_pause_activated:
             # Останавливаем все звуки (даже музыку)
@@ -183,6 +162,32 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
             for spell in enemy.spells:
                 camera.apply_point(spell)
             enemy.spells.draw(screen)
+
+        if keys[CONTROLS["KEYBOARD_SPELL_FIRE"]]:
+            player.shoot('fire', enemies_group)
+        elif keys[CONTROLS["KEYBOARD_SPELL_ICE"]]:
+            player.shoot('ice', enemies_group)
+        elif keys[CONTROLS["KEYBOARD_SPELL_LIGHT"]]:
+            player.shoot('flash', enemies_group)
+        elif keys[CONTROLS["KEYBOARD_SPELL_POISON"]]:
+            player.shoot('poison', enemies_group)
+        elif keys[CONTROLS["KEYBOARD_SPELL_VOID"]]:
+            player.shoot('void', enemies_group)
+
+        # Текущий джойстик находится в игроке, поэтому кнопки проверяем по нему же
+        if player.joystick:
+            # Только если joystick подключен проверяем нажатие кнопки
+            if player.joystick.get_button(CONTROLS["JOYSTICK_UI_PAUSE"]):
+                was_pause_activated = True
+
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_FIRE"]):
+                player.shoot('fire', enemies_group)
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_ICE"]):
+                player.shoot('ice', enemies_group)
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_LIGHT"]):
+                player.shoot('flash', enemies_group)
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_POISON"]):
+                player.shoot('poison', enemies_group)
 
         # Определение параметров для отрисовки контейнеров с заклинаниями
         if player.joystick:

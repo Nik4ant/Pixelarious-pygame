@@ -1,3 +1,5 @@
+from random import randint
+
 import pygame
 from engine import load_image, cut_sheet
 from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
@@ -32,6 +34,8 @@ class Entity(pygame.sprite.Sprite):
 
         self.last_damage_time = -Entity.HEALTH_LINE_TIME
         self.sleeping_time = None
+        self.ice_buff = 0
+        self.poison_buff = 0
 
         self.start_position = x, y
         self.point = None
@@ -47,6 +51,17 @@ class Entity(pygame.sprite.Sprite):
         # Направление взгляда
         self.look_direction_x = 0
         self.look_direction_y = 1
+
+    def update(self) -> None:
+        if self.ice_buff:
+            self.ice_buff -= 1
+            self.speed = self.__class__.default_speed * 0.4
+        else:
+            self.speed = self.__class__.default_speed
+
+        if self.poison_buff:
+            self.poison_buff -= 1
+            self.get_damage(0.1, '')
 
     def move(self, dx, dy):
         """
@@ -143,14 +158,23 @@ class Entity(pygame.sprite.Sprite):
                 self.sleeping_time = pygame.time.get_ticks()
             screen.blit(Entity.sleeping_frames[0][self.cur_sleeping_frame], (self.rect.centerx + 10, self.rect.y - 35))
 
-    def get_damage(self, damage):
+    def get_damage(self, damage, spell_type):
         """
         Получение дамага
 
         :param damage: Столько здоровья надо отнять
         :return: None
         """
+
+        if spell_type == 'ice':
+            self.ice_buff += 200
+        if spell_type == 'poison':
+            self.poison_buff += 200
+
         self.last_damage_time = pygame.time.get_ticks()
+        damage *= 1000
+        damage += randint(-damage * 0.1, damage * 0.1)
+        damage /= 1000
         self.health -= damage
         if self.health <= 0:
             self.death()
