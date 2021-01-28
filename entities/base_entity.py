@@ -19,6 +19,8 @@ class Entity(pygame.sprite.Sprite):
     HEALTH_LINE_WIDTH = 5
     HEALTH_LINE_TIME = 5000
 
+    POISON_DAMAGE = 0.05
+
     size = (TILE_SIZE,) * 2
     sleeping_frames = cut_sheet(load_image('sleep_icon_spritesheet.png', 'assets\\enemies\\'), 4, 1, size)
 
@@ -55,13 +57,13 @@ class Entity(pygame.sprite.Sprite):
     def update(self) -> None:
         if self.ice_buff:
             self.ice_buff -= 1
-            self.speed = self.__class__.default_speed * 0.4
+            self.speed = self.__class__.default_speed * 0.3
         else:
             self.speed = self.__class__.default_speed
 
         if self.poison_buff:
             self.poison_buff -= 1
-            self.get_damage(0.1, '')
+            self.get_damage(Entity.POISON_DAMAGE, '')
 
     def move(self, dx, dy):
         """
@@ -101,6 +103,7 @@ class Entity(pygame.sprite.Sprite):
         tick = pygame.time.get_ticks()
         if tick - self.last_update > self.UPDATE_TIME:
             self.last_update = tick
+
             if not self.alive:
                 self.cur_frame = self.cur_frame + 1
                 if self.cur_frame >= len(self.__class__.death_frames) - 1:
@@ -108,6 +111,7 @@ class Entity(pygame.sprite.Sprite):
                         group.remove(self)
                 self.image = self.__class__.death_frames[self.cur_frame]
                 return
+
             look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
             look += n
             self.cur_frame = (self.cur_frame + 1) % len(self.__class__.frames[look])
@@ -158,7 +162,7 @@ class Entity(pygame.sprite.Sprite):
                 self.sleeping_time = pygame.time.get_ticks()
             screen.blit(Entity.sleeping_frames[0][self.cur_sleeping_frame], (self.rect.centerx + 10, self.rect.y - 35))
 
-    def get_damage(self, damage, spell_type):
+    def get_damage(self, damage, spell_type, action_time=0):
         """
         Получение дамага
 
@@ -167,9 +171,9 @@ class Entity(pygame.sprite.Sprite):
         """
 
         if spell_type == 'ice':
-            self.ice_buff += 200
+            self.ice_buff += action_time
         if spell_type == 'poison':
-            self.poison_buff += 200
+            self.poison_buff += action_time
 
         self.last_damage_time = pygame.time.get_ticks()
         damage *= 1000

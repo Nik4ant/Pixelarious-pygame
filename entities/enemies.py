@@ -147,10 +147,8 @@ class ShootingMonster(Entity):
 
         self.stopping_time = pygame.time.get_ticks() + randint(-750, 750)
 
-    def update(self, all_sprites, player=None):
-        if not player:
-            return
-
+    def update(self, *args):
+        all_sprites, player = args
         super().update()
 
         self_x, self_y = self.rect.centerx, self.rect.centery
@@ -236,8 +234,11 @@ class ShootingMonster(Entity):
     def shoot(self, player, all_sprites):
         if not self.alive:
             return
+        enemies_group = self.groups()[1]
+        enemies_group.remove(self)
         args = (self.rect.centerx, self.rect.centery, player.rect.centerx,
-                player.rect.centery, [player], self.spells, all_sprites)
+                player.rect.centery, [player] + list(enemies_group), self.spells, all_sprites)
+        enemies_group.add(self)
         if self.__class__.__name__ == 'Wizard':
             FireSpell(*args)
         else:

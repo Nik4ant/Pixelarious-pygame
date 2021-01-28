@@ -32,6 +32,8 @@ class Player(Entity):
 
     # время перезарядки заклинания в миллисекундах
     spell_reload_time = 1000
+    #
+    after_spell_freezing = 300
     
     # время перезарядки дэша в миллисекундах
     dash_reload_time = 2000
@@ -41,7 +43,7 @@ class Player(Entity):
     dash_force_slower = 0.04
     dash_minimum_speed = 0.4
 
-    default_speed = TILE_SIZE * 2
+    default_speed = TILE_SIZE * 0.015
     # отметка при превышении которой, скорость игрока автоматически возврастает
     min_delta_to_start_run = 1.5
     # Максимальное ускорение игрока (при перемещении, на дэш не влияет)
@@ -73,8 +75,6 @@ class Player(Entity):
         self.rect.centery = y
 
         # Скорость
-        self.speed = TILE_SIZE * 50
-        self.default_speed = TILE_SIZE * 50
         self.dx = self.dy = 0
         self.distance_to_player = 0.0001
         self.health = 300
@@ -106,6 +106,8 @@ class Player(Entity):
         self.joystick = get_joystick() if check_any_joystick() else None
 
     def update(self):
+        super().update()
+
         # Обновляем состояние джойстика
         self.joystick = get_joystick() if check_any_joystick() else None
 
@@ -156,9 +158,9 @@ class Player(Entity):
         self.was_dash_activated = False
 
         if pygame.time.get_ticks() - self.shoot_last_time < 200:
-            self.speed = 0.8 * self.default_speed
+            self.speed *= 0.8 * self.default_speed
         else:
-            self.speed = self.default_speed
+            self.speed *= self.default_speed
 
         # Обработка активации дэша
         if (was_dash_activated and pygame.time.get_ticks() -
@@ -247,7 +249,7 @@ class Player(Entity):
         # ускорение збрасывается
         elif self.dash_force_x == 0 and self.dash_force_y == 0:
             self.dx = self.dy = 0
-            if pygame.time.get_ticks() - self.shoot_last_time > 5000:
+            if pygame.time.get_ticks() - self.shoot_last_time > Player.after_spell_freezing:
                 self.set_first_frame()
 
         # Если игрок движется и при этом не совершается дэш,
@@ -265,16 +267,17 @@ class Player(Entity):
             # 0.0388905 = 0.055 * 0.7071, где  0.055 - множитель для скорости
             # относительн TILE_SIZE, а 0.7071 - приближённое значение корня
             # из двух для выравнивание скорости при диагональном движении
-            self.speed = TILE_SIZE * 0.0388905
+            self.speed *= TILE_SIZE * 0.0388905
         else:
-            self.speed = TILE_SIZE * 0.055
+            self.speed *= TILE_SIZE * 0.055
 
         # Перемещение игрока относительно центра
         self.move(self.dx * self.speed, self.dy * self.speed)
 
         # Обновление анимации
-        if pygame.time.get_ticks() - self.shoot_last_time > 5000:
-            self.update_frame_state()
+        if pygame.time.get_ticks() - self.shoot_last_time > Player.after_spell_freezing:
+            if self.dx or self.dy:
+                self.update_frame_state()
 
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
@@ -309,6 +312,7 @@ class Player(Entity):
         number_of_frame = (round((angle - 0) / 18) + 47) % 20
         self.image = Player.cast_frames[number_of_frame // 5][number_of_frame % 5]
 
+        self.ice_buff += 10
         self.shoot_last_time = current_ticks
 
     def death(self):

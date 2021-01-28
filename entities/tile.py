@@ -74,7 +74,7 @@ class Torch(pygame.sprite.Sprite):
 
         dx, dy = player.rect.centerx - self.rect.centerx, player.rect.centery - self.rect.centery
         Torch.min_distance_to_player = min(max((dx ** 2 + dy ** 2) ** 0.5, 0.000001), Torch.min_distance_to_player)
-        self.BURNING_SOUND.set_volume(min(DEFAULT_SOUNDS_VOLUME / (Torch.min_distance_to_player / TILE_SIZE) * 2, 1.2))
+        self.BURNING_SOUND.set_volume(min(DEFAULT_SOUNDS_VOLUME / (Torch.min_distance_to_player / TILE_SIZE) * 1, 1.2))
         if not self.sounds_channel.get_busy():
             self.sounds_channel.play(self.BURNING_SOUND)
 
