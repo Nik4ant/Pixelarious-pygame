@@ -63,7 +63,7 @@ class Entity(pygame.sprite.Sprite):
 
         if self.poison_buff:
             self.poison_buff -= 1
-            self.get_damage(Entity.POISON_DAMAGE, '')
+            self.get_damage(Entity.POISON_DAMAGE)
 
     def move(self, dx, dy):
         """
@@ -162,7 +162,7 @@ class Entity(pygame.sprite.Sprite):
                 self.sleeping_time = pygame.time.get_ticks()
             screen.blit(Entity.sleeping_frames[0][self.cur_sleeping_frame], (self.rect.centerx + 10, self.rect.y - 35))
 
-    def get_damage(self, damage, spell_type, action_time=0):
+    def get_damage(self, damage, spell_type='', action_time=0):
         """
         Получение дамага
 

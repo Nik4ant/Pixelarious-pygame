@@ -30,6 +30,7 @@ class WalkingMonster(Entity):
 
     def update(self, screen, player=None):
         if not player:
+            print('BAAAAAAD')
             return
         super().update()
 
@@ -81,6 +82,7 @@ class WalkingMonster(Entity):
 
         if pygame.sprite.collide_rect(self.collider, player.collider):
             player.boost(self.rect.centerx - player.rect.centerx, self.rect.centerx - player.rect.centery)
+            player.get_damage(self.damage)
             self.rect.centerx, self.rect.centery = previous_pos
             self.stun_time = pygame.time.get_ticks()
 
@@ -263,6 +265,7 @@ class Demon(WalkingMonster):
     Устойчивойть к огню
     Слабость к льду
     """
+    damage = 50
     size = (int(TILE_SIZE // 8 * 5),) * 2
     frames = cut_sheet(load_image('demon_run.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('demon_idle.png', 'assets\\enemies'), 4, 2, size)
@@ -309,6 +312,7 @@ class GreenSlime(WalkingMonster):
     Устойчивость к льду и отравлению (я сам отравление)
     Слабость к молниям
     """
+    damage = 60
     size = (int(TILE_SIZE // 8 * 7),) * 2
     frames = cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2)
@@ -354,6 +358,7 @@ class DirtySlime(WalkingMonster):
     Устойчивость к льду и отравлению
     Слабость к молниям
     """
+    damage = 70
     size = (int(TILE_SIZE // 8 * 7),) * 2
     frames = cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2)
@@ -398,6 +403,7 @@ class Zombie(WalkingMonster):
     Устойчивость к молниям (они двигают мои нейроны)
     Слабостей не обнаружено (земля пухом ученым)
     """
+    damage = 30
     size = (int(TILE_SIZE // 4 * 3),) * 2
     frames = cut_sheet(load_image('zombie_run.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('zombie_idle.png', 'assets\\enemies'), 4, 2)
@@ -442,6 +448,7 @@ class Wizard(ShootingMonster):
     Устойчивость к молниям
     Слабость к огню (МОЙ ПЛАЩ ГОРИТ)
     """
+    damage = 10
     size = (TILE_SIZE // 8 * 7,) * 2
     frames = cut_sheet(load_image('wizard_run.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('wizard_idle.png', 'assets\\enemies'), 4, 2, size)
@@ -486,6 +493,7 @@ class LongWizard(ShootingMonster):
     Устойчивость к молниям
     Слабость к огню
     """
+    damage = 20
     size = (int(TILE_SIZE // 8 * 7),) * 2
     frames = cut_sheet(load_image('long_wizard_run.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('long_wizard_idle.png', 'assets\\enemies'), 4, 2)
