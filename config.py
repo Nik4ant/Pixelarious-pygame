@@ -3,14 +3,14 @@ import pygame
 
 FPS = 60
 # Громкость музыки во всей игре по умолчанию
-DEFAULT_MUSIC_VOLUME = 0.45 * 0
+DEFAULT_MUSIC_VOLUME = 0.45
 # Эта переменная нужна для увеличения громкости звука, если мелодия тихая.
 # Такое добавление будет дописываться вручную при установке громкости.
-MUSIC_VOLUME_ADDER = 0.2 * 0
+MUSIC_VOLUME_ADDER = 0.2
 # Громкость звука наведения по умолчанию
-DEFAULT_HOVER_SOUND_VOLUME = 0.4 * 0
+DEFAULT_HOVER_SOUND_VOLUME = 0.4
 # Громкость звуков внутри игры по умолчанию
-DEFAULT_SOUNDS_VOLUME = 0.5 * 0
+DEFAULT_SOUNDS_VOLUME = 0.5
 # Чуствительность джойстика
 # (только при достижении этого значения игра просчитает движения джойстика)
 JOYSTICK_SENSITIVITY = 0.11
