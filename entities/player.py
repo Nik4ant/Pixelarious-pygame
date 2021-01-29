@@ -187,19 +187,19 @@ class Player(Entity):
 
         # Обработка силы дэша, действующей на игрока
         # по x
-        if self.dash_force_x > self.dash_minimum_speed:
-            self.dash_force_x -= self.dash_force_slower
+        if self.dash_force_x > Player.dash_minimum_speed:
+            self.dash_force_x -= Player.dash_force_slower
             self.dx = self.dash_force_x * self.dash_direction_x
         else:
             self.dash_force_x = 0
-            self.dash_direction_x = 0
+            self.dash_direction_x = self.look_direction_x
         # по y
-        if self.dash_force_y > self.dash_minimum_speed:
-            self.dash_force_y -= self.dash_force_slower
+        if self.dash_force_y > Player.dash_minimum_speed:
+            self.dash_force_y -= Player.dash_force_slower
             self.dy = self.dash_force_y * self.dash_direction_y
         else:
             self.dash_force_y = 0
-            self.dash_direction_y = 0
+            self.dash_direction_y = self.look_direction_y
 
         '''
         Управление игрока сделано так, что при начале движения игрок не сразу
