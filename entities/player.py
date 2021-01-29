@@ -84,10 +84,10 @@ class Player(Entity):
         self.dx = self.dy = 0
         self.distance_to_player = 0.0001
 
-        self.health = 400 + 3000000000000
+        self.health = 400
         self.full_health = self.health
 
-        self.mana = 300
+        self.mana = 300 + 30000
         self.full_mana = self.mana
 
         # Группа со спрайтами заклинаний

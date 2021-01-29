@@ -3,7 +3,7 @@ from random import randint
 import pygame
 
 from engine import load_tile, cut_sheet, load_image, concat_two_file_paths
-from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
+from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME, SOUNDS_VOLUME_REDUCER
 from entities.base_entity import Collider
 
 
@@ -51,7 +51,7 @@ class Torch(pygame.sprite.Sprite):
 
     # Звуки
     BURNING_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "torch_sound.mp3"))
-    BURNING_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+    BURNING_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME - SOUNDS_VOLUME_REDUCER)
 
     def __init__(self, x: float, y: float, *groups):
         super().__init__(*groups)

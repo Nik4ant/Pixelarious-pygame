@@ -83,11 +83,13 @@ class WalkingMonster(Entity):
         if pygame.sprite.collide_rect(self.collider, player.collider):
             if self.alive:
                 # TODO: pep8 + test
-                boost_dx = (self.dx + player.__class__.max_delta_movements * 1 if self.dx < 0 else -1) * -4
-                boost_dy = (self.dy + player.__class__.max_delta_movements * 1 if self.dy < 0 else -1) * -4
+                boost_dx = (self.dx + player.__class__.max_delta_movements * 1 if self.dx < 0 else -1) * -5
+                boost_dy = (self.dy + player.__class__.max_delta_movements * 1 if self.dy < 0 else -1) * -5
+                if not player.is_boosting_from_enemy:
+                    player.get_damage(self.damage)
+
                 player.boost_from_enemy(boost_dx, boost_dy)
 
-                player.get_damage(self.damage)
             self.rect.centerx, self.rect.centery = previous_pos
             self.stun_time = pygame.time.get_ticks()
 

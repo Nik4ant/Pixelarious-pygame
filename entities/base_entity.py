@@ -158,8 +158,6 @@ class Entity(pygame.sprite.Sprite):
         health_length = width * max(self.health, 0) / self.full_health
         color = '#00b300' if str(self.__class__.__name__) == 'Player' else 'red'
         pygame.draw.rect(screen, color, (x1, y1 - 10, health_length, line_width))
-        if self.poison_buff:
-            pygame.draw.rect(screen, 'green', (x1 + width - line_width, y1 - 10, line_width, line_width))
 
     def draw_sign(self, screen):
         """
