@@ -4,6 +4,7 @@ import pygame
 
 from engine import load_tile, cut_sheet, load_image, concat_two_file_paths
 from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
+from entities.base_entity import Collider
 
 
 class Tile(pygame.sprite.Sprite):
@@ -38,6 +39,7 @@ class Tile(pygame.sprite.Sprite):
         self.type = tile_type  # тип тайла
         self.image = Tile.IMAGES[self.type]
         self.rect = self.image.get_rect().move(x * TILE_SIZE, y * TILE_SIZE)
+        self.collider = Collider(x, y)
 
 
 class Torch(pygame.sprite.Sprite):
@@ -96,6 +98,7 @@ class Door(pygame.sprite.Sprite):
         super().__init__(*groups)
         self.image = Door.frames[0]
         self.rect = self.image.get_rect().move(x * TILE_SIZE, y * TILE_SIZE)
+        self.collider = Collider(x, y)
 
         self.opened = False
 

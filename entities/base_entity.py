@@ -19,10 +19,11 @@ class Entity(pygame.sprite.Sprite):
     HEALTH_LINE_WIDTH = 5
     HEALTH_LINE_TIME = 5000
 
-    POISON_DAMAGE = 0.05
+    POISON_DAMAGE = 0.075
 
-    size = (TILE_SIZE,) * 2
-    sleeping_frames = cut_sheet(load_image('sleep_icon_spritesheet.png', 'assets\\enemies\\'), 4, 1, size)
+    size = (int(TILE_SIZE),) * 2
+    sleeping_frames = cut_sheet(load_image('sleep_icon_spritesheet.png', 'assets\\enemies'), 4, 1)
+    poison_frames = cut_sheet(load_image('poison_static.png', 'assets\\spells'), 5, 1, size)[0]
 
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
@@ -36,6 +37,8 @@ class Entity(pygame.sprite.Sprite):
 
         self.last_damage_time = -Entity.HEALTH_LINE_TIME
         self.sleeping_time = None
+        self.cur_poison_frame = 0
+        self.poison_static_time = 0
         self.ice_buff = 0
         self.poison_buff = 0
 
@@ -109,7 +112,10 @@ class Entity(pygame.sprite.Sprite):
                 if self.cur_frame >= len(self.__class__.death_frames) - 1:
                     for group in self.groups():
                         group.remove(self)
-                self.image = self.__class__.death_frames[self.cur_frame]
+                try:
+                    self.image = self.__class__.death_frames[self.cur_frame]
+                except IndexError:
+                    pass
                 return
 
             look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
@@ -131,6 +137,7 @@ class Entity(pygame.sprite.Sprite):
         """
         if abs(pygame.time.get_ticks() - self.last_damage_time) > Entity.HEALTH_LINE_TIME:
             return
+
         line_width = Entity.HEALTH_LINE_WIDTH
         x, y = self.rect.centerx, self.rect.centery
         width, height = self.rect.size
@@ -139,6 +146,8 @@ class Entity(pygame.sprite.Sprite):
         health_length = width * max(self.health, 0) / self.full_health
         color = '#00b300' if str(self.__class__.__name__) == 'Player' else 'red'
         pygame.draw.rect(screen, color, (x1, y1 - 10, health_length, line_width))
+        if self.poison_buff:
+            pygame.draw.rect(screen, 'green', (x1 + width - line_width, y1 - 10, line_width, line_width))
 
     def draw_sign(self, screen):
         """
@@ -149,17 +158,25 @@ class Entity(pygame.sprite.Sprite):
         """
         if not self.alive:
             return
+
+        ticks = pygame.time.get_ticks()
+        if self.poison_buff:
+            if ticks - self.poison_static_time > Entity.UPDATE_TIME:
+                self.poison_static_time = ticks
+                self.cur_poison_frame = (self.cur_poison_frame + 1) % len(Entity.poison_frames)
+            screen.blit(Entity.poison_frames[self.cur_poison_frame], (self.rect.x, self.rect.y))
+
         if self.player_observed:
             font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 96)
             text = font.render("!", True, (250, 20, 20))
             screen.blit(text, (self.rect.centerx, self.rect.y - 60))
 
         if not self.player_observed:
-            if not self.sleeping_time or pygame.time.get_ticks() - self.sleeping_time >= 250:
+            if not self.sleeping_time or ticks - self.sleeping_time >= 250:
                 if not self.sleeping_time:
                     self.cur_sleeping_frame = 0
                 self.cur_sleeping_frame = (self.cur_sleeping_frame + 1) % len(Entity.sleeping_frames[0])
-                self.sleeping_time = pygame.time.get_ticks()
+                self.sleeping_time = ticks
             screen.blit(Entity.sleeping_frames[0][self.cur_sleeping_frame], (self.rect.centerx + 10, self.rect.y - 35))
 
     def get_damage(self, damage, spell_type='', action_time=0):
@@ -176,9 +193,9 @@ class Entity(pygame.sprite.Sprite):
             self.poison_buff += action_time
 
         self.last_damage_time = pygame.time.get_ticks()
-        damage *= 1000
+        damage *= 10000
         damage += randint(-damage * 0.1, damage * 0.1)
-        damage /= 1000
+        damage /= 10000
         self.health -= damage
         if self.health <= 0:
             self.death()

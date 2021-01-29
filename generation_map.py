@@ -4,6 +4,7 @@ from entities.base_entity import Entity
 from entities.tile import Tile, Torch, Door
 from entities.player import Player
 from entities.enemies import random_monster
+from entities.spells import Spell
 from config import TILE_SIZE
 
 
@@ -1076,7 +1077,7 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
 
 
 def initialise_level(level_map, all_sprites, tiles_group, barriers_group, enemies_group,
-                     doors_group, torches_group, user_seed=None):
+                     doors_group, torches_group, end_of_level, user_seed=None):
     """
     Функция для инициализации уровня
     Проходит по переданной ей карте уровня и на каждый символ карты создает тайл и что-то на нем, если есть
@@ -1089,6 +1090,7 @@ def initialise_level(level_map, all_sprites, tiles_group, barriers_group, enemie
     :param enemies_group: Группа врагов
     :param doors_group: Группа дверей
     :param torches_group: Группа с факелами
+    :param end_of_level: Группа тайла лестницы вниз, при касании с которым произойдет переход на следующий уровень
     :param user_seed: Сид, по которому будут расставлены монстры
 
     :return Player: Игрок, размещённый в нужном месте
@@ -1100,6 +1102,8 @@ def initialise_level(level_map, all_sprites, tiles_group, barriers_group, enemie
 
     # Установка общих физических объектов для всех сущностей
     Entity.set_global_collisions_group(barriers_group)
+    # Установка общих физических объектов для всех заклинаний
+    Spell.set_global_collisions_group(barriers_group, doors_group)
 
     for y in range(len(level_map)):
         for x in range(len(level_map[y])):
@@ -1152,6 +1156,8 @@ def initialise_level(level_map, all_sprites, tiles_group, barriers_group, enemie
                     Door(x, y - 0.5, all_sprites, doors_group)
                 elif level_map[y][x] == 'T':
                     Torch(x + 0.12, y, all_sprites, torches_group)
+            elif level_map[y][x] == 'E':
+                Tile('E', x, y, all_sprites, end_of_level)
             elif level_map[y][x] != ' ':
                 Tile(level_map[y][x], x, y, all_sprites, tiles_group)
     # вернем игрока и сид монстров

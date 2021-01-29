@@ -6,6 +6,7 @@ from engine import *
 
 class Camera:
     """Класс представляющий камеру"""
+
     def __init__(self, screen_width, screen_height):
         # инициализация начального сдвига для камеры
         self.dx = 0
@@ -31,7 +32,7 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.height * 0.5 - self.screen_height * 0.5)
 
 
-def start(screen: pygame.surface.Surface, user_seed: str = None) -> int:
+def start(screen: pygame.surface.Surface, level_number, user_seed: str = None) -> int:
     """
     Сама игра (генерация уровня и затем цикл)
     :param screen: экран
@@ -55,6 +56,8 @@ def start(screen: pygame.surface.Surface, user_seed: str = None) -> int:
     doors_group = pygame.sprite.Group()
     # Группа со спрайтами факелов
     torches_group = pygame.sprite.Group()
+    # Группа со спрайтом конца уровня
+    end_of_level = pygame.sprite.Group()
 
     is_game_open = True
     clock = pygame.time.Clock()  # Часы
@@ -63,7 +66,7 @@ def start(screen: pygame.surface.Surface, user_seed: str = None) -> int:
     level, level_seed = generate_new_level(user_seed.split('\n')[0].split() if user_seed else 0)
     # Создаем монстров и плитки, проходя по уровню
     player, monsters_seed = initialise_level(level, all_sprites, tiles_group, collidable_tiles_group,
-                                             enemies_group, doors_group, torches_group,
+                                             enemies_group, doors_group, torches_group, end_of_level,
                                              user_seed.split('\n')[1].split() if user_seed else 0)
 
     # Создаем камеру
@@ -81,8 +84,11 @@ def start(screen: pygame.surface.Surface, user_seed: str = None) -> int:
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
-    fps_font = pygame.font.Font('assets\\UI\\pixel_font.ttf', 32)
-    
+    fps_font = pygame.font.Font('assets\\UI\\pixel_font.ttf', 48)
+
+    level_number_icon = load_tile('UPSTAIRS.png', (TILE_SIZE,) * 2)
+    level_number_font = pygame.font.Font('assets\\UI\\pixel_font.ttf', 64)
+
     # Иконки для отображения частей UI с заклинаниями
     spells_containers = (
         UIComponents.SpellContainer("fire_spell.png", (120, 150)),
@@ -155,6 +161,9 @@ def start(screen: pygame.surface.Surface, user_seed: str = None) -> int:
         # Обновление спрайтов
         player_sprites.update()
         # Если игрок умер, то надо открыть экран конца игры
+        if pygame.sprite.spritecollideany(player, end_of_level):
+            return 1
+        # Если игрок умер, то игра заканчивается
         if not player.alive:
             # Останавливаем все звуки (даже музыку)
             pygame.mixer.pause()
@@ -177,6 +186,7 @@ def start(screen: pygame.surface.Surface, user_seed: str = None) -> int:
 
         # Отрисовка всех спрайтов
         tiles_group.draw(screen)
+        end_of_level.draw(screen)
         collidable_tiles_group.draw(screen)
         torches_group.draw(screen)
         doors_group.draw(screen)
@@ -207,6 +217,10 @@ def start(screen: pygame.surface.Surface, user_seed: str = None) -> int:
         # Отрисовка фпс
         fps_text = fps_font.render(str(int(clock.get_fps())), True, (100, 255, 100))
         screen.blit(fps_text, (20, 10))
+
+        level_number_text = level_number_font.render(str(level_number), True, (255, 255, 255))
+        screen.blit(level_number_icon, (screen_width - 70, 10))
+        screen.blit(level_number_text, (screen_width - 110, 10))
 
         clock.tick(FPS)
         pygame.display.flip()

@@ -1,6 +1,5 @@
 import pygame
 
-
 FPS = 60
 # Громкость музыки во всей игре по умолчанию
 DEFAULT_MUSIC_VOLUME = 0.45
@@ -35,7 +34,7 @@ CONTROLS = {
     "KEYBOARD_SPELL_LIGHT": pygame.K_3,  # 3
     "KEYBOARD_SPELL_POISON": pygame.K_4,  # 4
     "KEYBOARD_SPELL_VOID": pygame.K_5,  # 5
-    
+
     "KEYBOARD_PAUSE": pygame.K_ESCAPE,
     "KEYBOARD_DASH": pygame.K_q,
     "KEYBOARD_LEFT": pygame.K_a,
