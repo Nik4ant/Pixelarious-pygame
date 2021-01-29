@@ -121,6 +121,8 @@ def start(screen: pygame.surface.Surface, user_seed: str = None) -> int:
                 player.shoot('flash', enemies_group)
             elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_POISON"]):
                 player.shoot('poison', enemies_group)
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_VOID"]):
+                player.shoot('void', enemies_group)
         # Иначе ввод с клавиатуры
         else:
             if keys[CONTROLS["KEYBOARD_PAUSE"]]:
@@ -154,6 +156,9 @@ def start(screen: pygame.surface.Surface, user_seed: str = None) -> int:
         player_sprites.update()
         # Если игрок умер, то надо открыть экран конца игры
         if not player.alive:
+            # Останавливаем все звуки (даже музыку)
+            pygame.mixer.pause()
+            pygame.mixer.music.pause()
             end_screen.execute(screen)
             return -1
 

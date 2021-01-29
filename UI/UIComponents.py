@@ -133,6 +133,7 @@ class SpellContainer:
         "x": load_image("joystick_x.png", path_to_folder="assets/UI/icons"),
         "triangle": load_image("joystick_triangle.png", path_to_folder="assets/UI/icons"),
         "square": load_image("joystick_square.png", path_to_folder="assets/UI/icons"),
+        "L1": load_image("joystick_L1.png", path_to_folder="assets/UI/icons"),
     }
 
     def __init__(self, icon_filename: str, position: tuple):

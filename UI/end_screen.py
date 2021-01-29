@@ -1,3 +1,4 @@
+import os
 import sys
 
 import pygame
@@ -43,6 +44,11 @@ def execute(screen: pygame.surface.Surface, is_win=False):
     # координаты курсора
     cursor_x, cursor_y = screen.get_rect().center
     cursor_speed = 15  # скорость курсора (нужно если используется джойстик)
+
+    # Т.к. игрок завершил игру, то файл с сохранением будет перезаписан
+    if os.path.isfile("data/save.txt"):
+        with open('data/save.txt', 'w', encoding="utf-8") as file:
+            file.write("")
 
     # Цикл меню
     while is_open:

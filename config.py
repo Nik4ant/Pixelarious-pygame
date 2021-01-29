@@ -27,7 +27,7 @@ CONTROLS = {
     "JOYSTICK_SPELL_ICE": 0,  # кнопка круг
     "JOYSTICK_SPELL_LIGHT": 3,  # кнопка квадрат
     "JOYSTICK_SPELL_POISON": 2,  # кнопка треугольник
-    "JOYSTICK_SPELL_VOID": 4,  # L1
+    "JOYSTICK_SPELL_VOID": 9,  # L1
 
     # Для клавиатуры
     "KEYBOARD_SPELL_FIRE": pygame.K_1,  # 1
