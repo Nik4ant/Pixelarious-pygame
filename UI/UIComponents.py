@@ -78,7 +78,7 @@ class Button(pygame.sprite.Sprite):
         self.image.blit(self.text_surface, self.text_surface.get_rect(center=self.image.get_rect().center))
 
 
-class Message_box:
+class MessageBox:
     """
     Класс представляющий диалог с сообщением, который закрывается
     при нажатии в любую область экрана
@@ -122,7 +122,7 @@ class Message_box:
             next_y += MARGIN
 
 
-class Spell_container:
+class SpellContainer:
     """Класс представляет UI элемент с отображением данных о заклинании."""
 
     # В этом случае фонт всегда будет общий у всех, поэтому это атрибут класса
@@ -156,18 +156,18 @@ class Spell_container:
 
         # Если подключён джойстик, то рисуется специальная иконка
         if is_joystick:
-            screen.blit(Spell_container.JOYSTICK_ICONS[spell_key], pos)
+            screen.blit(SpellContainer.JOYSTICK_ICONS[spell_key], pos)
         # Иначе просто текст
         else:
-            text_surface = Spell_container.font.render(spell_key, True,
+            text_surface = SpellContainer.font.render(spell_key, True,
                                                        pygame.Color("white"))
             screen.blit(text_surface, pos)
 
 
-class Logo_image(pygame.sprite.Sprite):
+class LogoImage(pygame.sprite.Sprite):
     """
     UI элемент с лого игры. Является классом,
-    т.к. может быть нужен не один раз."""
+    т.к. нужен не один раз."""
 
     def __init__(self, position: tuple, *args):
         super().__init__(*args)
@@ -177,3 +177,48 @@ class Logo_image(pygame.sprite.Sprite):
         self.image = pygame.transform.scale2x(self.image)
         self.rect = self.image.get_rect()
         self.rect.centerx, self.rect.centery = position
+
+
+class AnimatedBackground(pygame.sprite.Sprite):
+    def __init__(self, filename: str, frames_start: int, frames_end: int, delay: int,
+                 screen_size: tuple, path_to_folder="assets/UI/animated_backgrounds"):
+        """
+        Инициализация
+        :param filename: Имя файла в виде f строки для замены номера кадра
+        :param frames_start: Номер первого кадра в папке
+        :param frames_end: Количество кадров, до которого
+        нужно воспроизводить анимацию
+        :param delay: Задержка между сменой кадров
+        :param screen_size: Размеры экрана
+        :param path_to_folder: Путь до папки с кадрами
+        """
+
+        super().__init__()
+        self.current_frame_number = frames_start
+        # Номер первого и последнего кадров
+        self.frames_start = frames_start
+        self.frames_end = frames_end
+        # Пути
+        self.base_filename = filename
+        self.path_to_folder = path_to_folder
+
+        self.screen_size = screen_size
+        self.image = load_image(self.base_filename.format(self.current_frame_number),
+                                path_to_folder=self.path_to_folder)
+        self.image = pygame.transform.scale(self.image, self.screen_size)
+
+        self.last_update_time = pygame.time.get_ticks()
+        self.delay = delay
+
+    def update(self):
+        # Проверка для смены кадра
+        if pygame.time.get_ticks() - self.last_update_time > self.delay:
+            self.current_frame_number += 1
+            if self.current_frame_number > self.frames_end:
+                # Переводим счётчик на начало
+                self.current_frame_number = self.frames_start
+
+            self.image = load_image(self.base_filename.format(self.current_frame_number),
+                                    path_to_folder=self.path_to_folder)
+            self.image = pygame.transform.scale(self.image, self.screen_size)
+            self.last_update_time = pygame.time.get_ticks()

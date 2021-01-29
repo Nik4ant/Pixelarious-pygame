@@ -1,11 +1,8 @@
-import os
-
 import pygame
 
+from UI.UIComponents import Button, LogoImage, MessageBox
 from config import FPS, CONTROLS, JOYSTICK_SENSITIVITY, DEFAULT_MUSIC_VOLUME
-
 from engine import load_image, check_any_joystick, get_joystick, concat_two_file_paths
-from UI.UIComponents import Button, Logo_image, Message_box
 
 
 def execute(screen: pygame.surface.Surface) -> int:
@@ -25,7 +22,7 @@ def execute(screen: pygame.surface.Surface) -> int:
     UI_MARGIN = 55
 
     # Создание UI элементов
-    game_logo = Logo_image((screen.get_width() // 2, screen.get_height() // 6 - UI_MARGIN))
+    game_logo = LogoImage((screen.get_width() // 2, screen.get_height() // 6 - UI_MARGIN))
     next_y = game_logo.rect.y + game_logo.rect.height + UI_MARGIN * 2
 
     button_play = Button((screen.get_width() // 2, next_y), "Играть", 32)
@@ -97,12 +94,13 @@ def execute(screen: pygame.surface.Surface) -> int:
 
                 # Управление
                 if sender_text == button_controls.text:
-                    text = str("На клавиатуре: WASD - двигаться; Q - рывок\n Создать заклинание - ЛКМ\n" +
-                               "На джойстике: PADS - двигаться; R1 - рывок\n Создать заклинание - R2\n")
-                    current_message_box = Message_box(text,
-                                                      30,
-                                                      (screen.get_width() * 0.5,
-                                                       screen.get_height() * 0.5))
+                    text = str("Базовое управление:\n" +
+                               "На клавиатуре: WASD - двигаться; Q - рывок\n" +
+                               "На джойстике: PADS - двигаться; R1 - рывок\n")
+                    current_message_box = MessageBox(text,
+                                                     30,
+                                                     (screen.get_width() * 0.5,
+                                                      screen.get_height() * 0.5))
                     continue
 
                 # Об игре
@@ -111,20 +109,20 @@ def execute(screen: pygame.surface.Surface) -> int:
                                "которой надо пройти \n" +
                                "сквозь подземелье, заполненное врагами.\n"
                                "Желаем удачи\n")
-                    current_message_box = Message_box(text,
-                                                      30,
-                                                      (screen.get_width() * 0.5,
-                                                       screen.get_height() * 0.5))
+                    current_message_box = MessageBox(text,
+                                                     30,
+                                                     (screen.get_width() * 0.5,
+                                                      screen.get_height() * 0.5))
                     continue
 
                 # Авторы
                 if sender_text == button_authors.text:
                     text = str("Никита Сошнев (Nik4ant)\n"
                                "Максим Рудаков (Massering)")
-                    current_message_box = Message_box(text,
-                                                      30,
-                                                      (screen.get_width() * 0.5,
-                                                       screen.get_height() * 0.5))
+                    current_message_box = MessageBox(text,
+                                                     30,
+                                                     (screen.get_width() * 0.5,
+                                                      screen.get_height() * 0.5))
                     continue
 
                 # Музыка затухает (1 секунду), т.к. главный экран закроется

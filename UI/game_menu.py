@@ -38,7 +38,7 @@ def execute(screen: pygame.surface.Surface):
 
     next_y += button_continue.rect.width * 0.5 + UI_MARGIN
     button_exit = Button((screen.get_width() // 2, next_y),
-                         "Выйти из игры", 32,
+                         "Выйти в меню", 32,
                          base_button_filename="button_1.png",
                          hover_button_filename="button_1_hover.png")
 
@@ -47,8 +47,6 @@ def execute(screen: pygame.surface.Surface):
     UI_sprites.add(button_continue)
     UI_sprites.add(button_exit)
 
-    # Текущие диалог (может появлятся при нажатии кнопок)
-    current_message_box = None
     # Изображение для курсора
     cursor_image = load_image("cursor.png", "assets/UI/icons")
     # координаты курсора
@@ -109,11 +107,6 @@ def execute(screen: pygame.surface.Surface):
         screen.blit(ui_background_image, menu_top_left)
         # Рисуем весь UI
         UI_sprites.draw(screen)
-        # Если есть диалог, то его тоже обновляем и рисуем
-        if current_message_box:
-            current_message_box.update(was_click)
-            if current_message_box.need_to_draw:
-                current_message_box.draw(screen)
 
         # Рисуем курсор поверх всего
         screen.blit(cursor_image, cursor_position)

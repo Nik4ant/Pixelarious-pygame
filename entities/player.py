@@ -32,7 +32,7 @@ class Player(Entity):
 
     # время перезарядки заклинания в миллисекундах
     spell_reload_time = 1000
-    #
+    # время замедления после атаки заклинанием
     after_spell_freezing = 300
     
     # время перезарядки дэша в миллисекундах
@@ -64,7 +64,10 @@ class Player(Entity):
     def __init__(self, x: float, y: float, all_sprites, *args):
         # Конструктор класса Entity
         super().__init__(x, y, all_sprites, *args)
+
         self.alive = True
+        self.health = 300
+        self.full_health = self.health
 
         # Ширина и высота изображения после инициализации
         self.width, self.height = self.image.get_size()
@@ -77,8 +80,6 @@ class Player(Entity):
         # Скорость
         self.dx = self.dy = 0
         self.distance_to_player = 0.0001
-        self.health = 300
-        self.full_health = self.health
 
         # Группа со спрайтами заклинаний
         self.spells = pygame.sprite.Group()
@@ -92,13 +93,10 @@ class Player(Entity):
         # Дэш
         self.dash_direction_x = self.dash_direction_y = 0
         self.dash_force_x = self.dash_force_y = 0
-        self.was_dash_activated = 0
 
         # Время последнего использования дэша
-        # (Нужно для определения перезарядился дэш или нет)
+        # (Нужно для определения перезарядки дэша)
         self.dash_last_time = pygame.time.get_ticks()
-
-        self.wand = PlayerWand(all_sprites)
 
         # Инициализация прицеда для игрока
         self.scope = PlayerScope(x, y)
@@ -113,7 +111,7 @@ class Player(Entity):
 
         # Ниже переменные, нужные для общей обработки игрока внезависимости от
         # типа управления (геймпад/клавиатура)
-
+        was_dash_activated = False
         # Новая позиция для прицела игрока (по умолчанию изменений нет)
         new_scope_x, new_scope_y = self.scope.rect.centerx, self.scope.rect.centery
 
@@ -130,8 +128,7 @@ class Player(Entity):
             # Проверка на использование дэша
             # Переменная отвечает за проверку на то, была ли нажата кнопка дэша.
             # (Но нет гарантии того, что дэш уже перезарядился, это проверяется при использовании)
-            was_dash_activated = (self.joystick.get_button(CONTROLS["JOYSTICK_DASH"])
-                                  or self.was_dash_activated)
+            was_dash_activated = self.joystick.get_button(CONTROLS["JOYSTICK_DASH"])
 
             # Проверяем, что действительно игрок подвигал правую ось
             if (abs(axis_right_x) > JOYSTICK_SENSITIVITY or
@@ -151,16 +148,15 @@ class Player(Entity):
                                       + int(keys[CONTROLS["KEYBOARD_DOWN"]]))
 
             # Проверка на использование дэша
-            was_dash_activated = (keys[CONTROLS["KEYBOARD_DASH"]] or self.was_dash_activated)
+            was_dash_activated = keys[CONTROLS["KEYBOARD_DASH"]]
 
             # Позиция для прицела
             new_scope_x, new_scope_y = pygame.mouse.get_pos()
-        self.was_dash_activated = False
 
         if pygame.time.get_ticks() - self.shoot_last_time < 200:
-            self.speed *= 0.8 * self.default_speed
+            self.speed *= 0.8 * Player.default_speed
         else:
-            self.speed *= self.default_speed
+            self.speed *= Player.default_speed
 
         # Обработка активации дэша
         if (was_dash_activated and pygame.time.get_ticks() -
@@ -262,11 +258,12 @@ class Player(Entity):
                 not Player.sounds_channel.get_busy()):
             Player.sounds_channel.play(Player.FOOTSTEP_SOUND)
 
-        # Если игрок движется по диагонали, то его скорость надо
+        # Если игрок движется по диагонали, то его скорость надо корректировать
         if self.dx != 0 and self.dy != 0:
-            # 0.0388905 = 0.055 * 0.7071, где  0.055 - множитель для скорости
-            # относительн TILE_SIZE, а 0.7071 - приближённое значение корня
-            # из двух для выравнивание скорости при диагональном движении
+            # 0.0388905 = 0.055 * 0.7071, где 0.055 - множитель для скорости
+            # относительно TILE_SIZE, а 0.7071 - приближённое значение корня
+            # из двух делённого на 2 для выравнивание скорости при
+            # диагональном движении
             self.speed *= TILE_SIZE * 0.0388905
         else:
             self.speed *= TILE_SIZE * 0.055
@@ -281,7 +278,6 @@ class Player(Entity):
 
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
-        self.wand.update(self.rect.center, self.scope.rect.center)
 
     def shoot(self, spell_type: str, enemies_group):
         if not self.alive:
@@ -320,47 +316,32 @@ class Player(Entity):
         self.cur_frame = 0
         self.speed = 1
 
-        # Уделние прицела
-        # for group in self.scope.groups():
-        #     group.remove(self.scope)
+        # Удаление спрайта прицела
+        for group in self.scope.groups():
+            group.remove(self.scope)
+        # Удаление спрайта игрока
+        for group in self.groups():
+            group.remove(self)
 
-        # Удаление палочки
-        for group in self.wand.groups():
-            group.remove(self.wand)
+    def boost(self, boost_dx: float, boost_dy: float, distance: int):
+        """
+        Метод дающий ускорение игроку, в случае если он был атакован
+        :param boost_dx: Кортеж с направлением ускорения
+        :param boost_dy: Флаг, был ли игрок атакован
+        :param distance: Растояние между врагов
+        """
 
-    def boost(self, *args):
-        self.last_hit_time = pygame.time.get_ticks()
+        # Чтобы ускорить игрока, нужно задать это ускорение как дэш.
+        # Тогда игрок будет иметь ослабленное влияние и не сможет
+        # прервать ускорение.
+        """
+        self.dx = boost_dx * direction[0]
+        self.dash_force_x = self.dx
 
-
-class PlayerWand(pygame.sprite.Sprite):
-    """
-    Класс представляющий оружие игрока - волшебную палочку
-    """
-    def __init__(self, *args):
-        super().__init__(*args)
-
-        self.image = load_image("magic_wand.png")
-        self.image = pygame.transform.scale2x(self.image)
-        self.original_image = self.image
-        self.rect = self.image.get_rect()
-        self.offset = pygame.math.Vector2(0, self.rect.height * -0.5)
-
-    def update(self, player_position: tuple =None, player_scope_position: tuple =None):
-        pass
-        # Если были переданны координаты прицела, то обновляем угол
-        # if player_scope_position and player_position:
-        #     self.rect.centerx = player_position[0] + TILE_SIZE * 0.5
-        #     self.rect.centery = player_position[1] + TILE_SIZE * 0.1
-        #     # Получение угла относительно прицела и оружия
-        #     dx, dy = self.rect.centery - player_scope_position[1], self.rect.centerx - player_scope_position[0]
-        #     angle = degrees(atan2(dx, 0.00001 if dy == 0 else dy))
-        #     self.rotate_wand(angle)
-
-    def rotate_wand(self, angle: float) -> None:
-        pass
-        # self.image = pygame.transform.rotate(self.original_image, 90 - angle)
-        # offset_rotated = self.offset.rotate(angle)
-        # self.rect = self.image.get_rect(center=self.rect.center + offset_rotated)
+        self.dy = boost_dy * direction[1]
+        self.dash_force_y = self.dy
+        """
+        self.last_hit_time = pygame.time.get_tickяs()
 
 
 class PlayerScope(pygame.sprite.Sprite):

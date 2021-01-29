@@ -1,5 +1,5 @@
 from generation_map import initialise_level, generate_new_level
-from UI import game_menu, UIComponents
+from UI import end_screen, game_menu, UIComponents
 from config import *
 from engine import *
 
@@ -31,11 +31,12 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.height * 0.5 - self.screen_height * 0.5)
 
 
-def start(screen: pygame.surface.Surface, user_seed: str = None):
+def start(screen: pygame.surface.Surface, user_seed: str = None) -> int:
     """
     Сама игра (генерация уровня и затем цикл)
     :param screen: экран
     :param user_seed: если есть, создаем по нему уровень и мобов
+    :return: Код завершения игры. 0 - выход из игры
     """
     # Ставим загрузочный экран
     loading_screen(screen)
@@ -73,7 +74,6 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
     player_sprites.add(player)
     player.scope.init_scope_position((screen_width * 0.5, screen_height * 0.5))
     player_sprites.add(player.scope)
-    player_sprites.add(player.wand)
     all_sprites.add(player)
 
     # Фоновая музыка
@@ -85,11 +85,11 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
     
     # Иконки для отображения частей UI с заклинаниями
     spells_containers = (
-        UIComponents.Spell_container("fire_spell.png", (120, 150)),
-        UIComponents.Spell_container("ice_spell.png", (120, 250)),
-        UIComponents.Spell_container("light_spell.png", (120, 350)),
-        UIComponents.Spell_container("poison_spell.png", (120, 450)),
-        UIComponents.Spell_container("void_spell.png", (120, 550))
+        UIComponents.SpellContainer("fire_spell.png", (120, 150)),
+        UIComponents.SpellContainer("ice_spell.png", (120, 250)),
+        UIComponents.SpellContainer("light_spell.png", (120, 350)),
+        UIComponents.SpellContainer("poison_spell.png", (120, 450)),
+        UIComponents.SpellContainer("void_spell.png", (120, 550))
     )
 
     # Игровой цикл
@@ -101,15 +101,41 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
             if event.type == pygame.QUIT:
                 is_game_open = False
 
-            elif event.type == pygame.KEYDOWN and not player.joystick:
-                # Проверка на активацию паузы
-                if event.key == CONTROLS["KEYBOARD_PAUSE"]:
-                    was_pause_activated = True
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     player.shoot('fire', enemies_group)
                 else:
                     player.shoot('poison', enemies_group)
+
+        # Текущий джойстик находится в игроке, поэтому кнопки проверяем по нему же
+        if player.joystick:
+            # Только если joystick подключен проверяем нажатие кнопки
+            if player.joystick.get_button(CONTROLS["JOYSTICK_UI_PAUSE"]):
+                was_pause_activated = True
+
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_FIRE"]):
+                player.shoot('fire', enemies_group)
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_ICE"]):
+                player.shoot('ice', enemies_group)
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_LIGHT"]):
+                player.shoot('flash', enemies_group)
+            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_POISON"]):
+                player.shoot('poison', enemies_group)
+        # Иначе ввод с клавиатуры
+        else:
+            if keys[CONTROLS["KEYBOARD_PAUSE"]]:
+                was_pause_activated = True
+
+            if keys[CONTROLS["KEYBOARD_SPELL_FIRE"]]:
+                player.shoot('fire', enemies_group)
+            elif keys[CONTROLS["KEYBOARD_SPELL_ICE"]]:
+                player.shoot('ice', enemies_group)
+            elif keys[CONTROLS["KEYBOARD_SPELL_LIGHT"]]:
+                player.shoot('flash', enemies_group)
+            elif keys[CONTROLS["KEYBOARD_SPELL_POISON"]]:
+                player.shoot('poison', enemies_group)
+            elif keys[CONTROLS["KEYBOARD_SPELL_VOID"]]:
+                player.shoot('void', enemies_group)
 
         if was_pause_activated:
             # Останавливаем все звуки (даже музыку)
@@ -126,9 +152,10 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
 
         # Обновление спрайтов
         player_sprites.update()
-        # Если игрок умер, то игра заканчивается
+        # Если игрок умер, то надо открыть экран конца игры
         if not player.alive:
-            is_game_open = False
+            end_screen.execute(screen)
+            return -1
 
         enemies_group.update(all_sprites, player)
         torches_group.update(player)
@@ -163,35 +190,9 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
                 camera.apply_point(spell)
             enemy.spells.draw(screen)
 
-        if keys[CONTROLS["KEYBOARD_SPELL_FIRE"]]:
-            player.shoot('fire', enemies_group)
-        elif keys[CONTROLS["KEYBOARD_SPELL_ICE"]]:
-            player.shoot('ice', enemies_group)
-        elif keys[CONTROLS["KEYBOARD_SPELL_LIGHT"]]:
-            player.shoot('flash', enemies_group)
-        elif keys[CONTROLS["KEYBOARD_SPELL_POISON"]]:
-            player.shoot('poison', enemies_group)
-        elif keys[CONTROLS["KEYBOARD_SPELL_VOID"]]:
-            player.shoot('void', enemies_group)
-
-        # Текущий джойстик находится в игроке, поэтому кнопки проверяем по нему же
-        if player.joystick:
-            # Только если joystick подключен проверяем нажатие кнопки
-            if player.joystick.get_button(CONTROLS["JOYSTICK_UI_PAUSE"]):
-                was_pause_activated = True
-
-            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_FIRE"]):
-                player.shoot('fire', enemies_group)
-            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_ICE"]):
-                player.shoot('ice', enemies_group)
-            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_LIGHT"]):
-                player.shoot('flash', enemies_group)
-            elif player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_POISON"]):
-                player.shoot('poison', enemies_group)
-
         # Определение параметров для отрисовки контейнеров с заклинаниями
         if player.joystick:
-            spell_args = ("o", "x", "triangle", "square")
+            spell_args = ("o", "x", "triangle", "square", "L1")
         else:
             spell_args = ("1", "2", "3", "4", "5")
         # Отрисовка контейнеров с заклинаниями
@@ -212,3 +213,6 @@ def start(screen: pygame.surface.Surface, user_seed: str = None):
         data.write(' '.join(level_seed))
         data.write('\n')
         data.write(' '.join(monsters_seed))
+
+    # Код возврата 0 для закрытия игры
+    return 0
