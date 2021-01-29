@@ -13,7 +13,7 @@ if __name__ == '__main__':
     pygame.mixer.init(44100, -16, 12, 64)
 
     # Экран (он же будет использован везде)
-    screen = pygame.display.set_mode(flags=pygame.FULLSCREEN |pygame.HWSURFACE | pygame.DOUBLEBUF, vsync=True)
+    screen = pygame.display.set_mode(flags=pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF, vsync=True)
 
     # эти модули нужно импортировать именно тут,
     # т.к. в них происходит загрузка картинок, а в UI ещё и звуков.
@@ -21,22 +21,23 @@ if __name__ == '__main__':
     import game
     from UI import start_screen
 
-    # Вызов начального экрана
-    while code := start_screen.execute(screen) != 0:
-        # Выполнение действия по коду
-        if code != 0:
-            # Сид сохранения, который будет считан при запуске игры
-            seed = None
-            # Читаем файл сохранения, если он существует
-            if os.path.isfile("data/save.txt"):
-                with open('data/save.txt', 'r', encoding="utf-8") as file:
-                    seed = ' '.join(file.readlines())
-            # Если seed пустой, то присваем ему None
-            if not seed:
-                seed = None
+    # Выполнение действия по коду
+    while 1:
+        # Вызов начального экрана
+        code = start_screen.execute(screen)
+        if code == 0:
+            break
 
-            # Результат того, чем закончилась игра
-            code = game.start(screen, seed)
+        # Сид сохранения, который будет считан при запуске игры
+        seed = None
+        # Читаем файл сохранения, если он существует
+        if os.path.isfile("data/save.txt"):
+            with open('data/save.txt', 'r', encoding="utf-8") as file:
+                seed = ' '.join(file.readlines())
+
+        for level_number in range(1, 11):
+            if not game.start(screen, level_number, seed):
+                break
 
     # Закрытие pygame
     pygame.quit()

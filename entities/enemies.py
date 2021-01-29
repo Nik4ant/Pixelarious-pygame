@@ -1,6 +1,4 @@
-from random import randint
-
-import pygame
+from random import choice
 
 from entities.base_entity import Entity
 from entities.spells import *
@@ -28,11 +26,13 @@ class WalkingMonster(Entity):
 
         self.spells = pygame.sprite.Group()
 
-    def update(self, screen, player=None):
-        if not player:
-            print('BAAAAAAD')
-            return
+    def update(self, *args):
+        screen, player = args
         super().update()
+
+        if not self.alive:
+            super().update_frame_state()
+            return
 
         # Сокращаем написание координат объекта
         self_x, self_y = self.rect.centerx, self.rect.centery
@@ -242,9 +242,10 @@ class ShootingMonster(Entity):
                 player.rect.centery, [player] + list(enemies_group), self.spells, all_sprites)
         enemies_group.add(self)
         if self.__class__.__name__ == 'Wizard':
-            FireSpell(*args)
+            spell = FireSpell(*args)
         else:
-            VoidSpell(*args)
+            spell = VoidSpell(*args)
+        self.sounds_channel.play(spell.CAST_SOUND)
 
     def death(self):
         if not self.alive:
@@ -378,7 +379,7 @@ class DirtySlime(WalkingMonster):
         (1, 1): 0
     }
     # Канал для звуков
-    sounds_channel = pygame.mixer.Channel(5)
+    sounds_channel = pygame.mixer.Channel(4)
 
     # Звуки
     FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "slime_sound_1.ogg"))
@@ -423,7 +424,7 @@ class Zombie(WalkingMonster):
         (1, 1): 0
     }
     # Канал для звуков
-    sounds_channel = pygame.mixer.Channel(6)
+    sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
     FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "stone_steps_1.mp3"))
@@ -468,7 +469,7 @@ class Wizard(ShootingMonster):
         (1, 1): 0
     }
     # Канал для звуков
-    sounds_channel = pygame.mixer.Channel(7)
+    sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
     FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "wizard_rustle.mp3"))
