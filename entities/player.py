@@ -83,8 +83,10 @@ class Player(Entity):
         # Скорость
         self.dx = self.dy = 0
         self.distance_to_player = 0.0001
-        self.health = 300
+
+        self.health = 400 + 3000000000000
         self.full_health = self.health
+
         self.mana = 300
         self.full_mana = self.mana
 
@@ -97,10 +99,12 @@ class Player(Entity):
         self.look_direction_x = 0
         self.look_direction_y = 1
 
+        # Флаг, для проверки отталкивается ли игрок от врага
+        self.is_boosting_from_enemy = False
+
         # Дэш
         self.dash_direction_x = self.dash_direction_y = 0
         self.dash_force_x = self.dash_force_y = 0
-        self.was_dash_activated = 0
 
         # Время последнего использования дэша
         # (Нужно для определения перезарядился дэш или нет)
@@ -115,14 +119,13 @@ class Player(Entity):
         super().update()
 
         self.mana = min(self.mana + Player.MANA_UP, self.full_mana)
-        # self.health = min(self.mana + Player.HEALTH_UP, self.full_health)
 
         # Обновляем состояние джойстика
         self.joystick = get_joystick() if check_any_joystick() else None
 
         # Ниже переменные, нужные для общей обработки игрока внезависимости от
         # типа управления (геймпад/клавиатура)
-
+        was_dash_activated = False
         # Новая позиция для прицела игрока (по умолчанию изменений нет)
         new_scope_x, new_scope_y = self.scope.rect.centerx, self.scope.rect.centery
 
@@ -139,8 +142,7 @@ class Player(Entity):
             # Проверка на использование дэша
             # Переменная отвечает за проверку на то, была ли нажата кнопка дэша.
             # (Но нет гарантии того, что дэш уже перезарядился, это проверяется при использовании)
-            was_dash_activated = (self.joystick.get_button(CONTROLS["JOYSTICK_DASH"])
-                                  or self.was_dash_activated)
+            was_dash_activated = self.joystick.get_button(CONTROLS["JOYSTICK_DASH"])
 
             # Проверяем, что действительно игрок подвигал правую ось
             if (abs(axis_right_x) > JOYSTICK_SENSITIVITY or
@@ -160,14 +162,13 @@ class Player(Entity):
                                       + int(keys[CONTROLS["KEYBOARD_DOWN"]]))
 
             # Проверка на использование дэша
-            was_dash_activated = (keys[CONTROLS["KEYBOARD_DASH"]] or self.was_dash_activated)
+            was_dash_activated = keys[CONTROLS["KEYBOARD_DASH"]]
 
             # Позиция для прицела
             new_scope_x, new_scope_y = pygame.mouse.get_pos()
-        self.was_dash_activated = False
 
         if pygame.time.get_ticks() - self.shoot_last_time < 200:
-            self.speed *= 0.8 * self.default_speed
+            self.speed *= 0.8 * Player.default_speed
         else:
             self.speed *= self.default_speed
 
@@ -207,7 +208,7 @@ class Player(Entity):
             self.dash_force_x = 0
             self.dash_direction_x = self.look_direction_x
         # по y
-        if self.dash_force_y > self.dash_minimum_speed:
+        if self.dash_force_y > Player.dash_minimum_speed:
             self.dash_force_y -= self.dash_force_slower
             self.dy = self.dash_force_y * self.dash_direction_y
         else:
@@ -228,6 +229,7 @@ class Player(Entity):
         зажать другие клавиши, а затем отпустить текущие.
         '''
         # Проверка, что было было движение
+        # TODO: test (если хочешь можешь попробовать ограничить возможность игрока двигаться при self.is_boosting_from_enemy)
         if current_direction_x != 0 or current_direction_y != 0:
             # Обновление направления взгляда
             self.look_direction_x = current_direction_x
@@ -256,10 +258,21 @@ class Player(Entity):
 
         # Если игрок не совершает дэш и направления движения нет, то
         # ускорение збрасывается
-        elif self.dash_force_x == 0 and self.dash_force_y == 0:
+        elif (self.dash_force_x == 0 and self.dash_force_y == 0 and
+              not self.is_boosting_from_enemy):
             self.dx = self.dy = 0
             if pygame.time.get_ticks() - self.shoot_last_time > Player.after_spell_freezing:
                 self.set_first_frame()
+        elif self.is_boosting_from_enemy:
+            # TODO: test
+            self.dx -= 0.35 * -1 if self.dx < 0 else 1
+            self.dy -= 0.35 * -1 if self.dy < 0 else 1
+            if abs(self.dx) <= Player.delta_changer:
+                self.dx = 0
+                self.is_boosting_from_enemy = False
+            if abs(self.dy) <= Player.delta_changer:
+                self.dy = 0
+                self.is_boosting_from_enemy = False
 
         # Если игрок движется и при этом не совершается дэш,
         # то воспроизводится звук ходьбы
@@ -280,13 +293,15 @@ class Player(Entity):
         else:
             self.speed *= TILE_SIZE * 0.055
 
-        # Перемещение игрока относительно центра
+        # Перемещение игрока
         self.move(self.dx * self.speed, self.dy * self.speed)
 
         # Обновление анимации
         if pygame.time.get_ticks() - self.shoot_last_time > Player.after_spell_freezing:
             if self.dx or self.dy:
                 self.update_frame_state()
+            else:
+                self.set_first_frame()
 
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
@@ -333,16 +348,23 @@ class Player(Entity):
             self.sounds_channel.play(Player.NO_MANA_SOUND)
 
     def death(self):
-        print('PLAYER DEAD')
         self.alive = False
         self.cur_frame = 0
         self.speed = 1
 
-        # Уделние прицела
-        # for group in self.scope.groups():
-        #     group.remove(self.scope)
+    def boost_from_enemy(self, boost_dx: float, boost_dy: float):
+        """
+        Метод дающий ускорение игроку, в случае если он был атакован
+        :param boost_dx: Ускорение по x
+        :param boost_dy: Ускорение по y
+        """
 
-    def boost(self, *args):
+        # Чтобы ускорить игрока, нужно задать флаг, что игрок отталкивается в сторону.
+        # Тогда игрок не сможет прервать ускорение.
+        self.dx = boost_dx
+        self.dy = boost_dy
+
+        self.is_boosting_from_enemy = True
         self.last_hit_time = pygame.time.get_ticks()
 
 
@@ -372,6 +394,7 @@ class PlayerScope(pygame.sprite.Sprite):
         # стоит делать проверку на наличие аргументов x и y
         # (но предполагается, что x и y - это координаты)
         if x is not None and y is not None:
+            # Если размер текущего экрана
             self.rect.centerx, self.rect.centery = x, y
 
     def init_scope_position(self, position: tuple):

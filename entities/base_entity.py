@@ -88,6 +88,12 @@ class Entity(pygame.sprite.Sprite):
         # Если плохо, возвращаем к исходному
         if pygame.sprite.spritecollide(self.collider, Entity.collisions_group, False):
             self.rect.x = pos[0]
+            self.dx = 0
+            if self.__class__.__name__.lower() == "player":
+                self.dash_force_x = 0
+                self.dash_direction_x = self.look_direction_x
+                self.dash_force_y = 0
+                self.dash_direction_y = self.look_direction_y
 
         self.rect.y = round(self.rect.y + dy)
         self.collider.update(self.rect.centerx, self.rect.centery)
@@ -95,6 +101,12 @@ class Entity(pygame.sprite.Sprite):
         # Если плохо, возвращаем к исходному
         if pygame.sprite.spritecollide(self.collider, Entity.collisions_group, False):
             self.rect.y = pos[1]
+            self.dy = 0
+            if self.__class__.__name__.lower() == "player":
+                self.dash_force_x = 0
+                self.dash_direction_x = self.look_direction_x
+                self.dash_force_y = 0
+                self.dash_direction_y = self.look_direction_y
 
     def update_frame_state(self, n=0):
         """

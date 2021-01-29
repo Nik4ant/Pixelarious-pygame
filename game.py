@@ -32,12 +32,14 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.height * 0.5 - self.screen_height * 0.5)
 
 
-def start(screen: pygame.surface.Surface, level_number, user_seed: str = None) -> int:
+def start(screen: pygame.surface.Surface,
+          level_number: int, user_seed: str = None) -> int:
     """
     Сама игра (генерация уровня и затем цикл)
     :param screen: экран
     :param user_seed: если есть, создаем по нему уровень и мобов
-    :return: Код завершения игры. 0 - выход из игры
+    :return: Код завершения игры. 0 - выход из игры,
+    1 - переход на новый уровень, -1 в остальных случаях
     """
     # Ставим загрузочный экран
     loading_screen(screen)
@@ -60,7 +62,7 @@ def start(screen: pygame.surface.Surface, level_number, user_seed: str = None) -
     end_of_level = pygame.sprite.Group()
 
     is_game_open = True
-    clock = pygame.time.Clock()  # Часы
+    clock = pygame.time.Clock()
 
     # Создаем уровень с помощью функции из generation_map
     level, level_seed = generate_new_level(user_seed.split('\n')[0].split() if user_seed else 0)
@@ -99,7 +101,7 @@ def start(screen: pygame.surface.Surface, level_number, user_seed: str = None) -
     )
 
     # Игровой цикл
-    while is_game_open:
+    while is_game_open :
         was_pause_activated = False
         keys = pygame.key.get_pressed()
 
@@ -151,7 +153,7 @@ def start(screen: pygame.surface.Surface, level_number, user_seed: str = None) -
             pygame.mixer.music.pause()
             # Если была нажата кнопка выйти из игры, то цикл прерывается
             if game_menu.execute(screen) == -1:
-                break
+                return -1
             pygame.mixer.unpause()
             pygame.mixer.music.unpause()
 
@@ -162,12 +164,13 @@ def start(screen: pygame.surface.Surface, level_number, user_seed: str = None) -
         player_sprites.update()
         # Если игрок умер, то надо открыть экран конца игры
         if pygame.sprite.spritecollideany(player, end_of_level):
+            # TODO: переход на уровень слишком резкий!!!!
             return 1
         # Если игрок умер, то игра заканчивается
         if not player.alive:
             # Останавливаем все звуки (даже музыку)
-            pygame.mixer.pause()
-            pygame.mixer.music.pause()
+            pygame.mixer.stop()
+            pygame.mixer.music.stop()
             end_screen.execute(screen)
             return -1
 
