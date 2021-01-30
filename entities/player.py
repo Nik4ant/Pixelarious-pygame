@@ -314,7 +314,7 @@ class Player(Entity):
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
 
-    def shoot(self, spell_type: str, enemies_group):
+    def shoot(self, spell_type: str, group):
         if not self.alive:
             return
 
@@ -327,24 +327,35 @@ class Player(Entity):
         dx, dy = self.rect.centerx - self.scope.rect.centerx, self.rect.centery - self.scope.rect.centery
         angle = (degrees(atan2(dx, 0.00001 if not dy else dy)) + 360) % 360
         args = (self.rect.centerx, self.rect.centery,
-                self.scope.rect.right, self.scope.rect.centery, enemies_group)
+                self.scope.rect.right, self.scope.rect.centery, group)
 
-        if spell_type == 'fire':
+        if spell_type == Spell.FIRE:
             spell = FireSpell(*args)
-        elif spell_type == 'ice':
+        elif spell_type == Spell.ICE:
             spell = IceSpell(*args)
-        elif spell_type == 'flash':
+        elif spell_type == Spell.FLASH:
             spell = FlashSpell(*args)
-        elif spell_type == 'poison':
+        elif spell_type == Spell.POISON:
             spell = PoisonSpell(*args)
-        elif spell_type == 'void':
+        elif spell_type == Spell.VOID:
             spell = VoidSpell(*args)
+        elif spell_type == Spell.TELEPORT:
+            spell = TeleportSpell(*args[:-1] + ([self],))
         else:
             return
 
         if self.mana >= spell.mana_cost:
+            if spell_type == Spell.TELEPORT:
+                self.collider.update(*self.scope.rect.center)
+                if not (not pygame.sprite.spritecollideany(self.collider, Entity.collisions_group)
+                        and pygame.sprite.spritecollideany(self.collider, group)):
+                    self.sounds_channel.play(Player.NO_MANA_SOUND)
+                    return
+
             self.mana -= spell.mana_cost
             self.spells.add(spell)
+            if spell_type == Spell.TELEPORT:
+                self.spells.add(spell.start_sprite)
             self.sounds_channel.play(spell.CAST_SOUND)
 
             number_of_frame = (round((angle - 0) / 18) + 47) % 20
