@@ -23,18 +23,16 @@ if __name__ == '__main__':
 
     # До тех пор, пока игрок не выйдет из игры...
     code = -1
-    level_counter = 1
     while code != 0:
-        # Вызов начального экрана только,
-        # если не совершается переход на новый уровень
-        if code != 1:
-            code = start_screen.execute(screen)
-        else:
-            level_counter += 1
+        # Вызов начального экрана
+        code = start_screen.execute(screen)
+
         # Выполнение действия по коду
         if code != 0:
             # Сид сохранения, который будет считан при запуске игры
             seed = None
+            # Номер уровня с которого начнётся игра
+            level_number = 1
 
             # Читаем файл сохранения, если он существует
             if os.path.isfile("data/save.txt"):
@@ -43,9 +41,12 @@ if __name__ == '__main__':
                 # Если seed пустой, то присваем ему None
                 if not seed:
                     seed = None
+                else:
+                    data = seed.split('\n')
+                    seed, level_number = '\n'.join(data[:-1]), int(data[-1])
 
             # Результат того, чем закончилась игра
-            code = game.start(screen, level_counter, seed)
+            code = game.start(screen, level_number=level_number, user_seed=seed)
 
     # Закрытие pygame
     pygame.quit()

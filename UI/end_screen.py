@@ -5,7 +5,7 @@ import pygame
 
 from UI.UIComponents import Button, LogoImage, AnimatedBackground
 from config import FPS, CONTROLS, JOYSTICK_SENSITIVITY
-from engine import load_image, check_any_joystick, get_joystick
+from engine import load_image, check_any_joystick, get_joystick, concat_two_file_paths
 
 
 def execute(screen: pygame.surface.Surface, is_win=False):
@@ -23,7 +23,10 @@ def execute(screen: pygame.surface.Surface, is_win=False):
     if not is_win:
         animated_background = AnimatedBackground("death_{0}.png", 1, 23, 60, screen.get_size())
     else:
-        animated_background = AnimatedBackground("win_{0}.png", 1, 23, 60, screen.get_size())
+        # Фоновая музыка для победителя
+        pygame.mixer.music.load(concat_two_file_paths("assets/audio", "win_screen_BG.ogg"))
+        pygame.mixer.music.play(-1)
+        animated_background = AnimatedBackground("win_{0}.png", 1, 8, 60, screen.get_size())
 
     # Лого игры
     logo = LogoImage((screen.get_width() * 0.5, screen.get_height() * 0.1))
@@ -47,8 +50,8 @@ def execute(screen: pygame.surface.Surface, is_win=False):
 
     # Т.к. игрок завершил игру, то файл с сохранением будет перезаписан
     if os.path.isfile("data/save.txt"):
-        with open('data/save.txt', 'w', encoding="utf-8") as file:
-            file.write("")
+        with open('data/save.txt', 'r+', encoding="utf-8") as file:
+            file.truncate(0)
 
     # Цикл меню
     while is_open:
@@ -73,7 +76,7 @@ def execute(screen: pygame.surface.Surface, is_win=False):
 
                 # Выход
                 if sender_text == button_exit.text:
-                    return -1
+                    return
 
         # Определение местоположения для курсора
         if joystick:

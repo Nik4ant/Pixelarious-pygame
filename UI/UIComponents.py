@@ -150,10 +150,10 @@ class SpellContainer:
         """
         # Иконка заклинания
         screen.blit(self.spell_icon, self.position)
-        # Смещение между иконкой заклинания и кнопкой для переключение
+        # Смещение между иконкой заклинания и кнопкой для переключения
         MARGIN = 25
-        pos = (self.position[0] + self.spell_icon.get_width() + MARGIN,
-               self.position[1] + MARGIN)
+        pos = (self.position[0] + MARGIN,
+               self.position[1] - self.spell_icon.get_height())
 
         # Если подключён джойстик, то рисуется специальная иконка
         if is_joystick:

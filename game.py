@@ -33,13 +33,14 @@ class Camera:
 
 
 def start(screen: pygame.surface.Surface,
-          level_number: int, user_seed: str = None) -> int:
+          level_number: int = 1, user_seed: str = None) -> int:
     """
     Сама игра (генерация уровня и затем цикл)
     :param screen: экран
-    :param user_seed: если есть, создаем по нему уровень и мобов
-    :return: Код завершения игры. 0 - выход из игры,
-    1 - переход на новый уровень, -1 в остальных случаях
+    :param level_number: Номер уровня, чтобы при подгрузке показывать его
+    таким, каким он был задан.
+    :param user_seed: сид если есть, создаем по нему уровень и мобов
+    :return: Код завершения игры. 0 - выход из игры -1 в остальных случаях
     """
     # Ставим загрузочный экран
     loading_screen(screen)
@@ -60,16 +61,19 @@ def start(screen: pygame.surface.Surface,
     torches_group = pygame.sprite.Group()
     # Группа со спрайтом конца уровня
     end_of_level = pygame.sprite.Group()
-
+        
     is_game_open = True
     clock = pygame.time.Clock()
 
+    current_seed = user_seed  # текущий сид
+
     # Создаем уровень с помощью функции из generation_map
-    level, level_seed = generate_new_level(user_seed.split('\n')[0].split() if user_seed else 0)
+    level, level_seed = generate_new_level(current_seed.split('\n')[0].split() if current_seed else 0)
+    level_number = level_number
     # Создаем монстров и плитки, проходя по уровню
     player, monsters_seed = initialise_level(level, all_sprites, tiles_group, collidable_tiles_group,
                                              enemies_group, doors_group, torches_group, end_of_level,
-                                             user_seed.split('\n')[1].split() if user_seed else 0)
+                                             current_seed.split('\n')[1].split() if current_seed else 0)
 
     # Создаем камеру
     camera = Camera(screen_width, screen_height)
@@ -93,15 +97,15 @@ def start(screen: pygame.surface.Surface,
 
     # Иконки для отображения частей UI с заклинаниями
     spells_containers = (
-        UIComponents.SpellContainer("fire_spell.png", (120, 150)),
-        UIComponents.SpellContainer("ice_spell.png", (120, 250)),
-        UIComponents.SpellContainer("light_spell.png", (120, 350)),
-        UIComponents.SpellContainer("poison_spell.png", (120, 450)),
-        UIComponents.SpellContainer("void_spell.png", (120, 550))
+        UIComponents.SpellContainer("fire_spell.png", (screen.get_width() * 0.4, screen.get_height() * 0.9)),
+        UIComponents.SpellContainer("ice_spell.png", (screen.get_width() * 0.45, screen.get_height() * 0.9)),
+        UIComponents.SpellContainer("light_spell.png", (screen.get_width() * 0.5, screen.get_height() * 0.9)),
+        UIComponents.SpellContainer("poison_spell.png", (screen.get_width() * 0.55, screen.get_height() * 0.9)),
+        UIComponents.SpellContainer("void_spell.png", (screen.get_width() * 0.6, screen.get_height() * 0.9))
     )
 
     # Игровой цикл
-    while is_game_open :
+    while is_game_open:
         was_pause_activated = False
         keys = pygame.key.get_pressed()
 
@@ -153,6 +157,8 @@ def start(screen: pygame.surface.Surface,
             pygame.mixer.music.pause()
             # Если была нажата кнопка выйти из игры, то цикл прерывается
             if game_menu.execute(screen) == -1:
+                # Сохранение данных перед выходом
+                save(current_seed)
                 return -1
             pygame.mixer.unpause()
             pygame.mixer.music.unpause()
@@ -164,13 +170,39 @@ def start(screen: pygame.surface.Surface,
         player_sprites.update()
         # Если игрок умер, то надо открыть экран конца игры
         if pygame.sprite.spritecollideany(player, end_of_level):
-            # TODO: переход на уровень слишком резкий!!!!
-            return 1
+            # Если игрок собирается перейти на 11 уровень, то это победа
+            if level_number == 10:
+                # Победный экран
+                end_screen.execute(screen, is_win=True)
+                return 0
+            # Иначе перезагрука некоторых данных и новый уровень
+            else:
+                # Очищаем все группы со спрайтами
+                all_sprites.empty()
+                tiles_group.empty()
+                collidable_tiles_group.empty()
+                player_sprites.empty()
+                enemies_group.empty()
+                doors_group.empty()
+                torches_group.empty()
+                end_of_level.empty()
+
+                level_number += 1  # номер уровня
+                # Создаем уровень с помощью функции из generation_map
+                level, level_seed = generate_new_level(current_seed.split('\n')[0].split() if current_seed else 0)
+                # Создаем монстров и плитки, проходя по уровню
+                player, monsters_seed = initialise_level(level, all_sprites, tiles_group, collidable_tiles_group,
+                                                         enemies_group, doors_group, torches_group, end_of_level,
+                                                         current_seed.split('\n')[1].split() if current_seed else 0)
+                current_seed = ' '.join(level_seed) + '\n' + ' '.join(monsters_seed) + '\n' + str(level_number)
+
+                # Заного заполняем индивидуальные спрайты
+                player_sprites.add(player)
+                player.scope.init_scope_position((screen_width * 0.5, screen_height * 0.5))
+                player_sprites.add(player.scope)
+                continue
         # Если игрок умер, то игра заканчивается
         if not player.alive:
-            # Останавливаем все звуки (даже музыку)
-            pygame.mixer.stop()
-            pygame.mixer.music.stop()
             end_screen.execute(screen)
             return -1
 
@@ -229,12 +261,15 @@ def start(screen: pygame.surface.Surface,
         pygame.display.flip()
 
     # Сохранение данных
-    if 'data' not in os.listdir():
-        os.mkdir('data')
-    with open('data/save.txt', 'w') as data:
-        data.write(' '.join(level_seed))
-        data.write('\n')
-        data.write(' '.join(monsters_seed))
+    save(current_seed)
 
     # Код возврата 0 для закрытия игры
     return 0
+
+
+def save(current_seed: str):
+    if 'data' not in os.listdir():
+        os.mkdir('data')
+    with open('data/save.txt', 'w') as file:
+        print()
+        file.write(current_seed)

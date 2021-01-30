@@ -17,8 +17,11 @@ class Player(Entity):
     death_frames = []
     cast_frames = cut_sheet(load_image('player_cast_sprite_sheet.png', 'assets'), 5, 4, size)
 
+    # Переменные добавляющие эти значиния к здоровью и мане каждую итерацию update()
     MANA_UP = 0.15
     HEALTH_UP = 0.02
+    # Время неуязвимости, после атаки врагом (в миллисекундах)
+    INVULNERABILITY_TIME_AFTER_HIT = 500
 
     # Словарь типа (направлениями взгляда): *индекс ряда в frames для анимации*
     look_directions = {
@@ -35,7 +38,7 @@ class Player(Entity):
 
     # время перезарядки заклинания в миллисекундах
     spell_reload_time = 400
-    #
+    # эффект замедления после атаки заклинанием
     after_spell_freezing = 300
     
     # время перезарядки дэша в миллисекундах
@@ -44,8 +47,10 @@ class Player(Entity):
     dash_force_base = 2.8
     # сила замедляющая дэш со временем
     dash_force_slower = 0.04
+    # Минимальгая скорость дэша
     dash_minimum_speed = 0.4
 
+    # Скорость по умолчанию (используется при эффекте замедления)
     default_speed = TILE_SIZE * 0.015
     # отметка при превышении которой, скорость игрока автоматически возврастает
     min_delta_to_start_run = 1.5
@@ -84,10 +89,12 @@ class Player(Entity):
         self.dx = self.dy = 0
         self.distance_to_player = 0.0001
 
-        self.health = 400
+        # Здоровье
+        self.health = 425
         self.full_health = self.health
 
-        self.mana = 300 + 30000
+        # Мана
+        self.mana = 450
         self.full_mana = self.mana
 
         # Группа со спрайтами заклинаний
@@ -229,7 +236,6 @@ class Player(Entity):
         зажать другие клавиши, а затем отпустить текущие.
         '''
         # Проверка, что было было движение
-        # TODO: test (если хочешь можешь попробовать ограничить возможность игрока двигаться при self.is_boosting_from_enemy)
         if current_direction_x != 0 or current_direction_y != 0:
             # Обновление направления взгляда
             self.look_direction_x = current_direction_x
@@ -264,13 +270,14 @@ class Player(Entity):
             if pygame.time.get_ticks() - self.shoot_last_time > Player.after_spell_freezing:
                 self.set_first_frame()
         elif self.is_boosting_from_enemy:
-            # TODO: test
+            previous_dx, previous_dy = self.dx, self.dy
             self.dx -= 0.35 * -1 if self.dx < 0 else 1
             self.dy -= 0.35 * -1 if self.dy < 0 else 1
-            if abs(self.dx) <= Player.delta_changer:
+            if (previous_dx > 0 and self.dx < 0) or (previous_dx < 0 and self.dx > 0):
                 self.dx = 0
                 self.is_boosting_from_enemy = False
-            if abs(self.dy) <= Player.delta_changer:
+
+            if (previous_dy > 0 and self.dy < 0) or (previous_dy < 0 and self.dy > 0):
                 self.dy = 0
                 self.is_boosting_from_enemy = False
 
@@ -301,6 +308,7 @@ class Player(Entity):
             if self.dx or self.dy:
                 self.update_frame_state()
             else:
+                self.is_boosting_from_enemy = False
                 self.set_first_frame()
 
         # Обновление прицела
@@ -361,10 +369,11 @@ class Player(Entity):
 
         # Чтобы ускорить игрока, нужно задать флаг, что игрок отталкивается в сторону.
         # Тогда игрок не сможет прервать ускорение.
+        self.is_boosting_from_enemy = True
+
         self.dx = boost_dx
         self.dy = boost_dy
 
-        self.is_boosting_from_enemy = True
         self.last_hit_time = pygame.time.get_ticks()
 
 

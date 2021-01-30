@@ -35,7 +35,6 @@ def concat_two_file_paths(path_to_folder: str, filename: str):
     return os.path.join(path_to_folder, filename)
 
 
-# TODO: эта функция вводит Никиту в ступор, но он пока не придумал, что с ней сделать поэтому пусть будет тут
 def loading_screen(screen):
     width, height = screen.get_size()
 

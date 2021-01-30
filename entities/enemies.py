@@ -82,12 +82,14 @@ class WalkingMonster(Entity):
 
         if pygame.sprite.collide_rect(self.collider, player.collider):
             if self.alive:
-                # TODO: pep8 + test
-                boost_dx = (self.dx + player.__class__.max_delta_movements * 1 if self.dx < 0 else -1) * -5
-                boost_dy = (self.dy + player.__class__.max_delta_movements * 1 if self.dy < 0 else -1) * -5
-                if not player.is_boosting_from_enemy:
+                ticks = pygame.time.get_ticks()
+                # 2.17 - это коээфицент ускорения, был высчитан путём проб и ошибок
+                # (не является константой, т.к. используется только здесь)
+                boost_dx = (self.dx + player.max_delta_movements) * 2.17
+                boost_dy = (self.dy + player.max_delta_movements) * 2.17
+                # Чтобы игрок не умирал мгновенно, не понимая, что случилось
+                if ticks - player.last_hit_time > player.INVULNERABILITY_TIME_AFTER_HIT:
                     player.get_damage(self.damage)
-
                 player.boost_from_enemy(boost_dx, boost_dy)
 
             self.rect.centerx, self.rect.centery = previous_pos
