@@ -220,7 +220,7 @@ class ShootingMonster(Entity):
                     pygame.time.get_ticks() - self.last_shot_time > self.reload_time:
                 self.last_shot_time = pygame.time.get_ticks()
                 # Стреляем в игрока
-                if self.alive:
+                if self.alive and player.alive:
                     self.shoot(player, all_sprites)
 
         # Направление взгляда
