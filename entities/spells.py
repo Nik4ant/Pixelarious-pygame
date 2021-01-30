@@ -18,6 +18,7 @@ class Spell(pygame.sprite.Sprite):
     ICE = 'ice'
     POISON = 'poison'
     VOID = 'void'
+    TELEPORT = 'teleport'
 
     damage_frame = 0
 
@@ -27,9 +28,11 @@ class Spell(pygame.sprite.Sprite):
         super().__init__(*groups)
         dx = object_x - subject_x
         dy = object_y - subject_y
-        while (abs(dx) < 5000 and abs(dy) < 5000) and not isinstance(self, FlashSpell):
+        while (abs(dx) < 5000 and abs(dy) < 5000) and (self.spell_type != Spell.FLASH and
+                                                       self.spell_type != Spell.TELEPORT):
             dx *= 2
             dy *= 2
+            dy += 1
         self.point = (subject_x + dx, subject_y + dy)
 
         if dx >= 0:
@@ -54,22 +57,27 @@ class Spell(pygame.sprite.Sprite):
         self.update()
 
     def update(self) -> None:
-        ticks = pygame.time.get_ticks()
-        if ticks - self.last_update_time < self.UPDATE_TIME:
-            return
-        self.speed *= 1.05
-        self.last_update_time = ticks
-
         if (self.rect.centerx, self.rect.centery) == self.point:
+            ticks = pygame.time.get_ticks()
+            if ticks - self.last_update_time < self.UPDATE_TIME:
+                return
+            self.last_update_time = ticks
             if self.cur_frame == self.damage_frame:
-                self.collider.update(self.rect.centerx, self.rect.centery)
-                for obj in pygame.sprite.spritecollide(self.collider, self.object_group, False):
-                    obj.get_damage(self.damage, self.spell_type, self.action_time)
+                if isinstance(self, TeleportSpell):
+                    self.object_group[0].rect.center = self.rect.center
+                else:
+                    self.collider.update(self.rect.centerx, self.rect.centery)
+                    for obj in pygame.sprite.spritecollide(self.collider, self.object_group, False):
+                        obj.get_damage(self.damage, self.spell_type, self.action_time)
             self.cur_frame += 1
             if self.cur_frame == len(self.__class__.frames[self.cur_list]):
                 self.kill()
+                if isinstance(self, TeleportSpell):
+                    self.start_sprite.kill()
                 return
             self.image = self.__class__.frames[self.cur_list][self.cur_frame]
+            if isinstance(self, TeleportSpell):
+                self.start_sprite.image = self.__class__.frames[self.cur_list][self.cur_frame]
 
         else:
             self.cur_frame = (self.cur_frame + 1) % len(self.__class__.frames[0])
@@ -88,7 +96,6 @@ class Spell(pygame.sprite.Sprite):
             for obj in pygame.sprite.spritecollide(self.collider, self.object_group, False):
                 if obj.alive:
                     do_kill = True
-
             for obj in pygame.sprite.spritecollide(self.collider, Spell.barrier_group, False):
                 obj.collider.update(obj.rect.centerx, obj.rect.centery)
                 if pygame.sprite.collide_rect(self.collider, obj.collider):
@@ -98,15 +105,23 @@ class Spell(pygame.sprite.Sprite):
                 if not obj.opened and pygame.sprite.collide_rect(self.collider, obj.collider):
                     do_kill = True
 
-            if do_kill and self.spell_type != Spell.FLASH:
+            if do_kill and self.spell_type != Spell.FLASH and self.spell_type != Spell.TELEPORT:
                 self.point = (self.rect.centerx, self.rect.centery)
 
-            self.image = self.frames[0][self.cur_frame]
-
-            if (self.rect.centerx, self.rect.centery) == self.point:
+            if self.rect.center == self.point:
                 self.cur_frame = 0
                 self.cur_list = randint(1, len(self.__class__.frames) - 1)
-                self.sounds_channel.play(choice(self.SPELL_SOUNDS))
+                if not isinstance(self, TeleportSpell):
+                    self.sounds_channel.play(choice(self.SPELL_SOUNDS))
+
+            ticks = pygame.time.get_ticks()
+            if ticks - self.last_update_time < self.UPDATE_TIME:
+                return
+            self.speed += self.acceleration
+            self.last_update_time = ticks
+            self.image = self.frames[0][self.cur_frame]
+            if isinstance(self, TeleportSpell):
+                self.start_sprite.image = self.frames[0][self.cur_frame]
 
     @staticmethod
     def set_global_collisions_group(barrier_group: pygame.sprite.Group, doors_group: pygame.sprite.Group):
@@ -127,8 +142,8 @@ class IceSpell(Spell):
     damage = 20
     spell_type = Spell.ICE
     mana_cost = 30
-    UPDATE_TIME = 50
-    speed = TILE_SIZE * 0.6
+    UPDATE_TIME = 40
+    speed = TILE_SIZE * 0.3
     acceleration = 4
     action_time = 500
 
@@ -200,12 +215,12 @@ class FlashSpell(Spell):
     spell_type = Spell.FLASH
     mana_cost = 100
     UPDATE_TIME = 60
-    speed = TILE_SIZE * 10
-    acceleration = 0
+    speed = TILE_SIZE * 0.5
+    acceleration = 1
     damage_frame = 5
     action_time = 0
 
-    size = (TILE_SIZE // 4 * 5,) * 2
+    size = (TILE_SIZE // 2 * 3,) * 2
     frames = cut_sheet(load_image('EMPTY.png', 'assets\\tiles'), 1, 1, size)
     frames += cut_sheet(load_image('light.png', 'assets\\spells'), 15, 1, size)
 
@@ -310,3 +325,40 @@ class VoidSpell(Spell):
 
     def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, object_group, *groups):
         super().__init__(subject_x, subject_y, object_x, object_y, object_group, *groups)
+
+
+class TeleportSpell(Spell):
+    spell_type = Spell.TELEPORT
+    mana_cost = 300
+    UPDATE_TIME = 40
+    speed = TILE_SIZE * 1
+    acceleration = 0
+    damage_frame = 2
+    action_time = 0
+
+    size = (TILE_SIZE // 4 * 7,) * 2
+    frames = cut_sheet(load_image('EMPTY.png', 'assets\\tiles'), 1, 1, size)
+    frames += cut_sheet(load_image('teleport_puf.png', 'assets\\spells'), 8, 1, size)
+
+    # Канал для звуков
+    sounds_channel = pygame.mixer.Channel(3)
+
+    # Звуки
+    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "teleport_sound.ogg"))
+    CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+
+    SPELL_SOUNDS = (
+        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "teleport_sound.ogg")),
+    )
+    for sound in SPELL_SOUNDS:
+        sound.set_volume(DEFAULT_SOUNDS_VOLUME)
+
+    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, object_group, *groups):
+        super().__init__(subject_x, subject_y, object_x, object_y, object_group, *groups)
+
+        self.start_sprite = pygame.sprite.Sprite()
+        self.start_sprite.start_position = None
+        self.start_sprite.point = None
+        self.start_sprite.image = TeleportSpell.frames[0][0]
+        self.start_sprite.rect = self.start_sprite.image.get_rect()
+        self.start_sprite.rect.center = object_group[0].rect.center
