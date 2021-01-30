@@ -37,6 +37,7 @@ CONTROLS = {
     "KEYBOARD_SPELL_LIGHT": pygame.K_3,  # 3
     "KEYBOARD_SPELL_POISON": pygame.K_4,  # 4
     "KEYBOARD_SPELL_VOID": pygame.K_5,  # 5
+    "KEYBOARD_SPELL_TELEPORT": pygame.K_e,  # E
 
     "KEYBOARD_PAUSE": pygame.K_ESCAPE,
     "KEYBOARD_DASH": pygame.K_q,
