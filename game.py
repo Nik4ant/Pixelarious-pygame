@@ -170,8 +170,8 @@ def start(screen: pygame.surface.Surface,
 
         # Обновление спрайтов
         player_sprites.update()
-        # Если игрок умер, то надо открыть экран конца игры
-        if pygame.sprite.spritecollideany(player, end_of_level):
+        # Проверка перехода на следующий уровень, путём соприкосновением с лестницой вниз
+        if pygame.sprite.spritecollideany(player.collider, end_of_level):
             # Если игрок собирается перейти на 11 уровень, то это победа
             if level_number == 10:
                 # Победный экран
@@ -190,12 +190,12 @@ def start(screen: pygame.surface.Surface,
                 end_of_level.empty()
 
                 level_number += 1  # номер уровня
-                # Создаем уровень с помощью функции из generation_map
-                level, level_seed = generate_new_level(current_seed.split('\n')[0].split() if current_seed else 0)
+                # Создаем целиком новый уровень с помощью функции из generation_map
+                level, level_seed = generate_new_level(0)
                 # Создаем монстров и плитки, проходя по уровню
                 player, monsters_seed = initialise_level(level, all_sprites, tiles_group, collidable_tiles_group,
                                                          enemies_group, doors_group, torches_group, end_of_level,
-                                                         current_seed.split('\n')[1].split() if current_seed else 0)
+                                                         0)
                 current_seed = ' '.join(level_seed) + '\n' + ' '.join(monsters_seed) + '\n' + str(level_number)
 
                 # Заного заполняем индивидуальные спрайты
@@ -203,8 +203,11 @@ def start(screen: pygame.surface.Surface,
                 player.scope.init_scope_position((screen_width * 0.5, screen_height * 0.5))
                 player_sprites.add(player.scope)
                 continue
-        # Если игрок умер, то игра заканчивается
+        # Если игрок умер, то надо открыть экран конца игры
         if not player.alive:
+            # Останавливаем все звуки (даже музыку)
+            pygame.mixer.pause()
+            pygame.mixer.music.pause()
             end_screen.execute(screen)
             return -1
 
