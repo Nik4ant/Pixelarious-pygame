@@ -1,6 +1,5 @@
 import pygame
 
-
 FPS = 60
 # Громкость музыки во всей игре по умолчанию
 DEFAULT_MUSIC_VOLUME = 0.45
@@ -8,30 +7,16 @@ DEFAULT_MUSIC_VOLUME = 0.45
 # Такое добавление будет дописываться вручную при установке громкости.
 MUSIC_VOLUME_ADDER = 0.2
 # Громкость звука наведения по умолчанию
-DEFAULT_HOVER_SOUND_VOLUME = 0.4
+DEFAULT_HOVER_SOUND_VOLUME = 0.5
 # Громкость звуков внутри игры по умолчанию
-DEFAULT_SOUNDS_VOLUME = 0.5
+DEFAULT_SOUNDS_VOLUME = 0.3
+# Эта переменная нужна для уменьшения громкости звука, если эффект громкий.
+# Такое уменьшение будет дописываться вручную при установке громкости.
+SOUNDS_VOLUME_REDUCER = 0.12
 # Чуствительность джойстика
 # (только при достижении этого значения игра просчитает движения джойстика)
 JOYSTICK_SENSITIVITY = 0.11
-'''
-Cross Button    - Button 0
-Circle Button   - Button 1
-Square Button   - Button 2
-Triangle Button - Button 3
-Share Button    - Button 4
-PS Button       - Button 5
-Options Button  - Button 6
-L. Stick In     - Button 7
-R. Stick In     - Button 8
-L1              - Button 9
-R1              - Button 10
-D-pad Up        - Button 11
-D-pad Down      - Button 12
-D-pad Left      - Button 13
-D-pad Right     - Button 14
-Touch Pad Click - Button 15
-'''
+
 # Управление
 CONTROLS = {
     # Для контроллера
@@ -40,7 +25,19 @@ CONTROLS = {
     "JOYSTICK_UI_CLICK": 0,  # X
     "JOYSTICK_UI_PAUSE": 5,  # кнопка PS
 
+    "JOYSTICK_SPELL_FIRE": 1,  # X
+    "JOYSTICK_SPELL_ICE": 0,  # кнопка круг
+    "JOYSTICK_SPELL_LIGHT": 3,  # кнопка квадрат
+    "JOYSTICK_SPELL_POISON": 2,  # кнопка треугольник
+    "JOYSTICK_SPELL_VOID": 9,  # L1
+
     # Для клавиатуры
+    "KEYBOARD_SPELL_FIRE": pygame.K_1,  # 1
+    "KEYBOARD_SPELL_ICE": pygame.K_2,  # 2
+    "KEYBOARD_SPELL_LIGHT": pygame.K_3,  # 3
+    "KEYBOARD_SPELL_POISON": pygame.K_4,  # 4
+    "KEYBOARD_SPELL_VOID": pygame.K_5,  # 5
+
     "KEYBOARD_PAUSE": pygame.K_ESCAPE,
     "KEYBOARD_DASH": pygame.K_q,
     "KEYBOARD_LEFT": pygame.K_a,
