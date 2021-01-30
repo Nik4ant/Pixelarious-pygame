@@ -271,5 +271,4 @@ def save(current_seed: str):
     if 'data' not in os.listdir():
         os.mkdir('data')
     with open('data/save.txt', 'w') as file:
-        print()
         file.write(current_seed)
