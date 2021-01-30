@@ -152,6 +152,8 @@ def start(screen: pygame.surface.Surface,
                 player.shoot('poison', enemies_group)
             elif keys[CONTROLS["KEYBOARD_SPELL_VOID"]]:
                 player.shoot('void', enemies_group)
+            elif keys[CONTROLS["KEYBOARD_SPELL_TELEPORT"]]:
+                player.shoot('teleport', tiles_group)
 
         if was_pause_activated:
             # Останавливаем все звуки (даже музыку)
