@@ -327,7 +327,7 @@ class Player(Entity):
         dx, dy = self.rect.centerx - self.scope.rect.centerx, self.rect.centery - self.scope.rect.centery
         angle = (degrees(atan2(dx, 0.00001 if not dy else dy)) + 360) % 360
         args = (self.rect.centerx, self.rect.centery,
-                self.scope.rect.right, self.scope.rect.centery, group)
+                self.scope.rect.centerx, self.scope.rect.centery, group)
 
         if spell_type == Spell.FIRE:
             spell = FireSpell(*args)
@@ -346,11 +346,14 @@ class Player(Entity):
 
         if self.mana >= spell.mana_cost:
             if spell_type == Spell.TELEPORT:
-                self.collider.update(*self.scope.rect.center)
-                if not (not pygame.sprite.spritecollideany(self.collider, Entity.collisions_group)
-                        and pygame.sprite.spritecollideany(self.collider, group)):
+                pos = self.rect.center
+                self.rect.center = self.scope.rect.center
+                if (pygame.sprite.spritecollideany(self, Entity.collisions_group)
+                        or not pygame.sprite.spritecollideany(self, group)):
                     self.sounds_channel.play(Player.NO_MANA_SOUND)
+                    self.rect.center = pos
                     return
+                self.rect.center = pos
 
             self.mana -= spell.mana_cost
             self.spells.add(spell)
