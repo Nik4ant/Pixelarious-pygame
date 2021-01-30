@@ -74,6 +74,8 @@ def start(screen: pygame.surface.Surface,
     player, monsters_seed = initialise_level(level, all_sprites, tiles_group, collidable_tiles_group,
                                              enemies_group, doors_group, torches_group, end_of_level,
                                              current_seed.split('\n')[1].split() if current_seed else 0)
+    # Обновляем сид после инициализации уровня
+    current_seed = ' '.join(level_seed) + '\n' + ' '.join(monsters_seed) + '\n' + str(level_number)
 
     # Создаем камеру
     camera = Camera(screen_width, screen_height)
