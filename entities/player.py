@@ -18,8 +18,8 @@ class Player(Entity):
     cast_frames = cut_sheet(load_image('player_cast_sprite_sheet.png', 'assets'), 5, 4, size)
 
     # Переменные добавляющие эти значиния к здоровью и мане каждую итерацию update()
-    MANA_UP = 0.15
-    HEALTH_UP = 0.02
+    MANA_UP = 0.2
+    HEALTH_UP = 0.025
     # Время неуязвимости, после атаки врагом (в миллисекундах)
     INVULNERABILITY_TIME_AFTER_HIT = 500
 
@@ -38,9 +38,11 @@ class Player(Entity):
 
     # время перезарядки заклинания в миллисекундах
     spell_reload_time = 400
+    # Время между кастами заклинаний
+    between_shoots_range = 80
     # эффект замедления после атаки заклинанием
     after_spell_freezing = 300
-    
+
     # время перезарядки дэша в миллисекундах
     dash_reload_time = 2000
     # сила дэша, которая устанавливается в самом начале
@@ -70,7 +72,7 @@ class Player(Entity):
     DASH_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     NO_MANA_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "no_mana_sound.ogg"))
-    NO_MANA_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+    NO_MANA_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME + 20)
 
     def __init__(self, x: float, y: float, all_sprites, *args):
         # Конструктор класса Entity
@@ -90,7 +92,7 @@ class Player(Entity):
         self.distance_to_player = 0.0001
 
         # Здоровье
-        self.health = 425
+        self.health = 450
         self.full_health = self.health
 
         # Мана
@@ -125,7 +127,9 @@ class Player(Entity):
     def update(self):
         super().update()
 
-        self.mana = min(self.mana + Player.MANA_UP, self.full_mana)
+        if self.alive:
+            self.mana = min(self.mana + Player.MANA_UP, self.full_mana)
+            self.health = min(self.health + Player.HEALTH_UP, self.full_health)
 
         # Обновляем состояние джойстика
         self.joystick = get_joystick() if check_any_joystick() else None
@@ -314,37 +318,53 @@ class Player(Entity):
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
 
-    def shoot(self, spell_type: str, enemies_group):
+    def shoot(self, spell_type: str, group):
         if not self.alive:
             return
 
         current_ticks = pygame.time.get_ticks()
         # Если не прошло время перезарядки, то заклинания не создаются
-        if current_ticks - Player.spell_reload_time < self.shoot_last_time:
+        if current_ticks - Player.spell_reload_time < self.shoot_last_time or \
+                current_ticks - Player.between_shoots_range < self.shoot_last_time:
             return
+        self.shoot_last_time = current_ticks
 
         # Получение угла относительно прицела и оружия
         dx, dy = self.rect.centerx - self.scope.rect.centerx, self.rect.centery - self.scope.rect.centery
         angle = (degrees(atan2(dx, 0.00001 if not dy else dy)) + 360) % 360
         args = (self.rect.centerx, self.rect.centery,
-                self.scope.rect.right, self.scope.rect.centery, enemies_group)
+                self.scope.rect.centerx, self.scope.rect.centery, group)
 
-        if spell_type == 'fire':
+        if spell_type == Spell.FIRE:
             spell = FireSpell(*args)
-        elif spell_type == 'ice':
+        elif spell_type == Spell.ICE:
             spell = IceSpell(*args)
-        elif spell_type == 'flash':
+        elif spell_type == Spell.FLASH:
             spell = FlashSpell(*args)
-        elif spell_type == 'poison':
+        elif spell_type == Spell.POISON:
             spell = PoisonSpell(*args)
-        elif spell_type == 'void':
+        elif spell_type == Spell.VOID:
             spell = VoidSpell(*args)
+        elif spell_type == Spell.TELEPORT:
+            spell = TeleportSpell(*args[:-1] + ([self],))
         else:
             return
 
         if self.mana >= spell.mana_cost:
+            if spell_type == Spell.TELEPORT:
+                pos = self.rect.center
+                self.rect.center = self.scope.rect.center
+                if (pygame.sprite.spritecollideany(self, Entity.collisions_group)
+                        or not pygame.sprite.spritecollideany(self, group)):
+                    self.sounds_channel.play(Player.NO_MANA_SOUND)
+                    self.rect.center = pos
+                    return
+                self.rect.center = pos
+
             self.mana -= spell.mana_cost
             self.spells.add(spell)
+            if spell_type == Spell.TELEPORT:
+                self.spells.add(spell.start_sprite)
             self.sounds_channel.play(spell.CAST_SOUND)
 
             number_of_frame = (round((angle - 0) / 18) + 47) % 20
@@ -402,7 +422,7 @@ class PlayerScope(pygame.sprite.Sprite):
         # Т.к. update вызывается ещё и в игровом цикле, то
         # стоит делать проверку на наличие аргументов x и y
         # (но предполагается, что x и y - это координаты)
-        if x is not None and y is not None:
+        if x and y:
             # Если размер текущего экрана
             self.rect.centerx, self.rect.centery = x, y
 

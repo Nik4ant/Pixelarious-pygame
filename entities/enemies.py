@@ -46,7 +46,7 @@ class WalkingMonster(Entity):
         line = self.distance_to_player
 
         # Если игрок далеко, крутимся у своей стартовой точки
-        if line >= self.visibility_range:
+        if line >= self.visibility_range or not player.alive:
             if pygame.time.get_ticks() - self.stopping_time < Entity.WAITING_TIME:
                 # Обновляем спрайты со сдвигом в 2 (спрайты без движения)
                 super().update_frame_state(2)
@@ -172,7 +172,7 @@ class ShootingMonster(Entity):
         line = self.distance_to_player
 
         # Если игрок далеко, крутимся у своей стартовой точки
-        if line >= self.visibility_range:
+        if line >= self.visibility_range or not player.alive:
             if pygame.time.get_ticks() - self.stopping_time < Entity.WAITING_TIME:
                 super().update_frame_state(2)
                 self.spells.update()
@@ -220,7 +220,7 @@ class ShootingMonster(Entity):
                     pygame.time.get_ticks() - self.last_shot_time > self.reload_time:
                 self.last_shot_time = pygame.time.get_ticks()
                 # Стреляем в игрока
-                if self.alive:
+                if self.alive and player.alive:
                     self.shoot(player, all_sprites)
 
         # Направление взгляда

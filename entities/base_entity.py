@@ -204,10 +204,11 @@ class Entity(pygame.sprite.Sprite):
 
         self.last_damage_time = pygame.time.get_ticks()
         damage *= 10000
-        damage += randint(-damage * 0.1, damage * 0.1)
+        damage += randint(-damage * 0.3, damage * 0.3)
         damage /= 10000
         self.health -= damage
         if self.health <= 0:
+            self.health = 0
             self.death()
 
     def set_first_frame(self):
@@ -242,5 +243,7 @@ class Collider(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.centerx, self.rect.centery = x, y
 
-    def update(self, x: float, y: float):
+    def update(self, x: float, y: float, size=None):
         self.rect.centerx, self.rect.centery = x, y
+        if size:
+            self.rect.size = size

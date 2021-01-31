@@ -34,9 +34,17 @@ CONTROLS = {
     # Для клавиатуры
     "KEYBOARD_SPELL_FIRE": pygame.K_1,  # 1
     "KEYBOARD_SPELL_ICE": pygame.K_2,  # 2
-    "KEYBOARD_SPELL_LIGHT": pygame.K_3,  # 3
-    "KEYBOARD_SPELL_POISON": pygame.K_4,  # 4
-    "KEYBOARD_SPELL_VOID": pygame.K_5,  # 5
+    "KEYBOARD_SPELL_POISON": pygame.K_3,  # 3
+    "KEYBOARD_SPELL_VOID": pygame.K_4,  # 4
+    "KEYBOARD_SPELL_LIGHT": pygame.K_5,  # 5
+    "KEYBOARD_SPELL_TELEPORT": pygame.K_e,  # E
+    
+    # Для мышки
+    "MOUSE_SPELL_FIRE": 0,
+    "MOUSE_SPELL_ICE": 1,
+    "MOUSE_SPELL_POISON": 2,
+    "MOUSE_SPELL_VOID": 3,
+    "MOUSE_SPELL_LIGHT": 4,
 
     "KEYBOARD_PAUSE": pygame.K_ESCAPE,
     "KEYBOARD_DASH": pygame.K_q,
