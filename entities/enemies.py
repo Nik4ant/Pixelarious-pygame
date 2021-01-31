@@ -216,8 +216,11 @@ class ShootingMonster(Entity):
         if previous_pos == (self.rect.centerx, self.rect.centery):
             # Выбираем спрайты стояния
             delta = 2
+            reload_time = self.reload_time
+            if self.ice_buff:
+                reload_time *= 2
             if self.distance_to_player <= self.visibility_range and \
-                    pygame.time.get_ticks() - self.last_shot_time > self.reload_time:
+                    pygame.time.get_ticks() - self.last_shot_time > reload_time:
                 self.last_shot_time = pygame.time.get_ticks()
                 # Стреляем в игрока
                 if self.alive and player.alive:
@@ -465,7 +468,7 @@ class Wizard(ShootingMonster):
 
     death_frames = cut_sheet(load_image('wizard_dying.png', 'assets\\enemies'), 16, 1)[0]
 
-    default_speed = TILE_SIZE * 0.022
+    default_speed = TILE_SIZE * 0.012
     look_directions = {
         (-1, -1): 1,
         (-1, 0): 1,
@@ -493,7 +496,7 @@ class Wizard(ShootingMonster):
         self.full_health = self.health
 
 
-class LongWizard(ShootingMonster):
+class VoidWizard(ShootingMonster):
     """
     Большой маг
 
@@ -510,7 +513,7 @@ class LongWizard(ShootingMonster):
 
     death_frames = cut_sheet(load_image('long_wizard_dying.png', 'assets\\enemies'), 16, 1)[0]
 
-    default_speed = TILE_SIZE * 0.02
+    default_speed = TILE_SIZE * 0.01
     look_directions = {
         (-1, -1): 1,
         (-1, 0): 1,
@@ -562,7 +565,7 @@ def random_monster(x, y, all_sprites, enemies_group, seed, user_seed=None):
     elif n in (8, 9):
         monster = Wizard(*args)
     elif n in (10,):
-        monster = LongWizard(*args)
+        monster = VoidWizard(*args)
     else:
         # Специально, чтоб монстры спавнились в этом месте не со 100% шансом
         return None

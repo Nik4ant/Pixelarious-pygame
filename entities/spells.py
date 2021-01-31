@@ -52,7 +52,7 @@ class Spell(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.centerx, self.rect.centery = subject_x, subject_y
 
-        self.collider = Collider(self.rect.centerx, self.rect.centery)
+        self.collider = Collider(self.rect.centerx, self.rect.centery, (self.rect.size[0] - TILE_SIZE * 0.5,) * 2)
 
         self.update()
 
@@ -66,9 +66,14 @@ class Spell(pygame.sprite.Sprite):
                 if isinstance(self, TeleportSpell):
                     self.object_group[0].rect.center = self.rect.center
                 else:
-                    self.collider.update(self.rect.centerx, self.rect.centery)
-                    for obj in pygame.sprite.spritecollide(self.collider, self.object_group, False):
-                        obj.get_damage(self.damage, self.spell_type, self.action_time)
+                    if isinstance(self, VoidSpell):
+                        size = (round((self.rect.w / 3)),) * 2
+                        self.collider.update(self.rect.centerx, self.rect.centery, size)
+                    else:
+                        self.collider.update(self.rect.centerx, self.rect.centery)
+                    for obj in self.object_group:
+                        if pygame.sprite.collide_circle(self.collider, obj):
+                            obj.get_damage(self.damage, self.spell_type, self.action_time)
             self.cur_frame += 1
             if self.cur_frame == len(self.__class__.frames[self.cur_list]):
                 self.kill()
@@ -76,6 +81,9 @@ class Spell(pygame.sprite.Sprite):
                     self.start_sprite.kill()
                 return
             self.image = self.__class__.frames[self.cur_list][self.cur_frame]
+            pos = self.rect.center
+            self.rect = self.image.get_rect()
+            self.rect.center = pos
             if isinstance(self, TeleportSpell):
                 self.start_sprite.image = self.__class__.frames[self.cur_list][self.cur_frame]
 
@@ -141,7 +149,7 @@ class Spell(pygame.sprite.Sprite):
 class IceSpell(Spell):
     damage = 20
     spell_type = Spell.ICE
-    mana_cost = 30
+    mana_cost = 40
     UPDATE_TIME = 40
     speed = TILE_SIZE * 0.3
     acceleration = 4
@@ -176,7 +184,7 @@ class IceSpell(Spell):
 
 
 class FireSpell(Spell):
-    damage = 50
+    damage = 40
     spell_type = Spell.FIRE
     mana_cost = 50
     UPDATE_TIME = 40
@@ -213,7 +221,7 @@ class FireSpell(Spell):
 class FlashSpell(Spell):
     damage = 50
     spell_type = Spell.FLASH
-    mana_cost = 100
+    mana_cost = 200
     UPDATE_TIME = 60
     speed = TILE_SIZE * 0.5
     acceleration = 1
@@ -258,7 +266,7 @@ class PoisonSpell(Spell):
     UPDATE_TIME = 40
     speed = TILE_SIZE * 0.2
     acceleration = 0.5
-    action_time = 1000
+    action_time = 500
 
     size = (TILE_SIZE // 4 * 3,) * 2
     frames = cut_sheet(load_image('poison_laser.png', 'assets\\spells'), 7, 1, size)
@@ -292,14 +300,15 @@ class PoisonSpell(Spell):
 class VoidSpell(Spell):
     damage = 70
     spell_type = Spell.VOID
-    mana_cost = 70
+    mana_cost = 120
     speed = TILE_SIZE * 0.24
     acceleration = 3
     UPDATE_TIME = 40
+    damage_frame = 5
     action_time = 0
 
-    size = (TILE_SIZE // 4 * 3,) * 2
-    frames = cut_sheet(load_image('void_laser.png', 'assets\\spells'), 10, 1, size)
+    size = (TILE_SIZE * 3,) * 2
+    frames = cut_sheet(load_image('void_laser.png', 'assets\\spells'), 10, 1)
     frames += cut_sheet(load_image('void_explosion.png', 'assets\\spells'), 12, 2, size)
     frames += cut_sheet(load_image('void_explosions.png', 'assets\\spells'), 10, 5, size)
 

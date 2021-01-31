@@ -1,9 +1,7 @@
-import os
-
 import pygame
 
 from engine import load_image, concat_two_file_paths
-from config import DEFAULT_HOVER_SOUND_VOLUME, CONTROLS
+from config import DEFAULT_HOVER_SOUND_VOLUME
 
 
 class Button(pygame.sprite.Sprite):
@@ -98,7 +96,7 @@ class MessageBox:
         self.texts = text.split('\n')
         self.font = pygame.font.Font("assets\\UI\\pixel_font.ttf", text_size)
         # Так нужно для вывода сразу нескольких строк
-        self.text_surfaces = [self.font.render(part, True, pygame.Color("white")) for part in self.texts]
+        self.text_surfaces = [self.font.render(part, True, (255, 255, 255)) for part in self.texts]
 
         # Флаг для отрисовки (если True, то диалог рисуется)
         self.need_to_draw = True
@@ -126,21 +124,28 @@ class SpellContainer:
     """Класс представляет UI элемент с отображением данных о заклинании."""
 
     # В этом случае фонт всегда будет общий у всех, поэтому это атрибут класса
-    font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 64)
+    font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 32)
+    mini_font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 16)
     # Иконки кнопок джойстика, чтобы отображать кнопки для переключения заклиананий
+    size = (13, 13)
     JOYSTICK_ICONS = {
-        "o": load_image("joystick_o.png", path_to_folder="assets/UI/icons"),
-        "x": load_image("joystick_x.png", path_to_folder="assets/UI/icons"),
-        "triangle": load_image("joystick_triangle.png", path_to_folder="assets/UI/icons"),
-        "square": load_image("joystick_square.png", path_to_folder="assets/UI/icons"),
-        "L1": load_image("joystick_L1.png", path_to_folder="assets/UI/icons"),
+        "o": pygame.transform.scale(load_image("joystick_o.png", "assets/UI/icons"), size),
+        "x": pygame.transform.scale(load_image("joystick_x.png", "assets/UI/icons"), size),
+        "triangle": pygame.transform.scale(load_image("joystick_triangle.png", "assets/UI/icons"), size),
+        "square": pygame.transform.scale(load_image("joystick_square.png", "assets/UI/icons"), size),
+        "L1": pygame.transform.scale(load_image("joystick_L1.png", "assets/UI/icons"), size),
     }
+    LOCKED = load_image('transparent_grey.png', 'assets\\UI\\icons')
+    FRAME = load_image('spell_icon_frame.png', 'assets\\UI\\icons')
 
-    def __init__(self, icon_filename: str, position: tuple):
+    def __init__(self, icon_filename: str, mana_cost, player):
         self.spell_icon = load_image(icon_filename, "assets/UI/icons")
-        self.position = position
+        self.w, self.h = self.spell_icon.get_size()
+        self.locked = pygame.transform.scale(SpellContainer.LOCKED, (self.w, self.h))
+        self.mana_cost = mana_cost
+        self.player = player
 
-    def draw(self, screen: pygame.surface.Surface, is_joystick: bool, spell_key: str):
+    def draw(self, screen: pygame.surface.Surface, position: tuple, is_joystick: bool, spell_key: str):
         """
         Рисует UI элемент на экране screen
         :param screen: Экран для отрисовки
@@ -149,20 +154,70 @@ class SpellContainer:
         для джойстика, либо текст для вывода возле иконки заклинания
         """
         # Иконка заклинания
-        screen.blit(self.spell_icon, self.position)
+        x1, y1 = position
+        screen.blit(self.spell_icon, (x1 + 2, y1 + 18))
+        if self.player.mana < self.mana_cost:
+            screen.blit(self.locked, (x1 + 2, y1 + 18))
+        screen.blit(self.FRAME, position)
         # Смещение между иконкой заклинания и кнопкой для переключения
-        MARGIN = 25
-        pos = (self.position[0] + MARGIN,
-               self.position[1] - self.spell_icon.get_height())
 
+        pos = (x1 + 10, y1 + 14)
         # Если подключён джойстик, то рисуется специальная иконка
         if is_joystick:
             screen.blit(SpellContainer.JOYSTICK_ICONS[spell_key], pos)
         # Иначе просто текст
         else:
-            text_surface = SpellContainer.font.render(spell_key, True,
-                                                       pygame.Color("white"))
-            screen.blit(text_surface, pos)
+            button_text = SpellContainer.font.render(spell_key, True, (255, 255, 255))
+            screen.blit(button_text, pos)
+        pos = (x1 + self.h - 6, y1 + self.w - 2)
+        cost_text = SpellContainer.mini_font.render(str(self.mana_cost), True, (255, 255, 255))
+        screen.blit(cost_text, pos)
+
+
+class PlayerIcon:
+    """
+    Класс представляет UI элемент с отображением данных о заклинании.
+    """
+    # В этом случае фонт всегда будет общий у всех, поэтому это атрибут класса
+    font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 32)
+    # Иконки кнопок джойстика, чтобы отображать кнопки для переключения заклиананий
+    size = (40, 40)
+    FACE = pygame.transform.scale2x(load_image('elf_face.png', 'assets\\UI\\icons'))
+    FRAME = load_image('player_icon_frame.png', 'assets\\UI\\icons')
+    POISON_ICON = pygame.transform.scale(load_image('poison_icon.png', 'assets\\UI\\icons'), size)
+
+    def __init__(self, position: tuple, player):
+        self.position = position
+        self.player = player
+
+    def draw(self, screen: pygame.surface.Surface):
+        """
+        Рисует UI элемент на экране screen
+        :param screen: Экран для отрисовки
+        """
+        # Иконка заклинания
+        x1, y1 = self.position
+
+        health_line = pygame.sprite.Sprite()
+        health_length = round(260 * (self.player.health / self.player.full_health) + 0.5)
+        health_line.image = pygame.surface.Surface((health_length, 24))
+        health_line.image.fill((255, 30, 30))
+        screen.blit(health_line.image, (x1 + 136, y1 + 12))
+        screen.blit(self.font.render(f'{round(self.player.health + 0.5)}/{self.player.full_health}', True, (255, 255, 255)), (x1 + 220, y1 + 10))
+
+        mana_line = pygame.sprite.Sprite()
+        mana_length = round(260 * (self.player.mana / self.player.full_mana) + 0.5)
+        mana_line.image = pygame.surface.Surface((mana_length, 24))
+        mana_line.image.fill((30, 30, 255))
+        screen.blit(mana_line.image, (x1 + 136, y1 + 52))
+        screen.blit(self.font.render(f'{round(self.player.mana + 0.5)}/{self.player.full_mana}', True, (255, 255, 255)), (x1 + 220, y1 + 50))
+
+        screen.blit(self.FACE, (x1 + 25, y1 + 20))
+        screen.blit(self.FRAME, self.position)
+
+        pos = (self.position[0] + 8, self.position[1] + 14)
+        text_surface = self.font.render('', True, (255, 255, 255))
+        screen.blit(text_surface, pos)
 
 
 class LogoImage(pygame.sprite.Sprite):
@@ -175,7 +230,6 @@ class LogoImage(pygame.sprite.Sprite):
 
         # Изображение
         self.image = load_image("game_logo.png", path_to_folder="assets/UI")
-        self.image = pygame.transform.scale2x(self.image)
         self.rect = self.image.get_rect()
         self.rect.centerx, self.rect.centery = position
 

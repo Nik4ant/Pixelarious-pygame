@@ -33,7 +33,7 @@ def execute(screen: pygame.surface.Surface, is_win=False):
 
     # Кнопка возвращения в меню
     button_exit = Button((screen.get_width() // 2, screen.get_height() * 0.9),
-                         "Вернутся в меню", 32,
+                         "Вернуться в меню", 32,
                          base_button_filename="button_1.png",
                          hover_button_filename="button_1_hover.png")
 
