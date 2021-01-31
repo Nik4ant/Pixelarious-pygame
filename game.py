@@ -115,8 +115,6 @@ def start(screen: pygame.surface.Surface,
     )
     player_icon = PlayerIcon((20, 20), player)
 
-    print(FireSpell.__doc__)
-
     # Игровой цикл
     while is_game_open:
         was_pause_activated = False
