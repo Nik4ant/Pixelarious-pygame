@@ -21,7 +21,7 @@ class Player(Entity):
     MANA_UP = 0.2
     HEALTH_UP = 0.025
     # Время неуязвимости, после атаки врагом (в миллисекундах)
-    INVULNERABILITY_TIME_AFTER_HIT = 500
+    INVULNERABILITY_TIME_AFTER_HIT = 300
 
     # Словарь типа (направлениями взгляда): *индекс ряда в frames для анимации*
     look_directions = {
@@ -318,6 +318,9 @@ class Player(Entity):
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
 
+    def draw(self, screen):
+        screen.blit(self.image, self.rect.topleft)
+
     def shoot(self, spell_type: str, group):
         if not self.alive:
             return
@@ -352,14 +355,11 @@ class Player(Entity):
 
         if self.mana >= spell.mana_cost:
             if spell_type == Spell.TELEPORT:
-                pos = self.rect.center
-                self.rect.center = self.scope.rect.center
-                if (pygame.sprite.spritecollideany(self, Entity.collisions_group)
-                        or not pygame.sprite.spritecollideany(self, group)):
+                self.collider.update(*self.scope.rect.center)
+                if (pygame.sprite.spritecollideany(self.collider, Entity.collisions_group)
+                        or not pygame.sprite.spritecollideany(self.collider, group)):
                     self.sounds_channel.play(Player.NO_MANA_SOUND)
-                    self.rect.center = pos
                     return
-                self.rect.center = pos
 
             self.mana -= spell.mana_cost
             self.spells.add(spell)
@@ -425,6 +425,9 @@ class PlayerScope(pygame.sprite.Sprite):
         if x and y:
             # Если размер текущего экрана
             self.rect.centerx, self.rect.centery = x, y
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect.topleft)
 
     def init_scope_position(self, position: tuple):
         """

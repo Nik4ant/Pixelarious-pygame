@@ -65,6 +65,11 @@ def start(screen: pygame.surface.Surface,
     end_of_level = pygame.sprite.Group()
         
     is_game_open = True
+
+    transition = 0
+    transparent_grey = pygame.transform.scale(load_image('transparent_light_grey.png', 'assets\\UI\\icons'),
+                                              (screen_width, screen_height))
+
     clock = pygame.time.Clock()
 
     current_seed = user_seed  # текущий сид
@@ -173,39 +178,7 @@ def start(screen: pygame.surface.Surface,
 
         # Обновление спрайтов
         player_sprites.update()
-        # Проверка перехода на следующий уровень, путём соприкосновением с лестницой вниз
-        if pygame.sprite.spritecollideany(player.collider, end_of_level):
-            # Если игрок собирается перейти на 11 уровень, то это победа
-            if level_number == 10:
-                # Победный экран
-                end_screen.execute(screen, is_win=True)
-                return 0
-            # Иначе перезагрука некоторых данных и новый уровень
-            else:
-                # Очищаем все группы со спрайтами
-                all_sprites.empty()
-                tiles_group.empty()
-                collidable_tiles_group.empty()
-                player_sprites.empty()
-                enemies_group.empty()
-                doors_group.empty()
-                torches_group.empty()
-                end_of_level.empty()
 
-                level_number += 1  # номер уровня
-                # Создаем целиком новый уровень с помощью функции из generation_map
-                level, level_seed = generate_new_level(0)
-                # Создаем монстров и плитки, проходя по уровню
-                player, monsters_seed = initialise_level(level, all_sprites, tiles_group, collidable_tiles_group,
-                                                         enemies_group, doors_group, torches_group, end_of_level,
-                                                         0)
-                current_seed = ' '.join(level_seed) + '\n' + ' '.join(monsters_seed) + '\n' + str(level_number)
-
-                # Заного заполняем индивидуальные спрайты
-                player_sprites.add(player)
-                player.scope.init_scope_position((screen_width * 0.5, screen_height * 0.5))
-                player_sprites.add(player.scope)
-                continue
         # Если игрок умер, то надо открыть экран конца игры
         if not player.alive:
             # Останавливаем все звуки (даже музыку)
@@ -234,7 +207,7 @@ def start(screen: pygame.surface.Surface,
         torches_group.draw(screen)
         doors_group.draw(screen)
         enemies_group.draw(screen)
-        player_sprites.draw(screen)
+        player.draw(screen)
         player.draw_health_bar(screen)
         player.spells.update()
         player.spells.draw(screen)
@@ -259,6 +232,7 @@ def start(screen: pygame.surface.Surface,
             spells_containers[i].draw(screen, pos, bool(player.joystick), spell_args[i])
 
         player_icon.draw(screen)
+        player.scope.draw(screen)
 
         # Отрисовка фпс
         fps_text = fps_font.render(str(int(clock.get_fps())), True, (100, 255, 100))
@@ -267,6 +241,56 @@ def start(screen: pygame.surface.Surface,
         level_number_text = level_number_font.render(str(level_number), True, (255, 255, 255))
         screen.blit(level_number_icon, (screen_width - 70, 10))
         screen.blit(level_number_text, (screen_width - 110, 10))
+
+        # Проверка перехода на следующий уровень, путём соприкосновением с лестницой вниз
+        if pygame.sprite.spritecollideany(player.collider, end_of_level):
+            transition += 1
+            if transition < 15:
+                for i in range(transition):
+                    screen.blit(transparent_grey, (0, 0))
+            else:
+                transition = 0
+                # Если игрок собирается перейти на 11 уровень, то это победа
+                if level_number == 10:
+                    # Победный экран
+                    end_screen.execute(screen, is_win=True)
+                    return 0
+                # Иначе перезагрука некоторых данных и новый уровень
+                else:
+                    # Очищаем все группы со спрайтами
+                    all_sprites.empty()
+                    tiles_group.empty()
+                    collidable_tiles_group.empty()
+                    player_sprites.empty()
+                    enemies_group.empty()
+                    doors_group.empty()
+                    torches_group.empty()
+                    end_of_level.empty()
+
+                    level_number += 1  # номер уровня
+                    # Создаем целиком новый уровень с помощью функции из generation_map
+                    level, level_seed = generate_new_level(0)
+                    # Создаем монстров и плитки, проходя по уровню
+                    player, monsters_seed = initialise_level(level, all_sprites, tiles_group, collidable_tiles_group,
+                                                             enemies_group, doors_group, torches_group, end_of_level, 0)
+                    current_seed = ' '.join(level_seed) + '\n' + ' '.join(monsters_seed) + '\n' + str(level_number)
+
+                    # Заного заполняем индивидуальные спрайты
+                    player_sprites.add(player)
+                    player.scope.init_scope_position((screen_width * 0.5, screen_height * 0.5))
+                    player_sprites.add(player.scope)
+
+                    # Иконки для отображения частей UI с заклинаниями
+                    spells_containers = (
+                        SpellContainer("fire_spell.png", FireSpell.mana_cost, player),
+                        SpellContainer("ice_spell.png", IceSpell.mana_cost, player),
+                        SpellContainer("poison_spell.png", PoisonSpell.mana_cost, player),
+                        SpellContainer("void_spell.png", VoidSpell.mana_cost, player),
+                        SpellContainer("light_spell.png", FlashSpell.mana_cost, player),
+                        SpellContainer("teleport_spell.png", TeleportSpell.mana_cost, player),
+                    )
+                    player_icon = PlayerIcon((20, 20), player)
+                    continue
 
         clock.tick(FPS)
         pygame.display.flip()

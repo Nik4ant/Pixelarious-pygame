@@ -66,7 +66,7 @@ class Entity(pygame.sprite.Sprite):
 
         if self.poison_buff:
             self.poison_buff -= 1
-            self.get_damage(Entity.POISON_DAMAGE)
+            self.get_damage(Entity.POISON_DAMAGE, 'poison')
 
     def move(self, dx, dy):
         """
@@ -199,12 +199,27 @@ class Entity(pygame.sprite.Sprite):
 
         if spell_type == 'ice':
             self.ice_buff += action_time
-        if spell_type == 'poison':
+        if spell_type == 'poison' and damage >= 5:
             self.poison_buff += action_time
+
+        if (self.__class__.__name__ == 'Demon' and spell_type == 'ice' or
+                self.__class__.__name__ == 'GreenSlime' and spell_type == 'flash' or
+                self.__class__.__name__ == 'DirtySlime' and spell_type == 'void' or
+                self.__class__.__name__ == 'FireWizard' and spell_type == 'poison' or
+                self.__class__.__name__ == 'VoidWizard' and spell_type == 'fire'):
+            damage *= 2
+
+        if (self.__class__.__name__ == 'Demon' and spell_type == 'fire' or
+                self.__class__.__name__ == 'GreenSlime' and spell_type == 'poison' or
+                self.__class__.__name__ == 'DirtySlime' and spell_type == 'ice' or
+                self.__class__.__name__ == 'Zombie' and spell_type == 'flash' or
+                self.__class__.__name__ == 'FireWizard' and spell_type == 'fire' or
+                self.__class__.__name__ == 'VoidWizard' and spell_type == 'void'):
+            damage *= 0.25
 
         self.last_damage_time = pygame.time.get_ticks()
         damage *= 10000
-        damage += randint(-damage * 0.3, damage * 0.3)
+        damage += randint(-damage * 0.4, damage * 0.4)
         damage /= 10000
         self.health -= damage
         if self.health <= 0:

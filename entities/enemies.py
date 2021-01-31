@@ -216,8 +216,11 @@ class ShootingMonster(Entity):
         if previous_pos == (self.rect.centerx, self.rect.centery):
             # Выбираем спрайты стояния
             delta = 2
+            reload_time = self.reload_time
+            if self.ice_buff:
+                reload_time *= 2
             if self.distance_to_player <= self.visibility_range and \
-                    pygame.time.get_ticks() - self.last_shot_time > self.reload_time:
+                    pygame.time.get_ticks() - self.last_shot_time > reload_time:
                 self.last_shot_time = pygame.time.get_ticks()
                 # Стреляем в игрока
                 if self.alive and player.alive:
@@ -250,9 +253,9 @@ class ShootingMonster(Entity):
         args = (self.rect.centerx, self.rect.centery, player.rect.centerx,
                 player.rect.centery, [player] + list(enemies_group), self.spells, all_sprites)
         enemies_group.add(self)
-        if self.__class__.__name__ == 'Wizard':
+        if isinstance(self, FireWizard):
             spell = FireSpell(*args)
-        else:
+        elif isinstance(self, VoidWizard):
             spell = VoidSpell(*args)
         self.sounds_channel.play(spell.CAST_SOUND)
 
@@ -283,7 +286,7 @@ class Demon(WalkingMonster):
     death_frames = cut_sheet(load_image('demon_dying.png', 'assets\\enemies'), 16, 1)[0]
 
     UPDATE_TIME = 60
-    default_speed = TILE_SIZE * 0.023
+    default_speed = TILE_SIZE * 0.025
 
     look_directions = {
         (-1, -1): 1,
@@ -306,7 +309,7 @@ class Demon(WalkingMonster):
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
         self.alive = True
-        self.visibility_range = TILE_SIZE * 7
+        self.visibility_range = TILE_SIZE * 8
 
         self.health = 40
         self.full_health = self.health
@@ -319,7 +322,7 @@ class GreenSlime(WalkingMonster):
     Медленный
     Среднее количество жизней
     Не очень большой урон
-    Устойчивость к льду и отравлению (я сам отравление)
+    Устойчивость к отравлению (я сам отравление)
     Слабость к молниям
     """
     damage = 60
@@ -351,7 +354,7 @@ class GreenSlime(WalkingMonster):
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
         self.alive = True
-        self.visibility_range = TILE_SIZE * 5
+        self.visibility_range = TILE_SIZE * 6
 
         self.health = 80
         self.full_health = self.health
@@ -365,8 +368,8 @@ class DirtySlime(WalkingMonster):
     Медленный
     Много жизней
     Не очень большой урон
-    Устойчивость к льду и отравлению
-    Слабость к молниям
+    Устойчивость к льду
+    Слабость к пустоте
     """
     damage = 70
     size = (int(TILE_SIZE // 8 * 7),) * 2
@@ -397,7 +400,7 @@ class DirtySlime(WalkingMonster):
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
         self.alive = True
-        self.visibility_range = TILE_SIZE * 5
+        self.visibility_range = TILE_SIZE * 8
 
         self.health = 100
         self.full_health = self.health
@@ -411,7 +414,7 @@ class Zombie(WalkingMonster):
     Среднее количество жизней
     Средний урон
     Устойчивость к молниям (они двигают мои нейроны)
-    Слабостей не обнаружено (земля пухом ученым)
+    Слабостей не обнаружено (земля пухом учёным)
     """
     damage = 30
     size = (int(TILE_SIZE // 4 * 3),) * 2
@@ -442,13 +445,13 @@ class Zombie(WalkingMonster):
     def __init__(self, x, y, *args):
         super().__init__(x, y, *args)
         self.alive = True
-        self.visibility_range = TILE_SIZE * 6
+        self.visibility_range = TILE_SIZE * 8
 
         self.health = 80
         self.full_health = self.health
 
 
-class Wizard(ShootingMonster):
+class FireWizard(ShootingMonster):
     """
     Маг
 
@@ -456,7 +459,7 @@ class Wizard(ShootingMonster):
     Маловато жизней
     Средний урон
     Устойчивость к молниям
-    Слабость к огню (МОЙ ПЛАЩ ГОРИТ)
+    Слабость к льду
     """
     damage = 10
     size = (TILE_SIZE // 8 * 7,) * 2
@@ -465,7 +468,7 @@ class Wizard(ShootingMonster):
 
     death_frames = cut_sheet(load_image('wizard_dying.png', 'assets\\enemies'), 16, 1)[0]
 
-    default_speed = TILE_SIZE * 0.022
+    default_speed = TILE_SIZE * 0.012
     look_directions = {
         (-1, -1): 1,
         (-1, 0): 1,
@@ -493,15 +496,15 @@ class Wizard(ShootingMonster):
         self.full_health = self.health
 
 
-class LongWizard(ShootingMonster):
+class VoidWizard(ShootingMonster):
     """
     Большой маг
 
-    Подвижный
+    Подвижныйзщ
     Среднее количество жизней
     Большой урон
-    Устойчивость к молниям
-    Слабость к огню
+    Устойчивость к пустоте
+    Слабость к огню (МОЙ ПЛАЩ ГОРИТ)
     """
     damage = 20
     size = (int(TILE_SIZE // 8 * 7),) * 2
@@ -510,7 +513,7 @@ class LongWizard(ShootingMonster):
 
     death_frames = cut_sheet(load_image('long_wizard_dying.png', 'assets\\enemies'), 16, 1)[0]
 
-    default_speed = TILE_SIZE * 0.02
+    default_speed = TILE_SIZE * 0.01
     look_directions = {
         (-1, -1): 1,
         (-1, 0): 1,
@@ -560,9 +563,9 @@ def random_monster(x, y, all_sprites, enemies_group, seed, user_seed=None):
     elif n in (6, 7):
         monster = Zombie(*args)
     elif n in (8, 9):
-        monster = Wizard(*args)
+        monster = FireWizard(*args)
     elif n in (10,):
-        monster = LongWizard(*args)
+        monster = VoidWizard(*args)
     else:
         # Специально, чтоб монстры спавнились в этом месте не со 100% шансом
         return None
