@@ -95,7 +95,7 @@ def start(screen: pygame.surface.Surface,
     all_sprites.add(player)
 
     # Фоновая музыка
-    pygame.mixer.music.load(concat_two_file_paths("assets/audio", "game_bg.ogg"))
+    pygame.mixer.music.load(concat_two_file_paths("assets\\audio", "game_bg.ogg"))
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
@@ -114,6 +114,8 @@ def start(screen: pygame.surface.Surface,
         SpellContainer("teleport_spell.png", TeleportSpell.mana_cost, player),
     )
     player_icon = PlayerIcon((20, 20), player)
+
+    print(FireSpell.__doc__)
 
     # Игровой цикл
     while is_game_open:
@@ -308,5 +310,5 @@ def start(screen: pygame.surface.Surface,
 def save(current_seed: str):
     if 'data' not in os.listdir():
         os.mkdir('data')
-    with open('data/save.txt', 'w') as file:
+    with open('data\\save.txt', 'w') as file:
         file.write(current_seed)

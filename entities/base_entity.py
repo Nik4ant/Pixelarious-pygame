@@ -205,6 +205,7 @@ class Entity(pygame.sprite.Sprite):
         if (self.__class__.__name__ == 'Demon' and spell_type == 'ice' or
                 self.__class__.__name__ == 'GreenSlime' and spell_type == 'flash' or
                 self.__class__.__name__ == 'DirtySlime' and spell_type == 'void' or
+                self.__class__.__name__ == 'Zombie' and spell_type == 'fire' or
                 self.__class__.__name__ == 'FireWizard' and spell_type == 'poison' or
                 self.__class__.__name__ == 'VoidWizard' and spell_type == 'fire'):
             damage *= 2

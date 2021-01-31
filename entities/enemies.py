@@ -303,7 +303,7 @@ class Demon(WalkingMonster):
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "little_steps.mp3"))
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "little_steps.mp3"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x, y, *args):
@@ -348,7 +348,7 @@ class GreenSlime(WalkingMonster):
     sounds_channel = pygame.mixer.Channel(4)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "slime_sound.mp3"))
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "slime_sound.mp3"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x, y, *args):
@@ -394,7 +394,7 @@ class DirtySlime(WalkingMonster):
     sounds_channel = pygame.mixer.Channel(4)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "slime_sound_1.ogg"))
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "slime_sound_1.ogg"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x, y, *args):
@@ -414,7 +414,7 @@ class Zombie(WalkingMonster):
     Среднее количество жизней
     Средний урон
     Устойчивость к молниям (они двигают мои нейроны)
-    Слабостей не обнаружено (земля пухом учёным)
+    Слабость - огонь (земля пухом учёным)
     """
     damage = 30
     size = (int(TILE_SIZE // 4 * 3),) * 2
@@ -439,7 +439,7 @@ class Zombie(WalkingMonster):
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "stone_steps_1.mp3"))
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "stone_steps_1.mp3"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x, y, *args):
@@ -484,7 +484,7 @@ class FireWizard(ShootingMonster):
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "wizard_rustle.mp3"))
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "wizard_rustle.mp3"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x, y, *args):
@@ -529,7 +529,7 @@ class VoidWizard(ShootingMonster):
     sounds_channel = pygame.mixer.Channel(2)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/enemies/audio", "wizard_rustle.mp3"))
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "wizard_rustle.mp3"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x, y, *args):

@@ -50,7 +50,7 @@ class Torch(pygame.sprite.Sprite):
     min_distance_to_player = 100
 
     # Звуки
-    BURNING_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "torch_sound.mp3"))
+    BURNING_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "torch_sound.mp3"))
     BURNING_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME - SOUNDS_VOLUME_REDUCER)
 
     def __init__(self, x: float, y: float, *groups):
@@ -89,9 +89,9 @@ class Door(pygame.sprite.Sprite):
     min_distance_to_player = 100
 
     # Звуки
-    OPEN_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "door_open.mp3"))
+    OPEN_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "door_open.mp3"))
     OPEN_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
-    CLOSE_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "door_close.mp3"))
+    CLOSE_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "door_close.mp3"))
     CLOSE_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x: float, y: float, *groups):

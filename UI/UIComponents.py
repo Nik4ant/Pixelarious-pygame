@@ -13,7 +13,7 @@ class Button(pygame.sprite.Sprite):
     PRESS_TYPE = pygame.USEREVENT + 1
     HOVER_TYPE = pygame.USEREVENT + 2
     # Звук при наведении
-    HOVER_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "button_hover.wav"))
+    HOVER_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "button_hover.wav"))
     HOVER_SOUND.set_volume(DEFAULT_HOVER_SOUND_VOLUME)
 
     def __init__(self, position: tuple, text: str, text_size: int,
@@ -30,9 +30,9 @@ class Button(pygame.sprite.Sprite):
         self.was_sound_played = False
 
         # Базовое изображение
-        self.base_image = load_image(base_button_filename, path_to_folder="assets/UI")
+        self.base_image = load_image(base_button_filename, path_to_folder="assets\\UI")
         # Изображение при наведении
-        self.hover_image = load_image(hover_button_filename, path_to_folder="assets/UI")
+        self.hover_image = load_image(hover_button_filename, path_to_folder="assets\\UI")
         # Текущее изображение
         self.image = self.base_image
         # Текст
@@ -84,7 +84,7 @@ class MessageBox:
 
     def __init__(self, text: str, text_size: int, position: tuple):
         # Фон
-        self.image = load_image("dialog_box.png", path_to_folder="assets/UI")
+        self.image = load_image("dialog_box.png", path_to_folder="assets\\UI")
         size = (round(self.image.get_width() * 1.2),
                 round(self.image.get_height() * 1.2))
         self.image = pygame.transform.smoothscale(self.image, size)
@@ -129,17 +129,17 @@ class SpellContainer:
     # Иконки кнопок джойстика, чтобы отображать кнопки для переключения заклиананий
     size = (13, 13)
     JOYSTICK_ICONS = {
-        "o": pygame.transform.scale(load_image("joystick_o.png", "assets/UI/icons"), size),
-        "x": pygame.transform.scale(load_image("joystick_x.png", "assets/UI/icons"), size),
-        "triangle": pygame.transform.scale(load_image("joystick_triangle.png", "assets/UI/icons"), size),
-        "square": pygame.transform.scale(load_image("joystick_square.png", "assets/UI/icons"), size),
-        "L1": pygame.transform.scale(load_image("joystick_L1.png", "assets/UI/icons"), size),
+        "o": pygame.transform.scale(load_image("joystick_o.png", "assets\\UI\\icons"), size),
+        "x": pygame.transform.scale(load_image("joystick_x.png", "assets\\UI\\icons"), size),
+        "triangle": pygame.transform.scale(load_image("joystick_triangle.png", "assets\\UI\\icons"), size),
+        "square": pygame.transform.scale(load_image("joystick_square.png", "assets\\UI\\icons"), size),
+        "L1": pygame.transform.scale(load_image("joystick_L1.png", "assets\\UI\\icons"), size),
     }
     LOCKED = load_image('transparent_grey.png', 'assets\\UI\\icons')
     FRAME = load_image('spell_icon_frame.png', 'assets\\UI\\icons')
 
     def __init__(self, icon_filename: str, mana_cost, player):
-        self.spell_icon = load_image(icon_filename, "assets/UI/icons")
+        self.spell_icon = load_image(icon_filename, "assets\\UI\\icons")
         self.w, self.h = self.spell_icon.get_size()
         self.locked = pygame.transform.scale(SpellContainer.LOCKED, (self.w, self.h))
         self.mana_cost = mana_cost
@@ -229,14 +229,14 @@ class LogoImage(pygame.sprite.Sprite):
         super().__init__(*args)
 
         # Изображение
-        self.image = load_image("game_logo.png", path_to_folder="assets/UI")
+        self.image = load_image("game_logo.png", path_to_folder="assets\\UI")
         self.rect = self.image.get_rect()
         self.rect.centerx, self.rect.centery = position
 
 
 class AnimatedBackground(pygame.sprite.Sprite):
     def __init__(self, filename: str, frames_start: int, frames_end: int, delay: int,
-                 screen_size: tuple, path_to_folder="assets/UI/animated_backgrounds"):
+                 screen_size: tuple, path_to_folder="assets\\UI\\animated_backgrounds"):
         """
         Инициализация
         :param filename: Имя файла в виде f строки для замены номера кадра

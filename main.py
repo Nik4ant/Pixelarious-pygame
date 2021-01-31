@@ -35,8 +35,8 @@ if __name__ == '__main__':
             level_number = 1
 
             # Читаем файл сохранения, если он существует
-            if os.path.isfile("data/save.txt"):
-                with open('data/save.txt', 'r', encoding="utf-8") as file:
+            if os.path.isfile("data\\save.txt"):
+                with open('data\\save.txt', 'r', encoding="utf-8") as file:
                     seed = ' '.join(file.readlines())
                 # Если seed пустой, то присваем ему None
                 if not seed:

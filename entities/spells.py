@@ -147,15 +147,22 @@ class Spell(pygame.sprite.Sprite):
 
 
 class FireSpell(Spell):
+    """
+    Огненное заклинание
+
+    Обычное
+    Средний урон
+    Средняя стоимость маны
+    """
     damage = 40
     spell_type = Spell.FIRE
-    mana_cost = 50
+    mana_cost = 60
     UPDATE_TIME = 40
     speed = TILE_SIZE * 0.22
     acceleration = 2
     action_time = 0
 
-    size = (TILE_SIZE // 4 * 3,) * 2
+    size = (TILE_SIZE / 4 * 3,) * 2
     frames = cut_sheet(load_image('fire_laser.png', 'assets\\spells'), 6, 1, size)
     frames += cut_sheet(load_image('fire_explosion.png', 'assets\\spells'), 7, 8, size)
 
@@ -163,16 +170,16 @@ class FireSpell(Spell):
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "cast_sound_2.ogg"))
+    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "cast_sound_2.ogg"))
     CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     SPELL_SOUNDS = (
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_1.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_3.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_4.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_5.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_14.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_24.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_1.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_3.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_4.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_5.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_14.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_24.ogg")),
     )
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
@@ -182,6 +189,13 @@ class FireSpell(Spell):
 
 
 class IceSpell(Spell):
+    """
+    Ледяное заклинание
+
+    Замедлят противника (включая перезарядку заклинаний)
+    Маленький урон
+    Маленькая стоимость маны
+    """
     damage = 20
     spell_type = Spell.ICE
     mana_cost = 40
@@ -198,18 +212,18 @@ class IceSpell(Spell):
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "cast_sound_1.ogg"))
+    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "cast_sound_1.ogg"))
     CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     SPELL_SOUNDS = (
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_2.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_12.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_18.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_19.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_20.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_21.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_22.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_26.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_2.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_12.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_18.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_19.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_20.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_21.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_22.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_26.ogg")),
     )
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
@@ -219,9 +233,16 @@ class IceSpell(Spell):
 
 
 class PoisonSpell(Spell):
+    """
+    Заклинание отравления
+
+    Отравляет противника, постепенно нанося урон
+    Маленький урон
+    Небольшая стоимость маны
+    """
     damage = 10
     spell_type = Spell.POISON
-    mana_cost = 40
+    mana_cost = 50
     UPDATE_TIME = 40
     speed = TILE_SIZE * 0.2
     acceleration = 0.5
@@ -236,18 +257,18 @@ class PoisonSpell(Spell):
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "cast_sound_3.ogg"))
+    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "cast_sound_3.ogg"))
     CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     SPELL_SOUNDS = (
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_1.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_12.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_13.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_17.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_23.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_24.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_26.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_27.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_1.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_12.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_13.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_17.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_23.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_24.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_26.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_27.ogg")),
     )
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
@@ -257,9 +278,16 @@ class PoisonSpell(Spell):
 
 
 class VoidSpell(Spell):
+    """
+    Заклинание пустоты
+
+    Урон по площади
+    Большой урон
+    Большая стоимость маны
+    """
     damage = 70
     spell_type = Spell.VOID
-    mana_cost = 120
+    mana_cost = 150
     speed = TILE_SIZE * 0.24
     acceleration = 3
     UPDATE_TIME = 40
@@ -275,18 +303,18 @@ class VoidSpell(Spell):
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "cast_sound_5.ogg"))
+    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "cast_sound_5.ogg"))
     CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     SPELL_SOUNDS = (
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_2.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_5.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_14.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_15.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_16.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_17.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_18.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_25.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_2.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_5.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_14.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_15.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_16.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_17.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_18.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_25.ogg")),
     )
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
@@ -296,6 +324,13 @@ class VoidSpell(Spell):
 
 
 class FlashSpell(Spell):
+    """
+    Заклинание молнии
+
+    Бьёт через стены
+    Средний урон
+    Большая стоимость маны
+    """
     damage = 50
     spell_type = Spell.FLASH
     mana_cost = 200
@@ -313,21 +348,21 @@ class FlashSpell(Spell):
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "cast_sound_4.ogg"))
+    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "cast_sound_4.ogg"))
     CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     SPELL_SOUNDS = (
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_3.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_4.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_5.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_6.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_7.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_8.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_9.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_10.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_11.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_14.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "spell_sound_26.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_3.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_4.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_5.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_6.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_7.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_8.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_9.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_10.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_11.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_14.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_26.ogg")),
     )
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
@@ -337,6 +372,13 @@ class FlashSpell(Spell):
 
 
 class TeleportSpell(Spell):
+    """
+    Заклинание телепортации
+
+    Переносит игрока в координаты прицела
+    -
+    Очень большая стоимость маны
+    """
     spell_type = Spell.TELEPORT
     mana_cost = 300
     UPDATE_TIME = 40
@@ -353,11 +395,11 @@ class TeleportSpell(Spell):
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "teleport_sound.ogg"))
+    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "teleport_sound.ogg"))
     CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     SPELL_SOUNDS = (
-        pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "teleport_sound.ogg")),
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "teleport_sound.ogg")),
     )
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)

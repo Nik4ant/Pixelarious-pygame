@@ -65,13 +65,13 @@ class Player(Entity):
     sounds_channel = pygame.mixer.Channel(1)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "footstep.ogg"))
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "footstep.ogg"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    DASH_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/audio", "dash.wav"))
+    DASH_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "dash.wav"))
     DASH_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    NO_MANA_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets/spells/audio", "no_mana_sound.ogg"))
+    NO_MANA_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "no_mana_sound.ogg"))
     NO_MANA_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME + 20)
 
     def __init__(self, x: float, y: float, all_sprites, *args):
