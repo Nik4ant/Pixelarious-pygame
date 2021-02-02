@@ -34,7 +34,7 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.height * 0.5 - self.screen_height * 0.5)
 
 
-def start(screen: pygame.surface.Surface,
+def play(screen: pygame.surface.Surface,
           level_number: int = 1, user_seed: str = None) -> int:
     """
     Сама игра (генерация уровня и затем цикл)
@@ -106,12 +106,12 @@ def start(screen: pygame.surface.Surface,
 
     # Иконки для отображения частей UI с заклинаниями
     spells_containers = (
-        SpellContainer("fire_spell.png", FireSpell.mana_cost, player),
-        SpellContainer("ice_spell.png", IceSpell.mana_cost, player),
-        SpellContainer("poison_spell.png", PoisonSpell.mana_cost, player),
-        SpellContainer("void_spell.png", VoidSpell.mana_cost, player),
-        SpellContainer("light_spell.png", FlashSpell.mana_cost, player),
-        SpellContainer("teleport_spell.png", TeleportSpell.mana_cost, player),
+        SpellContainer("fire_spell.png", FireSpell, player),
+        SpellContainer("ice_spell.png", IceSpell, player),
+        SpellContainer("poison_spell.png", PoisonSpell, player),
+        SpellContainer("void_spell.png", VoidSpell, player),
+        SpellContainer("light_spell.png", FlashSpell, player),
+        SpellContainer("teleport_spell.png", TeleportSpell, player),
     )
     player_icon = PlayerIcon((20, 20), player)
 
@@ -227,7 +227,7 @@ def start(screen: pygame.surface.Surface,
         else:
             spell_args = ("1", "2", "3", "4", "5", "E")
         # Отрисовка контейнеров с заклинаниями
-        for i in range(len(spells_containers)):
+        for i in range(len(spells_containers) - 1, -1, -1):
             pos = (screen_width * (0.375 + 0.05 * i), screen_height * 0.9)
             spells_containers[i].draw(screen, pos, bool(player.joystick), spell_args[i])
 
@@ -282,12 +282,12 @@ def start(screen: pygame.surface.Surface,
 
                     # Иконки для отображения частей UI с заклинаниями
                     spells_containers = (
-                        SpellContainer("fire_spell.png", FireSpell.mana_cost, player),
-                        SpellContainer("ice_spell.png", IceSpell.mana_cost, player),
-                        SpellContainer("poison_spell.png", PoisonSpell.mana_cost, player),
-                        SpellContainer("void_spell.png", VoidSpell.mana_cost, player),
-                        SpellContainer("light_spell.png", FlashSpell.mana_cost, player),
-                        SpellContainer("teleport_spell.png", TeleportSpell.mana_cost, player),
+                        SpellContainer("fire_spell.png", FireSpell, player),
+                        SpellContainer("ice_spell.png", IceSpell, player),
+                        SpellContainer("poison_spell.png", PoisonSpell, player),
+                        SpellContainer("void_spell.png", VoidSpell, player),
+                        SpellContainer("light_spell.png", FlashSpell, player),
+                        SpellContainer("teleport_spell.png", TeleportSpell, player),
                     )
                     player_icon = PlayerIcon((20, 20), player)
                     continue

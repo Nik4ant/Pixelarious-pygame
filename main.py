@@ -46,7 +46,7 @@ if __name__ == '__main__':
                     seed, level_number = '\n'.join(data[:-1]), int(data[-1])
 
             # Результат того, чем закончилась игра
-            code = game.start(screen, level_number=level_number, user_seed=seed)
+            code = game.play(screen, level_number=level_number, user_seed=seed)
 
     # Закрытие pygame
     pygame.quit()

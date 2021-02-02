@@ -269,15 +269,13 @@ class ShootingMonster(Entity):
 
 
 class Demon(WalkingMonster):
-    """
-    Демон
+    """Демон
 
     Мало жизней
     Быстрый
     Больно бьёт
     Устойчивойть к огню
-    Слабость к льду
-    """
+    Слабость к льду"""
     damage = 50
     size = (int(TILE_SIZE // 8 * 5),) * 2
     frames = cut_sheet(load_image('demon_run.png', 'assets\\enemies'), 4, 2, size)
@@ -316,15 +314,13 @@ class Demon(WalkingMonster):
 
 
 class GreenSlime(WalkingMonster):
-    """
-    Зеленый слизень
+    """Зеленый слизень
 
     Медленный
     Среднее количество жизней
     Не очень большой урон
     Устойчивость к отравлению (я сам отравление)
-    Слабость к молниям
-    """
+    Слабость к молниям"""
     damage = 60
     size = (int(TILE_SIZE // 8 * 7),) * 2
     frames = cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2)
@@ -407,15 +403,13 @@ class DirtySlime(WalkingMonster):
 
 
 class Zombie(WalkingMonster):
-    """
-    Зомби
+    """Зомби
 
     Не медленный, но и не быстрый
     Среднее количество жизней
     Средний урон
     Устойчивость к молниям (они двигают мои нейроны)
-    Слабость - огонь (земля пухом учёным)
-    """
+    Слабость - огонь (земля пухом учёным)"""
     damage = 30
     size = (int(TILE_SIZE // 4 * 3),) * 2
     frames = cut_sheet(load_image('zombie_run.png', 'assets\\enemies'), 4, 2)
@@ -452,15 +446,13 @@ class Zombie(WalkingMonster):
 
 
 class FireWizard(ShootingMonster):
-    """
-    Маг
+    """Маг
 
     Подвижный
     Маловато жизней
     Средний урон
     Устойчивость к молниям
-    Слабость к льду
-    """
+    Слабость к льду"""
     damage = 10
     size = (TILE_SIZE // 8 * 7,) * 2
     frames = cut_sheet(load_image('wizard_run.png', 'assets\\enemies'), 4, 2, size)
@@ -497,15 +489,13 @@ class FireWizard(ShootingMonster):
 
 
 class VoidWizard(ShootingMonster):
-    """
-    Большой маг
+    """Большой маг
 
     Подвижныйзщ
     Среднее количество жизней
     Большой урон
     Устойчивость к пустоте
-    Слабость к огню (МОЙ ПЛАЩ ГОРИТ)
-    """
+    Слабость к огню (МОЙ ПЛАЩ ГОРИТ)"""
     damage = 20
     size = (int(TILE_SIZE // 8 * 7),) * 2
     frames = cut_sheet(load_image('long_wizard_run.png', 'assets\\enemies'), 4, 2)

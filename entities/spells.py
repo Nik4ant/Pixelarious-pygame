@@ -6,7 +6,7 @@ import pygame
 from engine import load_image, cut_sheet, concat_two_file_paths
 from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
 
-from entities.base_entity import Collider
+from entities.base_entity import Collider, Entity
 
 
 class Spell(pygame.sprite.Sprite):
@@ -147,14 +147,14 @@ class Spell(pygame.sprite.Sprite):
 
 
 class FireSpell(Spell):
-    """
-    Огненное заклинание
+    """Огненное заклинание
 
     Обычное
-    Средний урон
-    Средняя стоимость маны
-    """
-    damage = 40
+    Эффективно против:
+    Зомби, Пустотных магов
+    Неэффективно против:
+    Демонов, Огненных магов"""
+    damage = 50
     spell_type = Spell.FIRE
     mana_cost = 60
     UPDATE_TIME = 40
@@ -189,13 +189,14 @@ class FireSpell(Spell):
 
 
 class IceSpell(Spell):
-    """
-    Ледяное заклинание
+    """Ледяное заклинание
 
-    Замедлят противника (включая перезарядку заклинаний)
-    Маленький урон
-    Маленькая стоимость маны
-    """
+    На время замедляет противника
+    (включая перезарядку заклинаний)
+    Эффективно против:
+    Демонов
+    Неэффективно против:
+    Грязных слизней"""
     damage = 20
     spell_type = Spell.ICE
     mana_cost = 40
@@ -233,20 +234,22 @@ class IceSpell(Spell):
 
 
 class PoisonSpell(Spell):
-    """
-    Заклинание отравления
+    """Заклинание отравления
 
-    Отравляет противника, постепенно нанося урон
-    Маленький урон
-    Небольшая стоимость маны
-    """
-    damage = 10
+    Отравляет противника,
+    постепенно нанося урон
+    Эффективно против:
+    Огненных магов
+    Неэффективно против:
+    Зеленых слизеней"""
     spell_type = Spell.POISON
+    damage = 10
+    action_time = 500
+    extra_damage = Entity.POISON_DAMAGE * action_time
     mana_cost = 50
     UPDATE_TIME = 40
     speed = TILE_SIZE * 0.2
     acceleration = 0.5
-    action_time = 500
 
     size = (TILE_SIZE // 4 * 3,) * 2
     frames = cut_sheet(load_image('poison_laser.png', 'assets\\spells'), 7, 1, size)
@@ -278,16 +281,16 @@ class PoisonSpell(Spell):
 
 
 class VoidSpell(Spell):
-    """
-    Заклинание пустоты
+    """Заклинание пустоты
 
     Урон по площади
-    Большой урон
-    Большая стоимость маны
-    """
+    Эффективно против:
+    Грязных слизеней
+    Неэффективно против:
+    Пустотных магов"""
     damage = 70
     spell_type = Spell.VOID
-    mana_cost = 150
+    mana_cost = 100
     speed = TILE_SIZE * 0.24
     acceleration = 3
     UPDATE_TIME = 40
@@ -324,16 +327,16 @@ class VoidSpell(Spell):
 
 
 class FlashSpell(Spell):
-    """
-    Заклинание молнии
+    """Заклинание молнии
 
     Бьёт через стены
-    Средний урон
-    Большая стоимость маны
-    """
+    Эффективно против:
+    Зеленых слизеней
+    Неэффективно против:
+    Зомби"""
     damage = 50
     spell_type = Spell.FLASH
-    mana_cost = 200
+    mana_cost = 150
     UPDATE_TIME = 60
     speed = TILE_SIZE * 0.5
     acceleration = 1
@@ -372,14 +375,11 @@ class FlashSpell(Spell):
 
 
 class TeleportSpell(Spell):
-    """
-    Заклинание телепортации
+    """Заклинание телепортации
 
-    Переносит игрока в координаты прицела
-    -
-    Очень большая стоимость маны
-    """
+    Переносит игрока в позицию прицела"""
     spell_type = Spell.TELEPORT
+    damage = '---'
     mana_cost = 300
     UPDATE_TIME = 40
     speed = TILE_SIZE * 1

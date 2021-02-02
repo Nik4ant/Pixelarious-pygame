@@ -1,6 +1,7 @@
 import os
 import sys
 import pygame
+from PIL import Image
 
 from config import TILE_SIZE
 
@@ -95,3 +96,29 @@ def load_tile(filename: str, size=(TILE_SIZE, TILE_SIZE)) -> pygame.surface.Surf
     image = load_image(filename, path_to_folder='assets\\tiles')
     image = pygame.transform.scale(image, size)
     return image
+
+
+def scale_frame(image: pygame.surface.Surface, size: (int, int), k: int = 40):
+    image = Image.frombytes('RGBA', image.get_size(), pygame.image.tostring(image, 'RGBA'))
+    pix = image.load()
+
+    new_image = Image.new('RGBA', size)
+    new_pix = new_image.load()
+    for j in range(size[1]):
+        for i in range(size[0]):
+            if i <= k:
+                a = i
+            elif k <= i <= size[0] - k:
+                a = k
+            else:
+                a = i - size[0] + image.size[0]
+
+            if j <= k:
+                b = j
+            elif k <= j <= size[1] - k:
+                b = k
+            else:
+                b = j - size[1] + image.size[1]
+            new_pix[i, j] = pix[a, b]
+
+    return pygame.image.fromstring(new_image.tobytes(), size, 'RGBA')

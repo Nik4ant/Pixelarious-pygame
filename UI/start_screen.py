@@ -19,23 +19,23 @@ def execute(screen: pygame.surface.Surface) -> int:
     joystick = get_joystick() if check_any_joystick() else None
 
     # Смещение между UI элементами
-    UI_MARGIN = 55
+    button_margin = 50
 
     # Создание UI элементов
-    game_logo = LogoImage((screen.get_width() // 2, screen.get_height() // 6 - UI_MARGIN))
-    next_y = game_logo.rect.y + game_logo.rect.height + UI_MARGIN * 2
+    game_logo = LogoImage((screen.get_width() // 2, screen.get_height() // 6 - button_margin))
+    next_y = game_logo.rect.y + game_logo.rect.height + button_margin * 2
 
     button_play = Button((screen.get_width() // 2, next_y), "Играть", 32)
-    next_y = button_play.rect.y + button_play.rect.height + UI_MARGIN
+    next_y = button_play.rect.y + button_play.rect.height + button_margin
 
     button_controls = Button((screen.get_width() // 2, next_y), "Управление", 32)
-    next_y = button_controls.rect.y + button_controls.rect.height + UI_MARGIN
+    next_y = button_controls.rect.y + button_controls.rect.height + button_margin
 
     button_about = Button((screen.get_width() // 2, next_y), "Об игре", 32)
-    next_y = button_about.rect.y + button_about.rect.height + UI_MARGIN
+    next_y = button_about.rect.y + button_about.rect.height + button_margin
 
     button_authors = Button((screen.get_width() // 2, next_y), "Авторы", 32)
-    next_y = button_authors.rect.y + button_authors.rect.height + UI_MARGIN
+    next_y = button_authors.rect.y + button_authors.rect.height + button_margin
 
     button_exit = Button((screen.get_width() // 2, next_y), "Выйти", 32)
 
@@ -50,6 +50,20 @@ def execute(screen: pygame.surface.Surface) -> int:
 
     # Текущие диалог (может появлятся при нажатии кнопок)
     current_message_box = None
+
+    text = """Управление:
+    На клавиатуре: WASD - двигаться; Q - рывок;
+    1-5 - заклинания; E - телепорт;
+    На джойстике: PADS - двигаться; R1 - рывок"""
+    control_message_box = MessageBox(text, 32, (screen.get_width() * 0.5, screen.get_height() * 0.5))
+    text = """Игра жанра Roguelite,
+    в которой надо пройти
+    сквозь подземелье, заполненное врагами.
+    Желаем удачи"""
+    about_message_box = MessageBox(text, 32, (screen.get_width() * 0.5, screen.get_height() * 0.5))
+    text = """Никита Сошнев (Nik4ant)
+    Максим Рудаков (Massering)"""
+    authors_message_box = MessageBox(text, 32, (screen.get_width() * 0.5, screen.get_height() * 0.5))
 
     # Фоновое изоюражение
     background_image = load_image("main_menu_BG.png", "assets/UI")
@@ -88,51 +102,33 @@ def execute(screen: pygame.surface.Surface) -> int:
                     was_click = True
 
             if event.type == Button.PRESS_TYPE:
+                was_click = False
                 # Текст нажатой кнопки
                 # (гарантированно есть, т.к. устанавливается при инициализации)
                 sender_text = event.dict["sender_text"]
 
                 # Управление
                 if sender_text == button_controls.text:
-                    text = str("Базовое управление:\n" +
-                               "На клавиатуре: WASD - двигаться; Q - рывок\n" +
-                               "На джойстике: PADS - двигаться; R1 - рывок\n")
-                    current_message_box = MessageBox(text,
-                                                     30,
-                                                     (screen.get_width() * 0.5,
-                                                      screen.get_height() * 0.5))
-                    continue
+                    current_message_box = control_message_box
 
                 # Об игре
-                if sender_text == button_about.text:
-                    text = str("Игра жанра Rogulite, в \n"
-                               "которой надо пройти \n" +
-                               "сквозь подземелье, заполненное врагами.\n"
-                               "Желаем удачи\n")
-                    current_message_box = MessageBox(text,
-                                                     30,
-                                                     (screen.get_width() * 0.5,
-                                                      screen.get_height() * 0.5))
-                    continue
+                elif sender_text == button_about.text:
+                    current_message_box = about_message_box
 
                 # Авторы
-                if sender_text == button_authors.text:
-                    text = str("Никита Сошнев (Nik4ant)\n"
-                               "Максим Рудаков (Massering)")
-                    current_message_box = MessageBox(text,
-                                                     30,
-                                                     (screen.get_width() * 0.5,
-                                                      screen.get_height() * 0.5))
-                    continue
-
-                # Музыка затухает (1 секунду), т.к. главный экран закроется
-                pygame.mixer.music.fadeout(1000)
+                elif sender_text == button_authors.text:
+                    current_message_box = authors_message_box
 
                 # Проверяем какая кнопка была нажата
-                if sender_text == button_play.text:
+                elif sender_text == button_play.text:
+                    # Музыка затухает (1 секунду), т.к. главный экран закроется
+                    pygame.mixer.music.fadeout(1000)
                     return 1
                 elif sender_text == button_exit.text:
+                    # Музыка затухает (1 секунду), т.к. главный экран закроется
+                    pygame.mixer.music.fadeout(1000)
                     return 0
+                current_message_box.need_to_draw = True
 
         # Определение местоположения для курсора
         if joystick:
@@ -148,18 +144,15 @@ def execute(screen: pygame.surface.Surface) -> int:
         # Обновляем все UI элементы
         UI_sprites.update(cursor_position, was_click)
 
-        # Очистка экрана
-        screen.fill((0, 0, 0))
-
         # Фоновое изобраджение
         screen.blit(background_image, (0, 0))
         # Рисуем весь UI
         UI_sprites.draw(screen)
         # Если есть диалог, то его тоже обновляем и рисуем
         if current_message_box:
-            current_message_box.update(was_click)
             if current_message_box.need_to_draw:
                 current_message_box.draw(screen)
+            current_message_box.update(was_click)
 
         # Рисуем курсор поверх всего
         screen.blit(cursor_image, cursor_position)
@@ -169,3 +162,4 @@ def execute(screen: pygame.surface.Surface) -> int:
         joystick = get_joystick() if check_any_joystick() else None
         was_click = False
         clock.tick(FPS)
+    return 0

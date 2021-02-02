@@ -1,6 +1,6 @@
 import pygame
 
-from engine import load_image, concat_two_file_paths
+from engine import load_image, concat_two_file_paths, scale_frame
 from config import DEFAULT_HOVER_SOUND_VOLUME
 
 
@@ -81,20 +81,22 @@ class MessageBox:
     Класс представляющий диалог с сообщением, который закрывается
     при нажатии в любую область экрана
     """
+    # Загружаем фоновое изображение
+    background_image = load_image("dialog_box.png", "assets\\UI")
 
     def __init__(self, text: str, text_size: int, position: tuple):
         # Фон
-        self.image = load_image("dialog_box.png", path_to_folder="assets\\UI")
-        size = (round(self.image.get_width() * 1.2),
-                round(self.image.get_height() * 1.2))
-        self.image = pygame.transform.smoothscale(self.image, size)
+        self.image = self.background_image
+        self.font = pygame.font.Font("assets\\UI\\pixel_font.ttf", text_size)
+        indent = 50
+        size = (int(text_size * 0.38 * max(map(len, text.split('\n')))),
+                round(indent + len(text.split('\n')) * self.font.get_height() * 0.9))
+        self.image = scale_frame(self.image, size, indent)
         self.rect = self.image.get_rect()
         # Корректирование позиции в соответствии с размерами фона
-        self.rect = self.rect.move(position[0] - self.image.get_width() * 0.5,
-                                   position[1] - self.image.get_height() * 0.5)
+        self.rect.center = position
         # Текст для диалога
         self.texts = text.split('\n')
-        self.font = pygame.font.Font("assets\\UI\\pixel_font.ttf", text_size)
         # Так нужно для вывода сразу нескольких строк
         self.text_surfaces = [self.font.render(part, True, (255, 255, 255)) for part in self.texts]
 
@@ -104,28 +106,35 @@ class MessageBox:
     def update(self, was_click=False):
         if was_click:
             self.need_to_draw = False
+        else:
+            self.need_to_draw = True
 
     def draw(self, screen: pygame.surface.Surface):
         # Фоновое изображение
-        screen.blit(self.image, self.rect)
+        screen.blit(self.image, self.rect.topleft)
 
         # Вывод текста
-        MARGIN = 24
+        margin = self.font.get_height() * 0.9
         # Чтобы избежать пустого отступа
-        next_y = 0
+        next_y = 20
 
         for text_surface in self.text_surfaces:
-            y_pos = self.rect.centery + next_y - text_surface.get_height()
-            screen.blit(text_surface, text_surface.get_rect(center=(self.rect.centerx, y_pos)))
-            next_y += MARGIN
+            y_pos = self.rect.top + next_y
+            screen.blit(text_surface, text_surface.get_rect(midtop=(self.rect.centerx, y_pos)))
+            next_y += margin
 
 
 class SpellContainer:
-    """Класс представляет UI элемент с отображением данных о заклинании."""
+    """
+    Класс представляет UI элемент с отображением данных о заклинании.
+    """
 
     # В этом случае фонт всегда будет общий у всех, поэтому это атрибут класса
     font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 32)
     mini_font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 16)
+
+    delay_time = 50
+
     # Иконки кнопок джойстика, чтобы отображать кнопки для переключения заклиананий
     size = (13, 13)
     JOYSTICK_ICONS = {
@@ -138,26 +147,35 @@ class SpellContainer:
     LOCKED = load_image('transparent_grey.png', 'assets\\UI\\icons')
     FRAME = load_image('spell_icon_frame.png', 'assets\\UI\\icons')
 
-    def __init__(self, icon_filename: str, mana_cost, player):
+    def __init__(self, icon_filename: str, spell_class, player):
         self.spell_icon = load_image(icon_filename, "assets\\UI\\icons")
+        self.rect = self.spell_icon.get_rect()
         self.w, self.h = self.spell_icon.get_size()
         self.locked = pygame.transform.scale(SpellContainer.LOCKED, (self.w, self.h))
-        self.mana_cost = mana_cost
+        self.mana_cost = spell_class.mana_cost
         self.player = player
+        self.information = f'''{spell_class.__doc__}
+Урон: {spell_class.damage}{(' + ' + str(spell_class.extra_damage)) if spell_class.__name__ == 'PoisonSpell' else ''}
+Затраты маны: {spell_class.mana_cost}'''.strip()
+        self.massage_box = MessageBox(self.information, 30, (0, 0))
+        self.hover_time = 0
 
     def draw(self, screen: pygame.surface.Surface, position: tuple, is_joystick: bool, spell_key: str):
         """
         Рисует UI элемент на экране screen
         :param screen: Экран для отрисовки
+        :param position: Позиция отрисовки
         :param is_joystick: Подключен ли джойстик
         :param spell_key: Строка, представляющая либо ключ для вывода иконки
         для джойстика, либо текст для вывода возле иконки заклинания
         """
         # Иконка заклинания
         x1, y1 = position
-        screen.blit(self.spell_icon, (x1 + 2, y1 + 18))
+        pos = (x1 + 2, y1 + 18)
+        screen.blit(self.spell_icon, pos)
+        self.rect.topleft = pos
         if self.player.mana < self.mana_cost:
-            screen.blit(self.locked, (x1 + 2, y1 + 18))
+            screen.blit(self.locked, pos)
         screen.blit(self.FRAME, position)
         # Смещение между иконкой заклинания и кнопкой для переключения
 
@@ -169,6 +187,17 @@ class SpellContainer:
         else:
             button_text = SpellContainer.font.render(spell_key, True, (255, 255, 255))
             screen.blit(button_text, pos)
+
+        # При наведении курсора на заклинание, рисуется табличка с информацией
+        if self.rect.collidepoint(*self.player.scope.rect.center):
+            if self.hover_time >= self.delay_time:
+                self.massage_box.rect.bottomleft = self.player.scope.rect.center
+                self.massage_box.draw(screen)
+            else:
+                self.hover_time += 1
+        else:
+            self.hover_time = 0
+
         pos = (x1 + self.h - 6, y1 + self.w - 2)
         cost_text = SpellContainer.mini_font.render(str(self.mana_cost), True, (255, 255, 255))
         screen.blit(cost_text, pos)
