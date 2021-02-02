@@ -73,7 +73,7 @@ class Button(pygame.sprite.Sprite):
             self.was_sound_played = False
 
         # Заного выводим текст поверх кнопки
-        self.image.blit(self.text_surface, self.text_surface.get_rect(center=self.image.get_rect().center))
+        self.image.blit(self.text_surface, self.text_surface.get_rect(center=self.rect.center))
 
 
 class MessageBox:
@@ -85,16 +85,19 @@ class MessageBox:
     background_image = load_image("dialog_box.png", "assets\\UI")
 
     def __init__(self, text: str, text_size: int, position: tuple):
+        self.font = pygame.font.Font("assets\\UI\\pixel_font.ttf", text_size)
+
         # Фон
         self.image = self.background_image
-        self.font = pygame.font.Font("assets\\UI\\pixel_font.ttf", text_size)
         indent = 50
-        size = (int(text_size * 0.38 * max(map(len, text.split('\n')))),
+        size = (max(int(text_size * 0.38 * max(map(len, text.split('\n')))), 300),
                 round(indent + len(text.split('\n')) * self.font.get_height() * 0.9))
         self.image = scale_frame(self.image, size, indent)
+
         self.rect = self.image.get_rect()
         # Корректирование позиции в соответствии с размерами фона
         self.rect.center = position
+
         # Текст для диалога
         self.texts = text.split('\n')
         # Так нужно для вывода сразу нескольких строк
@@ -155,8 +158,8 @@ class SpellContainer:
         self.mana_cost = spell_class.mana_cost
         self.player = player
         self.information = f'''{spell_class.__doc__}
-Урон: {spell_class.damage}{(' + ' + str(spell_class.extra_damage)) if spell_class.__name__ == 'PoisonSpell' else ''}
-Затраты маны: {spell_class.mana_cost}'''.strip()
+        Урон: {spell_class.damage}{f' + spell_class.extra_damage' if spell_class.__name__ == 'PoisonSpell' else ''}
+        Затраты маны: {spell_class.mana_cost}'''.strip()
         self.massage_box = MessageBox(self.information, 30, (0, 0))
         self.hover_time = 0
 

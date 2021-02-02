@@ -244,7 +244,7 @@ class PoisonSpell(Spell):
     Зеленых слизеней"""
     spell_type = Spell.POISON
     damage = 10
-    action_time = 500
+    action_time = 1000
     extra_damage = Entity.POISON_DAMAGE * action_time
     mana_cost = 50
     UPDATE_TIME = 40
@@ -288,7 +288,7 @@ class VoidSpell(Spell):
     Грязных слизеней
     Неэффективно против:
     Пустотных магов"""
-    damage = 70
+    damage = 60
     spell_type = Spell.VOID
     mana_cost = 100
     speed = TILE_SIZE * 0.24

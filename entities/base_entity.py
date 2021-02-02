@@ -19,7 +19,7 @@ class Entity(pygame.sprite.Sprite):
     HEALTH_LINE_WIDTH = 5
     HEALTH_LINE_TIME = 5000
 
-    POISON_DAMAGE = 0.075
+    POISON_DAMAGE = 0.05
 
     size = (int(TILE_SIZE),) * 2
     sleeping_frames = cut_sheet(load_image('sleep_icon_spritesheet.png', 'assets\\enemies'), 4, 1)

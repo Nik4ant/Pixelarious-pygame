@@ -352,7 +352,7 @@ class GreenSlime(WalkingMonster):
         self.alive = True
         self.visibility_range = TILE_SIZE * 6
 
-        self.health = 80
+        self.health = 100
         self.full_health = self.health
 
 
@@ -398,7 +398,7 @@ class DirtySlime(WalkingMonster):
         self.alive = True
         self.visibility_range = TILE_SIZE * 8
 
-        self.health = 100
+        self.health = 130
         self.full_health = self.health
 
 
@@ -484,7 +484,7 @@ class FireWizard(ShootingMonster):
         self.alive = True
         self.visibility_range = TILE_SIZE * 9
 
-        self.health = 60
+        self.health = FireSpell.damage
         self.full_health = self.health
 
 
@@ -527,7 +527,7 @@ class VoidWizard(ShootingMonster):
 
         self.visibility_range = TILE_SIZE * 13
 
-        self.health = 80
+        self.health = VoidSpell.damage
         self.full_health = self.health
 
         self.reload_time = self.reload_time * 4 / 3
