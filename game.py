@@ -291,6 +291,8 @@ def play(screen: pygame.surface.Surface,
                     )
                     player_icon = PlayerIcon((20, 20), player)
                     continue
+        else:
+            transition = 0
 
         clock.tick(FPS)
         pygame.display.flip()

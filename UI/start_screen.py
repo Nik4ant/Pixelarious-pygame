@@ -85,24 +85,24 @@ def execute(screen: pygame.surface.Surface) -> int:
     # Установка громкости
     pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
-    # Переменная, становящайся True если было нажатие курсора
-    # (предусмотрен как джойстик, так и обычная мышка)
-    was_click = False
-
     # Цикл окна
     while is_open:
+        # Переменная, становящайся True если было нажатие курсора
+        # (предусмотрен как джойстик, так и обычная мышка)
+        was_click = False
+
         # Обработка событий
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 is_open = False
-                break
 
             if event.type == pygame.MOUSEBUTTONUP:
+                # print('mouse')
                 if event.button == 1:
                     was_click = True
 
             if event.type == Button.PRESS_TYPE:
-                was_click = False
+                # print('button')
                 # Текст нажатой кнопки
                 # (гарантированно есть, т.к. устанавливается при инициализации)
                 sender_text = event.dict["sender_text"]
@@ -110,14 +110,17 @@ def execute(screen: pygame.surface.Surface) -> int:
                 # Управление
                 if sender_text == button_controls.text:
                     current_message_box = control_message_box
+                    current_message_box.need_to_draw = True
 
                 # Об игре
                 elif sender_text == button_about.text:
                     current_message_box = about_message_box
+                    current_message_box.need_to_draw = True
 
                 # Авторы
                 elif sender_text == button_authors.text:
                     current_message_box = authors_message_box
+                    current_message_box.need_to_draw = True
 
                 # Проверяем какая кнопка была нажата
                 elif sender_text == button_play.text:
@@ -128,7 +131,6 @@ def execute(screen: pygame.surface.Surface) -> int:
                     # Музыка затухает (1 секунду), т.к. главный экран закроется
                     pygame.mixer.music.fadeout(1000)
                     return 0
-                current_message_box.need_to_draw = True
 
         # Определение местоположения для курсора
         if joystick:
@@ -160,6 +162,5 @@ def execute(screen: pygame.surface.Surface) -> int:
 
         # Обновляем состояние джойстика
         joystick = get_joystick() if check_any_joystick() else None
-        was_click = False
         clock.tick(FPS)
     return 0

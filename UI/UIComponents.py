@@ -73,7 +73,7 @@ class Button(pygame.sprite.Sprite):
             self.was_sound_played = False
 
         # Заного выводим текст поверх кнопки
-        self.image.blit(self.text_surface, self.text_surface.get_rect(center=self.rect.center))
+        self.image.blit(self.text_surface, self.text_surface.get_rect(center=self.image.get_rect().center))
 
 
 class MessageBox:
@@ -106,11 +106,9 @@ class MessageBox:
         # Флаг для отрисовки (если True, то диалог рисуется)
         self.need_to_draw = True
 
-    def update(self, was_click=False):
+    def update(self, was_click):
         if was_click:
             self.need_to_draw = False
-        else:
-            self.need_to_draw = True
 
     def draw(self, screen: pygame.surface.Surface):
         # Фоновое изображение
@@ -158,7 +156,7 @@ class SpellContainer:
         self.mana_cost = spell_class.mana_cost
         self.player = player
         self.information = f'''{spell_class.__doc__}
-        Урон: {spell_class.damage}{f' + spell_class.extra_damage' if spell_class.__name__ == 'PoisonSpell' else ''}
+        Урон: {spell_class.damage}{f' + {spell_class.extra_damage}' if spell_class.__name__ == 'PoisonSpell' else ''}
         Затраты маны: {spell_class.mana_cost}'''.strip()
         self.massage_box = MessageBox(self.information, 30, (0, 0))
         self.hover_time = 0
