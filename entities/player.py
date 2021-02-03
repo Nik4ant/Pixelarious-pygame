@@ -46,11 +46,11 @@ class Player(Entity):
     # время перезарядки дэша в миллисекундах
     dash_reload_time = 2000
     # сила дэша, которая устанавливается в самом начале
-    dash_force_base = 2.8
+    dash_force_base = 3
     # сила замедляющая дэш со временем
     dash_force_slower = 0.04
     # Минимальгая скорость дэша
-    dash_minimum_speed = 0.4
+    dash_minimum_speed = 0.8
 
     # Скорость по умолчанию (используется при эффекте замедления)
     default_speed = TILE_SIZE * 0.015
@@ -59,7 +59,7 @@ class Player(Entity):
     # Максимальное ускорение игрока (при перемещении, на дэш не влияет)
     max_delta_movements = 2
     # сила с которой игрок будет набирать/уменьшать свою скорость
-    delta_changer = 0.06
+    delta_changer = 0.3
 
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(1)
@@ -92,11 +92,11 @@ class Player(Entity):
         self.distance_to_player = 0.0001
 
         # Здоровье
-        self.health = 450
+        self.health = 500
         self.full_health = self.health
 
         # Мана
-        self.mana = 450
+        self.mana = 500
         self.full_mana = self.mana
 
         # Группа со спрайтами заклинаний
@@ -136,7 +136,6 @@ class Player(Entity):
 
         # Ниже переменные, нужные для общей обработки игрока внезависимости от
         # типа управления (геймпад/клавиатура)
-        was_dash_activated = False
         # Новая позиция для прицела игрока (по умолчанию изменений нет)
         new_scope_x, new_scope_y = self.scope.rect.centerx, self.scope.rect.centery
 
@@ -335,8 +334,7 @@ class Player(Entity):
         # Получение угла относительно прицела и оружия
         dx, dy = self.rect.centerx - self.scope.rect.centerx, self.rect.centery - self.scope.rect.centery
         angle = (degrees(atan2(dx, 0.00001 if not dy else dy)) + 360) % 360
-        args = (self.rect.centerx, self.rect.centery,
-                self.scope.rect.centerx, self.scope.rect.centery, group)
+        args = (*self.rect.center, self.scope.rect.centerx, self.scope.rect.centery, group)
 
         if spell_type == Spell.FIRE:
             spell = FireSpell(*args)
@@ -408,13 +406,10 @@ class PlayerScope(pygame.sprite.Sprite):
         super().__init__()
 
         self.image = load_image("player_scope.png", path_to_folder="assets")
-        self.image = pygame.transform.scale(self.image,
-                                            (round(self.image.get_width() * 1.3),
-                                             round(self.image.get_height() * 1.3)))
+        self.image = pygame.transform.scale(self.image, (round(TILE_SIZE * 0.5),) * 2)
         self.rect = self.image.get_rect()
         # Начальное местоположение
-        self.rect.centerx = x
-        self.rect.centery = y
+        self.rect.center = x, y
         # Скорость перемещения
         self.speed = 15
 
@@ -424,7 +419,7 @@ class PlayerScope(pygame.sprite.Sprite):
         # (но предполагается, что x и y - это координаты)
         if x and y:
             # Если размер текущего экрана
-            self.rect.centerx, self.rect.centery = x, y
+            self.rect.center = x, y
 
     def draw(self, screen):
         screen.blit(self.image, self.rect.topleft)
@@ -434,4 +429,4 @@ class PlayerScope(pygame.sprite.Sprite):
         Метод устанавливает позицию прицела
         :param position: Кортеж с координатами
         """
-        self.rect.centerx, self.rect.centery = position
+        self.rect.center = position

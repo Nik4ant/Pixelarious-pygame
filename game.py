@@ -35,7 +35,7 @@ class Camera:
 
 
 def play(screen: pygame.surface.Surface,
-          level_number: int = 1, user_seed: str = None) -> int:
+         level_number: int = 1, user_seed: str = None) -> int:
     """
     Сама игра (генерация уровня и затем цикл)
     :param screen: экран
@@ -67,8 +67,7 @@ def play(screen: pygame.surface.Surface,
     is_game_open = True
 
     transition = 0
-    transparent_grey = pygame.transform.scale(load_image('transparent_light_grey.png', 'assets\\UI\\icons'),
-                                              (screen_width, screen_height))
+    transparent_grey = pygame.surface.Surface((screen_width, screen_height), pygame.SRCALPHA).convert_alpha()
 
     clock = pygame.time.Clock()
 
@@ -83,6 +82,7 @@ def play(screen: pygame.surface.Surface,
                                              current_seed.split('\n')[1].split() if current_seed else 0)
     # Обновляем сид после инициализации уровня
     current_seed = ' '.join(level_seed) + '\n' + ' '.join(monsters_seed) + '\n' + str(level_number)
+    save(current_seed)
 
     # Создаем камеру
     camera = Camera(screen_width, screen_height)
@@ -160,6 +160,8 @@ def play(screen: pygame.surface.Surface,
                 player.shoot('void', enemies_group)
             if keys[CONTROLS["KEYBOARD_SPELL_TELEPORT"]]:
                 player.shoot('teleport', tiles_group)
+            if keys[CONTROLS["KEYBOARD_SPELL_HEAL"]]:
+                player.shoot('heal', [player])
 
         if was_pause_activated:
             # Останавливаем все звуки (даже музыку)
@@ -174,7 +176,7 @@ def play(screen: pygame.surface.Surface,
             pygame.mixer.music.unpause()
 
         # Очистка экрана
-        screen.fill((20, 20, 20))
+        screen.fill(BACKGROUND_COLOR)
 
         # Обновление спрайтов
         player_sprites.update()
@@ -202,7 +204,6 @@ def play(screen: pygame.surface.Surface,
 
         # Отрисовка всех спрайтов
         tiles_group.draw(screen)
-        end_of_level.draw(screen)
         collidable_tiles_group.draw(screen)
         torches_group.draw(screen)
         doors_group.draw(screen)
@@ -223,9 +224,9 @@ def play(screen: pygame.surface.Surface,
 
         # Определение параметров для отрисовки контейнеров с заклинаниями
         if player.joystick:
-            spell_args = ("o", "x", "triangle", "square", "L1", "L2")
+            spell_args = ("o", "x", "triangle", "square", "L1", "L2", "")
         else:
-            spell_args = ("1", "2", "3", "4", "5", "E")
+            spell_args = ("1", "2", "3", "4", "5", "E", 'H')
         # Отрисовка контейнеров с заклинаниями
         for i in range(len(spells_containers) - 1, -1, -1):
             pos = (screen_width * (0.375 + 0.05 * i), screen_height * 0.9)
@@ -245,16 +246,19 @@ def play(screen: pygame.surface.Surface,
         # Проверка перехода на следующий уровень, путём соприкосновением с лестницой вниз
         if pygame.sprite.spritecollideany(player.collider, end_of_level):
             transition += 1
-            if transition < 15:
-                for i in range(transition):
-                    screen.blit(transparent_grey, (0, 0))
+            pygame.mixer.fadeout(1000)
+            pygame.mixer.music.fadeout(1000)
+            if transition < 20:
+                transparent_grey.fill(BACKGROUND_COLOR + (round(transition ** 2 / 4),))
+                screen.blit(transparent_grey, (0, 0))
             else:
+                loading_screen(screen)
                 transition = 0
                 # Если игрок собирается перейти на 11 уровень, то это победа
                 if level_number == 10:
                     # Победный экран
                     end_screen.execute(screen, is_win=True)
-                    return 0
+                    return -1
                 # Иначе перезагрука некоторых данных и новый уровень
                 else:
                     # Очищаем все группы со спрайтами
@@ -274,6 +278,7 @@ def play(screen: pygame.surface.Surface,
                     player, monsters_seed = initialise_level(level, all_sprites, tiles_group, collidable_tiles_group,
                                                              enemies_group, doors_group, torches_group, end_of_level, 0)
                     current_seed = ' '.join(level_seed) + '\n' + ' '.join(monsters_seed) + '\n' + str(level_number)
+                    save(current_seed)
 
                     # Заного заполняем индивидуальные спрайты
                     player_sprites.add(player)
@@ -290,9 +295,12 @@ def play(screen: pygame.surface.Surface,
                         SpellContainer("teleport_spell.png", TeleportSpell, player),
                     )
                     player_icon = PlayerIcon((20, 20), player)
+                    pygame.mixer.music.play(-1)
                     continue
         else:
             transition = 0
+            if not pygame.mixer.music.get_busy():
+                pygame.mixer.music.play(-1)
 
         clock.tick(FPS)
         pygame.display.flip()

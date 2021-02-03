@@ -29,18 +29,21 @@ class Button(pygame.sprite.Sprite):
         # Свойство, чтобы при наведении звук воспроизводился только один раз
         self.was_sound_played = False
 
-        # Базовое изображение
-        self.base_image = load_image(base_button_filename, path_to_folder="assets\\UI")
-        # Изображение при наведении
-        self.hover_image = load_image(hover_button_filename, path_to_folder="assets\\UI")
-        # Текущее изображение
-        self.image = self.base_image
         # Текст
         self.text = text
         self.font = pygame.font.Font("assets\\UI\\pixel_font.ttf", text_size)
+
+        # Базовое изображение
         self.text_surface = self.font.render(text, True, pygame.Color("white"))
-        # Выводим текст поверх кнопки
-        self.image.blit(self.text_surface, self.text_surface.get_rect(center=self.image.get_rect().center))
+        self.base_image = load_image(base_button_filename, path_to_folder="assets\\UI")
+        self.base_image.blit(self.text_surface, self.text_surface.get_rect(center=self.base_image.get_rect().center))
+
+        # Изображение при наведении
+        self.hover_image = load_image(hover_button_filename, path_to_folder="assets\\UI")
+        self.hover_image.blit(self.text_surface, self.text_surface.get_rect(center=self.hover_image.get_rect().center))
+
+        # Текущее изображение
+        self.image = self.base_image
         self.rect = self.image.get_rect()
         # Двигаем кнопку, но с учётом размера
         self.rect = self.rect.move(position[0] - self.rect.width / 2, position[1] - self.rect.height / 2)
@@ -72,9 +75,6 @@ class Button(pygame.sprite.Sprite):
             # Т.к. на кнопку наведения нет, то сбрасываем свойство
             self.was_sound_played = False
 
-        # Заного выводим текст поверх кнопки
-        self.image.blit(self.text_surface, self.text_surface.get_rect(center=self.image.get_rect().center))
-
 
 class MessageBox:
     """
@@ -90,6 +90,7 @@ class MessageBox:
         # Фон
         self.image = self.background_image
         indent = 50
+        text = text.strip()
         size = (max(int(text_size * 0.38 * max(map(len, text.split('\n')))), 300),
                 round(indent + len(text.split('\n')) * self.font.get_height() * 0.9))
         self.image = scale_frame(self.image, size, indent)
@@ -101,7 +102,7 @@ class MessageBox:
         # Текст для диалога
         self.texts = text.split('\n')
         # Так нужно для вывода сразу нескольких строк
-        self.text_surfaces = [self.font.render(part, True, (255, 255, 255)) for part in self.texts]
+        self.text_surfaces = [self.font.render(part.strip(), True, (255, 255, 255)) for part in self.texts]
 
         # Флаг для отрисовки (если True, то диалог рисуется)
         self.need_to_draw = True
@@ -229,18 +230,20 @@ class PlayerIcon:
         x1, y1 = self.position
 
         health_line = pygame.sprite.Sprite()
-        health_length = round(260 * (self.player.health / self.player.full_health) + 0.5)
+        health_length = round(264 * (self.player.health / self.player.full_health) + 0.5)
         health_line.image = pygame.surface.Surface((health_length, 24))
         health_line.image.fill((255, 30, 30))
-        screen.blit(health_line.image, (x1 + 136, y1 + 12))
-        screen.blit(self.font.render(f'{round(self.player.health + 0.5)}/{self.player.full_health}', True, (255, 255, 255)), (x1 + 220, y1 + 10))
+        screen.blit(health_line.image, (x1 + 132, y1 + 12))
+        screen.blit(self.font.render(f'{round(self.player.health + 0.5)}/{self.player.full_health}', True,
+                                     (255, 255, 255)), (x1 + 220, y1 + 10))
 
         mana_line = pygame.sprite.Sprite()
-        mana_length = round(260 * (self.player.mana / self.player.full_mana) + 0.5)
+        mana_length = round(264 * (self.player.mana / self.player.full_mana) + 0.5)
         mana_line.image = pygame.surface.Surface((mana_length, 24))
         mana_line.image.fill((30, 30, 255))
-        screen.blit(mana_line.image, (x1 + 136, y1 + 52))
-        screen.blit(self.font.render(f'{round(self.player.mana + 0.5)}/{self.player.full_mana}', True, (255, 255, 255)), (x1 + 220, y1 + 50))
+        screen.blit(mana_line.image, (x1 + 132, y1 + 52))
+        screen.blit(self.font.render(f'{round(self.player.mana + 0.5)}/{self.player.full_mana}', True,
+                                     (255, 255, 255)), (x1 + 220, y1 + 50))
 
         screen.blit(self.FACE, (x1 + 25, y1 + 20))
         screen.blit(self.FRAME, self.position)
@@ -261,7 +264,7 @@ class LogoImage(pygame.sprite.Sprite):
         # Изображение
         self.image = load_image("game_logo.png", path_to_folder="assets\\UI")
         self.rect = self.image.get_rect()
-        self.rect.centerx, self.rect.centery = position
+        self.rect.center = position
 
 
 class AnimatedBackground(pygame.sprite.Sprite):

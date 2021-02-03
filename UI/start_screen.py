@@ -19,7 +19,7 @@ def execute(screen: pygame.surface.Surface) -> int:
     joystick = get_joystick() if check_any_joystick() else None
 
     # Смещение между UI элементами
-    button_margin = 50
+    button_margin = 55
 
     # Создание UI элементов
     game_logo = LogoImage((screen.get_width() // 2, screen.get_height() // 6 - button_margin))
@@ -51,15 +51,19 @@ def execute(screen: pygame.surface.Surface) -> int:
     # Текущие диалог (может появлятся при нажатии кнопок)
     current_message_box = None
 
-    text = """Управление:
-    На клавиатуре: WASD - двигаться; Q - рывок;
+    text = """На клавиатуре: 
+    WASD - двигаться; Q - рывок;
     1-5 - заклинания; E - телепорт;
-    На джойстике: PADS - двигаться; R1 - рывок"""
+
+    На джойстике: 
+    PADS - двигаться; R1 - рывок;
+    Остальное я не знаю, подберите там;"""
     control_message_box = MessageBox(text, 32, (screen.get_width() * 0.5, screen.get_height() * 0.5))
-    text = """Игра жанра Roguelite,
-    в которой надо пройти
+    text = """
+    Игра жанра Roguelite с видом сверху,
+    в которой Вам предстоит пройти
     сквозь подземелье, заполненное врагами.
-    Желаем удачи"""
+    Желаем удачи!"""
     about_message_box = MessageBox(text, 32, (screen.get_width() * 0.5, screen.get_height() * 0.5))
     text = """Никита Сошнев (Nik4ant)
     Максим Рудаков (Massering)"""
@@ -97,12 +101,10 @@ def execute(screen: pygame.surface.Surface) -> int:
                 is_open = False
 
             if event.type == pygame.MOUSEBUTTONUP:
-                # print('mouse')
                 if event.button == 1:
                     was_click = True
 
             if event.type == Button.PRESS_TYPE:
-                # print('button')
                 # Текст нажатой кнопки
                 # (гарантированно есть, т.к. устанавливается при инициализации)
                 sender_text = event.dict["sender_text"]

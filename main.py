@@ -39,9 +39,7 @@ if __name__ == '__main__':
                 with open('data\\save.txt', 'r', encoding="utf-8") as file:
                     seed = ' '.join(file.readlines())
                 # Если seed пустой, то присваем ему None
-                if not seed:
-                    seed = None
-                else:
+                if seed:
                     data = seed.split('\n')
                     seed, level_number = '\n'.join(data[:-1]), int(data[-1])
 

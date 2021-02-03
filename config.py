@@ -38,7 +38,8 @@ CONTROLS = {
     "KEYBOARD_SPELL_VOID": pygame.K_4,  # 4
     "KEYBOARD_SPELL_LIGHT": pygame.K_5,  # 5
     "KEYBOARD_SPELL_TELEPORT": pygame.K_e,  # E
-    
+    "KEYBOARD_SPELL_HEAL": pygame.K_h,  # H
+
     # Для мышки
     "MOUSE_SPELL_FIRE": 0,
     "MOUSE_SPELL_ICE": 1,
@@ -53,5 +54,7 @@ CONTROLS = {
     "KEYBOARD_UP": pygame.K_w,
     "KEYBOARD_DOWN": pygame.K_s,
 }
+# Цвет фона в игре, экране загрузки и т.д.
+BACKGROUND_COLOR = (20, 10, 20)
 # сторона одного тайла
 TILE_SIZE = 64

@@ -2,8 +2,9 @@ import os
 import sys
 import pygame
 from PIL import Image
+from random import randint
 
-from config import TILE_SIZE
+from config import TILE_SIZE, BACKGROUND_COLOR
 
 
 def check_any_joystick() -> bool:
@@ -40,17 +41,17 @@ def loading_screen(screen):
     width, height = screen.get_size()
 
     font = pygame.font.Font('assets\\UI\\pixel_font.ttf', 48)
-    for _ in range(4):
+    for _ in range(1):
         for i in range(4):
             text = font.render('Загрузка' + '.' * i, True, (240, 240, 240))
             text_x = width // 2 - text.get_width() // 2
             text_y = height // 2 - text.get_height() // 2
 
-            screen.fill((20, 20, 20))
+            screen.fill(BACKGROUND_COLOR)
             screen.blit(text, (text_x, text_y))
             pygame.display.flip()
 
-            pygame.time.wait(1)
+            pygame.time.wait(100)
 
 
 def cut_sheet(sheet, columns, rows, size=(TILE_SIZE, TILE_SIZE)):
@@ -109,14 +110,14 @@ def scale_frame(image: pygame.surface.Surface, size: (int, int), k: int = 40):
             if i <= k:
                 a = i
             elif k <= i <= size[0] - k:
-                a = k
+                a = k + randint(0, 10)
             else:
                 a = i - size[0] + image.size[0]
 
             if j <= k:
                 b = j
             elif k <= j <= size[1] - k:
-                b = k
+                b = k + randint(0, 10)
             else:
                 b = j - size[1] + image.size[1]
             new_pix[i, j] = pix[a, b]

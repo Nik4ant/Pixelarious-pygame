@@ -1086,6 +1086,7 @@ def initialise_level(level_map, all_sprites, tiles_group, barriers_group, enemie
 
     :param level_map: Уровень
     :param all_sprites: Группа со всеми спрайтами
+    :param tiles_group: Группа со спрайтами плиток пола
     :param barriers_group: Группа для спрайтов с тайлами, сквозь которые нельзя ходить
     :param enemies_group: Группа врагов
     :param doors_group: Группа дверей
@@ -1157,7 +1158,7 @@ def initialise_level(level_map, all_sprites, tiles_group, barriers_group, enemie
                 elif level_map[y][x] == 'T':
                     Torch(x + 0.12, y, all_sprites, torches_group)
             elif level_map[y][x] == 'E':
-                Tile('E', x, y, all_sprites, end_of_level)
+                Tile('E', x, y, all_sprites, tiles_group, end_of_level)
             elif level_map[y][x] != ' ':
                 Tile(level_map[y][x], x, y, all_sprites, tiles_group)
     # вернем игрока и сид монстров

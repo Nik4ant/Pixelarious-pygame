@@ -380,7 +380,7 @@ class TeleportSpell(Spell):
     Переносит игрока в позицию прицела"""
     spell_type = Spell.TELEPORT
     damage = '---'
-    mana_cost = 300
+    mana_cost = 200
     UPDATE_TIME = 40
     speed = TILE_SIZE * 1
     acceleration = 0
@@ -413,3 +413,49 @@ class TeleportSpell(Spell):
         self.start_sprite.image = TeleportSpell.frames[0][0]
         self.start_sprite.rect = self.start_sprite.image.get_rect()
         self.start_sprite.rect.center = object_group[0].rect.center
+
+
+class HealingSpell(Spell):
+    """Заклинание восстановления
+
+    ЕГО ЕЩЕ НЕТ
+    РАЗРАБАТЫВАЕТСЯ
+    (если будет вообще)
+
+    Увеличивает количество жизней, забирая ману"""
+    spell_type = Spell.TELEPORT
+    damage = '---'
+    mana_cost = 1
+    UPDATE_TIME = 40
+    speed = 1
+    acceleration = 0
+    damage_frame = 0
+    action_time = 0
+
+    size = (TILE_SIZE // 4 * 7,) * 2
+    frames = cut_sheet(load_image('EMPTY.png', 'assets\\tiles'), 1, 1, size)
+    frames += cut_sheet(load_image('healing.png', 'assets\\spells'), 20, 1, size)
+
+    # Канал для звуков
+    sounds_channel = pygame.mixer.Channel(3)
+
+    # Звуки
+    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "teleport_sound.ogg"))
+    CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+
+    SPELL_SOUNDS = (
+        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "teleport_sound.ogg")),
+    )
+    for sound in SPELL_SOUNDS:
+        sound.set_volume(DEFAULT_SOUNDS_VOLUME)
+
+    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, object_group, *groups):
+        super().__init__(subject_x, subject_y, object_x, object_y, object_group, *groups)
+
+        self.start_sprite = pygame.sprite.Sprite()
+        self.start_sprite.start_position = None
+        self.start_sprite.point = None
+        self.start_sprite.image = TeleportSpell.frames[0][0]
+        self.start_sprite.rect = self.start_sprite.image.get_rect()
+        self.start_sprite.rect.center = object_group[0].rect.center
+

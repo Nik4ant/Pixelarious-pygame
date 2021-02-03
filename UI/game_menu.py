@@ -1,10 +1,8 @@
-import sys
-
 import pygame
 
 from UI.UIComponents import Button
 from config import FPS, CONTROLS, JOYSTICK_SENSITIVITY
-from engine import load_image, check_any_joystick, get_joystick
+from engine import load_image, check_any_joystick, get_joystick, scale_frame
 
 
 def execute(screen: pygame.surface.Surface):
@@ -21,16 +19,15 @@ def execute(screen: pygame.surface.Surface):
     # Смещение между UI элементами
     UI_MARGIN = 20
     # Фоновое изображение для всего экрана
-    background_image = load_image("pause_menu_BG.png", "assets/UI")
+    background_image = load_image("pause_menu_BG.png", "assets\\UI")
     background_image = pygame.transform.scale(background_image, screen.get_size())
-    # Фоновое игображение
-    ui_background_image = load_image("pause_menu_UI_BG.png", "assets/UI")
     # Центральная координата всего меню на экране
-    menu_top_left = (screen.get_width() * 0.5 - ui_background_image.get_width() * 0.5,
-                     screen.get_height() * 0.5 - ui_background_image.get_height() * 0.5)
+    menu_width = 300
+    menu_top_left = (screen.get_width() * 0.5 - menu_width * 0.5,
+                     screen.get_height() * 0.25)
 
     # Создание UI элементов
-    next_y = menu_top_left[1] + ui_background_image.get_width() * 0.5 - UI_MARGIN * 2.5
+    next_y = menu_top_left[1] + menu_width * 0.5 - UI_MARGIN * 2.5
     button_continue = Button((screen.get_width() // 2, next_y),
                              "Продолжить", 32,
                              base_button_filename="button_1.png",
@@ -41,6 +38,9 @@ def execute(screen: pygame.surface.Surface):
                          "Выйти в меню", 32,
                          base_button_filename="button_1.png",
                          hover_button_filename="button_1_hover.png")
+    # Фоновое игображение
+    background_menu_image = scale_frame(load_image("pause_menu_UI_BG.png", "assets\\UI"),
+                                        (menu_width, int(screen.get_height() * 0.25)))
 
     # Добавление в группу
     UI_sprites = pygame.sprite.Group()
@@ -48,7 +48,7 @@ def execute(screen: pygame.surface.Surface):
     UI_sprites.add(button_exit)
 
     # Изображение для курсора
-    cursor_image = load_image("cursor.png", "assets/UI/icons")
+    cursor_image = load_image("cursor.png", "assets\\UI\\icons")
     # координаты курсора
     cursor_x, cursor_y = screen.get_rect().center
     cursor_speed = 25  # скорость курсора (нужно если используется джойстик)
@@ -104,7 +104,7 @@ def execute(screen: pygame.surface.Surface):
         # Фоновое изображение окна
         screen.blit(background_image, (0, 0))
         # Фоновое изобраджение UI
-        screen.blit(ui_background_image, menu_top_left)
+        screen.blit(background_menu_image, menu_top_left)
         # Рисуем весь UI
         UI_sprites.draw(screen)
 
