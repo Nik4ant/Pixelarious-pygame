@@ -22,7 +22,7 @@ class Entity(pygame.sprite.Sprite):
     POISON_DAMAGE = 0.05
 
     size = (int(TILE_SIZE),) * 2
-    sleeping_frames = cut_sheet(load_image('sleep_icon_spritesheet.png', 'assets\\enemies'), 4, 1)
+    sleeping_frames = cut_sheet(load_image('sleep_icon_spritesheet.png', 'assets\\enemies'), 4, 1, size)
     poison_frames = cut_sheet(load_image('poison_static.png', 'assets\\spells'), 5, 1, size)[0]
 
     def __init__(self, x: float, y: float, *args):
@@ -37,6 +37,7 @@ class Entity(pygame.sprite.Sprite):
 
         self.last_damage_time = -Entity.HEALTH_LINE_TIME
         self.sleeping_time = None
+        self.cur_sleeping_frame = 0
         self.cur_poison_frame = 0
         self.poison_static_time = 0
         self.ice_buff = 0
@@ -143,29 +144,21 @@ class Entity(pygame.sprite.Sprite):
     def draw_health_bar(self, screen):
         """
         Функция отрисовки полоски здоровья
-
-        :param screen: Экран отрисовки
-        :return: None
-        """
-        if abs(pygame.time.get_ticks() - self.last_damage_time) > Entity.HEALTH_LINE_TIME:
-            return
-
-        line_width = Entity.HEALTH_LINE_WIDTH
-        x, y = self.rect.centerx, self.rect.centery
-        width, height = self.rect.size
-        x1, y1 = x - width * 0.5, y - height * 0.5
-        pygame.draw.rect(screen, 'grey', (x1 - 1, y1 - 10 - 1, width + 2, line_width + 2))
-        health_length = width * max(self.health, 0) / self.full_health
-        color = '#00b300' if str(self.__class__.__name__) == 'Player' else 'red'
-        pygame.draw.rect(screen, color, (x1, y1 - 10, health_length, line_width))
-
-    def draw_sign(self, screen):
-        """
         Отрисовка знака сна (Z-Z-Z) или восклицательного знака.
 
         :param screen: Экран отрисовки
         :return: None
         """
+        if pygame.time.get_ticks() - self.last_damage_time < Entity.HEALTH_LINE_TIME:
+            line_width = Entity.HEALTH_LINE_WIDTH
+            x, y = self.rect.centerx, self.rect.centery
+            width, height = self.rect.size
+            x1, y1 = x - width * 0.5, y - height * 0.5
+            pygame.draw.rect(screen, 'grey', (x1 - 1, y1 - 10 - 1, width + 2, line_width + 2))
+            health_length = width * max(self.health, 0) / self.full_health
+            color = '#00b300' if str(self.__class__.__name__) == 'Player' else 'red'
+            pygame.draw.rect(screen, color, (x1, y1 - 10, health_length, line_width))
+
         if not self.alive:
             return
 
@@ -176,18 +169,16 @@ class Entity(pygame.sprite.Sprite):
                 self.cur_poison_frame = (self.cur_poison_frame + 1) % len(Entity.poison_frames)
             screen.blit(Entity.poison_frames[self.cur_poison_frame], (self.rect.x, self.rect.y))
 
-        if self.player_observed:
-            font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 96)
-            text = font.render("!", True, (250, 20, 20))
-            screen.blit(text, (self.rect.centerx, self.rect.y - 60))
+        # if self.player_observed:
+        #     font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 96)
+        #     text = font.render("!", True, (250, 20, 20))
+        #     screen.blit(text, (self.rect.centerx, self.rect.y - 60))
 
-        if not self.player_observed:
+        if self.__class__.__name__ != 'Player' and not self.player_observed:
             if not self.sleeping_time or ticks - self.sleeping_time >= 250:
-                if not self.sleeping_time:
-                    self.cur_sleeping_frame = 0
-                self.cur_sleeping_frame = (self.cur_sleeping_frame + 1) % len(Entity.sleeping_frames[0])
+                self.cur_sleeping_frame = (self.cur_sleeping_frame + 1) % len(self.sleeping_frames[0])
                 self.sleeping_time = ticks
-            screen.blit(Entity.sleeping_frames[0][self.cur_sleeping_frame], (self.rect.centerx + 10, self.rect.y - 35))
+            screen.blit(self.sleeping_frames[0][self.cur_sleeping_frame], (self.rect.centerx + 10, self.rect.y - 35))
 
     def get_damage(self, damage, spell_type='', action_time=0):
         """

@@ -217,7 +217,6 @@ def play(screen: pygame.surface.Surface,
         for enemy in enemies_group:
             camera.apply_point(enemy)
             enemy.draw_health_bar(screen)
-            enemy.draw_sign(screen)
             for spell in enemy.spells:
                 camera.apply_point(spell)
             enemy.spells.draw(screen)

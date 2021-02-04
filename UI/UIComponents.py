@@ -234,16 +234,16 @@ class PlayerIcon:
         health_line.image = pygame.surface.Surface((health_length, 24))
         health_line.image.fill((255, 30, 30))
         screen.blit(health_line.image, (x1 + 132, y1 + 12))
-        screen.blit(self.font.render(f'{round(self.player.health + 0.5)}/{self.player.full_health}', True,
-                                     (255, 255, 255)), (x1 + 220, y1 + 10))
+        screen.blit(self.font.render(f'{round(self.player.health + 0.5)}/{self.player.full_health}',
+                                     True, (255, 255, 255)), (x1 + 220, y1 + 10))
 
         mana_line = pygame.sprite.Sprite()
         mana_length = round(264 * (self.player.mana / self.player.full_mana) + 0.5)
         mana_line.image = pygame.surface.Surface((mana_length, 24))
         mana_line.image.fill((30, 30, 255))
         screen.blit(mana_line.image, (x1 + 132, y1 + 52))
-        screen.blit(self.font.render(f'{round(self.player.mana + 0.5)}/{self.player.full_mana}', True,
-                                     (255, 255, 255)), (x1 + 220, y1 + 50))
+        screen.blit(self.font.render(f'{round(self.player.mana + 0.5)}/{self.player.full_mana}',
+                                     True, (255, 255, 255)), (x1 + 220, y1 + 50))
 
         screen.blit(self.FACE, (x1 + 25, y1 + 20))
         screen.blit(self.FRAME, self.position)

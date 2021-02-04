@@ -1,5 +1,3 @@
-from random import choice
-
 from entities.base_entity import Entity
 from entities.spells import *
 from engine import *
@@ -17,9 +15,9 @@ class Player(Entity):
     death_frames = []
     cast_frames = cut_sheet(load_image('player_cast_sprite_sheet.png', 'assets'), 5, 4, size)
 
-    # Переменные добавляющие эти значиния к здоровью и мане каждую итерацию update()
-    MANA_UP = 0.2
-    HEALTH_UP = 0.025
+    # Переменные добавляющие эти значения к здоровью и мане каждую итерацию update()
+    MANA_UP = 0.4
+    HEALTH_UP = 0.1
     # Время неуязвимости, после атаки врагом (в миллисекундах)
     INVULNERABILITY_TIME_AFTER_HIT = 300
 
