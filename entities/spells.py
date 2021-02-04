@@ -125,7 +125,6 @@ class Spell(pygame.sprite.Sprite):
             ticks = pygame.time.get_ticks()
             if ticks - self.last_update_time < self.UPDATE_TIME:
                 return
-            self.speed += self.acceleration
             self.last_update_time = ticks
             self.image = self.frames[0][self.cur_frame]
             if isinstance(self, TeleportSpell):
@@ -197,7 +196,7 @@ class IceSpell(Spell):
     Демонов
     Неэффективно против:
     Грязных слизней"""
-    damage = 20
+    damage = 25
     spell_type = Spell.ICE
     mana_cost = 40
     UPDATE_TIME = 40

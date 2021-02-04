@@ -157,7 +157,10 @@ class SpellContainer:
         self.mana_cost = spell_class.mana_cost
         self.player = player
         self.information = f'''{spell_class.__doc__}
+
         Урон: {spell_class.damage}{f' + {spell_class.extra_damage}' if spell_class.__name__ == 'PoisonSpell' else ''}
+        {'Время действия: ' + str(spell_class.action_time // 60) + ' c' 
+        if spell_class.__name__ in ('IceSpell', 'PoisonSpell') else 'Мгновенное действие'}
         Затраты маны: {spell_class.mana_cost}'''.strip()
         self.massage_box = MessageBox(self.information, 30, (0, 0))
         self.hover_time = 0

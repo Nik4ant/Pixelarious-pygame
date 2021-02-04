@@ -3,7 +3,7 @@ from random import randint
 import pygame
 
 from engine import load_tile, cut_sheet, load_image, concat_two_file_paths
-from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME, SOUNDS_VOLUME_REDUCER
+from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
 from entities.base_entity import Collider
 
 
@@ -17,10 +17,10 @@ class Tile(pygame.sprite.Sprite):
         '6':  load_tile('DOWN_LEFT_WALL.png'),
         '7':  load_tile('DOWN_WALL.png'),
         '8':  load_tile('DOWN_RIGHT_WALL.png'),
-        '9':  load_tile('TOP_RIGHT_CORNER.png'),
-        '0':  load_tile('TOP_LEFT_CORNER.png'),
-        '-':  load_tile('DOWN_LEFT_CORNER_FLAT.png'),
-        '=':  load_tile('DOWN_RIGHT_CORNER_FLAT.png'),
+        '9':  load_tile('TOP_RIGHT_WALL.png'),
+        '0':  load_tile('TOP_LEFT_WALL.png'),
+        '-':  load_tile('DOWN_LEFT_WALL_FLAT.png'),
+        '=':  load_tile('DOWN_RIGHT_WALL_FLAT.png'),
         'B':  load_tile('BARREL.png'),
         'B1': load_tile('BOX.png'),
         'P':  load_tile('UPSTAIRS.png'),
@@ -39,7 +39,24 @@ class Tile(pygame.sprite.Sprite):
         self.type = tile_type  # тип тайла
         self.image = Tile.IMAGES[self.type]
         self.rect = self.image.get_rect().move(x * TILE_SIZE, y * TILE_SIZE)
-        self.collider = Collider(x, y)
+        half = TILE_SIZE // 2
+        quarter = TILE_SIZE // 4
+        if self.type in ('1', '5'):
+            self.collider = Collider(x, y, (half, half * 3))
+        elif self.type in ('3', '7'):
+            self.collider = Collider(x, y, (half * 3, half))
+
+        elif self.type in ('2', '9'):
+            self.collider = Collider(x - quarter, y + quarter, (half * 2, half * 2))
+        elif self.type in ('4', '0'):
+            self.collider = Collider(x + quarter, y + quarter, (half * 2, half * 2))
+        elif self.type in ('6', '-'):
+            self.collider = Collider(x + quarter, y - quarter, (half * 2, half * 2))
+        elif self.type in ('8', '='):
+            self.collider = Collider(x - quarter, y - quarter, (half * 2, half * 2))
+
+        else:
+            self.collider = Collider(x, y)
 
 
 class Torch(pygame.sprite.Sprite):
@@ -48,10 +65,11 @@ class Torch(pygame.sprite.Sprite):
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(0)
     min_distance_to_player = 100
+    update_sounds_channel = 0
 
     # Звуки
     BURNING_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "torch_sound.mp3"))
-    BURNING_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME - SOUNDS_VOLUME_REDUCER)
+    BURNING_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x: float, y: float, *groups):
         super().__init__(*groups)
@@ -62,10 +80,12 @@ class Torch(pygame.sprite.Sprite):
         self.update_time = pygame.time.get_ticks()
 
     def update(self, player=None) -> None:
-        if not player:
-            Torch.min_distance_to_player = 100000
+        ticks = pygame.time.get_ticks()
+        if ticks - Torch.update_sounds_channel > 100:
+            Torch.update_sounds_channel = ticks
+            Torch.min_distance_to_player = 100
             return
-        if pygame.time.get_ticks() - self.update_time > 100 + randint(-20, 20):
+        if ticks - self.update_time > 100 + randint(-20, 20):
             self.update_time = pygame.time.get_ticks()
             while 1:
                 n = randint(0, 7)
@@ -76,7 +96,7 @@ class Torch(pygame.sprite.Sprite):
 
         dx, dy = player.rect.centerx - self.rect.centerx, player.rect.centery - self.rect.centery
         Torch.min_distance_to_player = min(max((dx ** 2 + dy ** 2) ** 0.5, 0.000001), Torch.min_distance_to_player)
-        self.BURNING_SOUND.set_volume(min(DEFAULT_SOUNDS_VOLUME / (Torch.min_distance_to_player / TILE_SIZE) * 1, 1.2))
+        self.BURNING_SOUND.set_volume(min(DEFAULT_SOUNDS_VOLUME / (Torch.min_distance_to_player / TILE_SIZE) * 3, 1.2))
         if not self.sounds_channel.get_busy():
             self.sounds_channel.play(self.BURNING_SOUND)
 

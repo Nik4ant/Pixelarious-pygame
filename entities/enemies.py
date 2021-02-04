@@ -319,7 +319,8 @@ class GreenSlime(WalkingMonster):
     Медленный
     Среднее количество жизней
     Не очень большой урон
-    Устойчивость к отравлению (я сам отравление)
+    Устойчивость к отравлению
+    (я сам отравление)
     Слабость к молниям"""
     damage = 60
     size = (int(TILE_SIZE // 8 * 7),) * 2
@@ -328,7 +329,7 @@ class GreenSlime(WalkingMonster):
 
     death_frames = cut_sheet(load_image('green_slime_dying.png', 'assets\\enemies'), 16, 1)[0]
 
-    default_speed = TILE_SIZE * 0.02
+    default_speed = TILE_SIZE * 0.012
     look_directions = {
         (-1, -1): 1,
         (-1, 0): 1,
@@ -408,8 +409,10 @@ class Zombie(WalkingMonster):
     Не медленный, но и не быстрый
     Среднее количество жизней
     Средний урон
-    Устойчивость к молниям (они двигают мои нейроны)
-    Слабость - огонь (земля пухом учёным)"""
+    Устойчивость к молниям
+    (они двигают мои нейроны)
+    Слабость - огонь
+    (земля пухом учёным)"""
     damage = 30
     size = (int(TILE_SIZE // 4 * 3),) * 2
     frames = cut_sheet(load_image('zombie_run.png', 'assets\\enemies'), 4, 2)
@@ -491,11 +494,12 @@ class FireWizard(ShootingMonster):
 class VoidWizard(ShootingMonster):
     """Большой маг
 
-    Подвижныйзщ
+    Подвижный
     Среднее количество жизней
     Большой урон
     Устойчивость к пустоте
-    Слабость к огню (МОЙ ПЛАЩ ГОРИТ)"""
+    Слабость к огню
+    (МОЙ ПЛАЩ ГОРИТ)"""
     damage = 20
     size = (int(TILE_SIZE // 8 * 7),) * 2
     frames = cut_sheet(load_image('long_wizard_run.png', 'assets\\enemies'), 4, 2)

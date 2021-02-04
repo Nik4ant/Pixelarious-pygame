@@ -16,7 +16,7 @@ class Entity(pygame.sprite.Sprite):
 
     WAITING_TIME = 2000
     UPDATE_TIME = 120
-    HEALTH_LINE_WIDTH = 5
+    HEALTH_LINE_WIDTH = 10
     HEALTH_LINE_TIME = 5000
 
     POISON_DAMAGE = 0.05
@@ -24,6 +24,8 @@ class Entity(pygame.sprite.Sprite):
     size = (int(TILE_SIZE),) * 2
     sleeping_frames = cut_sheet(load_image('sleep_icon_spritesheet.png', 'assets\\enemies'), 4, 1, size)
     poison_frames = cut_sheet(load_image('poison_static.png', 'assets\\spells'), 5, 1, size)[0]
+
+    font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 15)
 
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
@@ -154,10 +156,17 @@ class Entity(pygame.sprite.Sprite):
             x, y = self.rect.centerx, self.rect.centery
             width, height = self.rect.size
             x1, y1 = x - width * 0.5, y - height * 0.5
-            pygame.draw.rect(screen, 'grey', (x1 - 1, y1 - 10 - 1, width + 2, line_width + 2))
+
+            pygame.draw.rect(screen, 'dark grey', (x1 - 1, y1 - 10 - 1, width + 2, line_width + 2))
             health_length = width * max(self.health, 0) / self.full_health
             color = '#00b300' if str(self.__class__.__name__) == 'Player' else 'red'
             pygame.draw.rect(screen, color, (x1, y1 - 10, health_length, line_width))
+
+            health_text = f'{round(self.health + 0.5)}/{self.full_health}'
+            health = self.font.render(health_text, True, (255, 255, 255))
+            rect = health.get_rect()
+            rect.center = (x1 + width // 2, y1 - 5)
+            screen.blit(health, rect.topleft)
 
         if not self.alive:
             return
