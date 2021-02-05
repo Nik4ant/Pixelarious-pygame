@@ -24,7 +24,8 @@ class Spell(pygame.sprite.Sprite):
 
     start_position = None
 
-    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, object_group, *groups):
+    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
+                 object_group, *groups):
         super().__init__(*groups)
         dx = object_x - subject_x
         dy = object_y - subject_y
@@ -34,6 +35,9 @@ class Spell(pygame.sprite.Sprite):
             dy *= 2
             dy += 1
         self.point = (subject_x + dx, subject_y + dy)
+
+        if self.spell_type != Spell.TELEPORT:
+            self.damage = self.__class__.damage * extra_damage
 
         if dx >= 0:
             self.angle = -degrees(atan(dy / max(dx, 0.00001)))
@@ -52,7 +56,7 @@ class Spell(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.centerx, self.rect.centery = subject_x, subject_y
 
-        self.collider = Collider(self.rect.centerx, self.rect.centery, (self.rect.size[0] - TILE_SIZE * 0.5,) * 2)
+        self.collider = Collider(self.rect.centerx, self.rect.centery, (TILE_SIZE * 0.1,) * 2)
 
         self.update()
 
@@ -71,6 +75,8 @@ class Spell(pygame.sprite.Sprite):
                         self.collider.update(self.rect.centerx, self.rect.centery, size)
                     else:
                         self.collider.update(self.rect.centerx, self.rect.centery)
+                    pygame.sprite.spritecollide(self.collider, Spell.furniture_group, True)
+                    pygame.sprite.spritecollide(self.collider, Spell.doors_group, True)
                     for obj in self.object_group:
                         if pygame.sprite.collide_circle(self.collider, obj):
                             obj.get_damage(self.damage, self.spell_type, self.action_time)
@@ -105,16 +111,21 @@ class Spell(pygame.sprite.Sprite):
                 if obj.alive:
                     do_kill = True
             for obj in pygame.sprite.spritecollide(self.collider, Spell.barrier_group, False):
-                obj.collider.update(obj.rect.centerx, obj.rect.centery)
+                obj.collider.update(*obj.rect.center)
                 if pygame.sprite.collide_rect(self.collider, obj.collider):
                     do_kill = True
+
             for obj in pygame.sprite.spritecollide(self.collider, Spell.doors_group, False):
-                obj.collider.update(obj.rect.centerx, obj.rect.centery)
-                if not obj.opened and pygame.sprite.collide_rect(self.collider, obj.collider):
+                obj.collider.update(*obj.rect.center)
+                if not obj.opened:
+                    do_kill = True
+            for obj in pygame.sprite.spritecollide(self.collider, Spell.furniture_group, False):
+                obj.collider.update(*obj.rect.center)
+                if pygame.sprite.collide_rect(self.collider, obj.collider):
                     do_kill = True
 
             if do_kill and self.spell_type != Spell.FLASH and self.spell_type != Spell.TELEPORT:
-                self.point = (self.rect.centerx, self.rect.centery)
+                self.point = self.rect.center
 
             if self.rect.center == self.point:
                 self.cur_frame = 0
@@ -131,7 +142,7 @@ class Spell(pygame.sprite.Sprite):
                 self.start_sprite.image = self.frames[0][self.cur_frame]
 
     @staticmethod
-    def set_global_collisions_group(barrier_group: pygame.sprite.Group, doors_group: pygame.sprite.Group):
+    def set_global_collisions_group(barrier_group: pygame.sprite.Group):
         """
         Метод устанавливает группу со спрайтами, которые будут считаться
         физическими объектами для всех сущностей на уровне.
@@ -142,7 +153,11 @@ class Spell(pygame.sprite.Sprite):
         :param doors_group: Новая группа
         """
         Spell.barrier_group = barrier_group
+
+    @staticmethod
+    def set_global_breaking_group(doors_group, furniture_group):
         Spell.doors_group = doors_group
+        Spell.furniture_group = furniture_group
 
 
 class FireSpell(Spell):
@@ -183,8 +198,9 @@ class FireSpell(Spell):
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, object_group, *groups):
-        super().__init__(subject_x, subject_y, object_x, object_y, object_group, *groups)
+    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
+                 object_group, *groups):
+        super().__init__(subject_x, subject_y, object_x, object_y, extra_damage, object_group, *groups)
 
 
 class IceSpell(Spell):
@@ -228,8 +244,9 @@ class IceSpell(Spell):
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, object_group, *groups):
-        super().__init__(subject_x, subject_y, object_x, object_y, object_group, *groups)
+    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
+                 object_group, *groups):
+        super().__init__(subject_x, subject_y, object_x, object_y, extra_damage, object_group, *groups)
 
 
 class PoisonSpell(Spell):
@@ -275,8 +292,9 @@ class PoisonSpell(Spell):
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, object_group, *groups):
-        super().__init__(subject_x, subject_y, object_x, object_y, object_group, *groups)
+    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
+                 object_group, *groups):
+        super().__init__(subject_x, subject_y, object_x, object_y, extra_damage, object_group, *groups)
 
 
 class VoidSpell(Spell):
@@ -321,8 +339,9 @@ class VoidSpell(Spell):
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, object_group, *groups):
-        super().__init__(subject_x, subject_y, object_x, object_y, object_group, *groups)
+    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
+                 object_group, *groups):
+        super().__init__(subject_x, subject_y, object_x, object_y, extra_damage, object_group, *groups)
 
 
 class FlashSpell(Spell):
@@ -369,8 +388,9 @@ class FlashSpell(Spell):
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, object_group, *groups):
-        super().__init__(subject_x, subject_y, object_x, object_y, object_group, *groups)
+    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
+                 object_group, *groups):
+        super().__init__(subject_x, subject_y, object_x, object_y, extra_damage, object_group, *groups)
 
 
 class TeleportSpell(Spell):
@@ -403,8 +423,9 @@ class TeleportSpell(Spell):
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, object_group, *groups):
-        super().__init__(subject_x, subject_y, object_x, object_y, object_group, *groups)
+    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
+                 object_group, *groups):
+        super().__init__(subject_x, subject_y, object_x, object_y, extra_damage, object_group, *groups)
 
         self.start_sprite = pygame.sprite.Sprite()
         self.start_sprite.start_position = None
@@ -448,8 +469,9 @@ class HealingSpell(Spell):
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, object_group, *groups):
-        super().__init__(subject_x, subject_y, object_x, object_y, object_group, *groups)
+    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
+                 object_group, *groups):
+        super().__init__(subject_x, subject_y, object_x, object_y, extra_damage, object_group, *groups)
 
         self.start_sprite = pygame.sprite.Sprite()
         self.start_sprite.start_position = None

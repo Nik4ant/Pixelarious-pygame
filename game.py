@@ -6,6 +6,13 @@ from config import *
 from engine import *
 
 
+def save(current_seed: str):
+    if 'data' not in os.listdir():
+        os.mkdir('data')
+    with open('data\\save.txt', 'w') as file:
+        file.write(current_seed)
+
+
 class Camera:
     """Класс представляющий камеру"""
 
@@ -53,6 +60,8 @@ def play(screen: pygame.surface.Surface,
     all_sprites = pygame.sprite.Group()
     # Группа со спрайтами тайлов
     tiles_group = pygame.sprite.Group()
+    # Группа со спрайтами ящиков и бочек
+    furniture_group = pygame.sprite.Group()
     # Группа со спрайтами преград
     collidable_tiles_group = pygame.sprite.Group()
     # Группа со спрайтами врагов
@@ -63,7 +72,7 @@ def play(screen: pygame.surface.Surface,
     torches_group = pygame.sprite.Group()
     # Группа со спрайтом конца уровня
     end_of_level = pygame.sprite.Group()
-        
+
     is_game_open = True
 
     transition = 0
@@ -75,9 +84,9 @@ def play(screen: pygame.surface.Surface,
 
     # Создаем уровень с помощью функции из generation_map
     level, level_seed = generate_new_level(current_seed.split('\n')[0].split() if current_seed else 0)
-    level_number = level_number
     # Создаем монстров и плитки, проходя по уровню
-    player, monsters_seed = initialise_level(level, all_sprites, tiles_group, collidable_tiles_group,
+    player, monsters_seed = initialise_level(level, level_number, all_sprites, tiles_group,
+                                             furniture_group, collidable_tiles_group,
                                              enemies_group, doors_group, torches_group, end_of_level,
                                              current_seed.split('\n')[1].split() if current_seed else 0)
     # Обновляем сид после инициализации уровня
@@ -182,7 +191,7 @@ def play(screen: pygame.surface.Surface,
         player_sprites.update()
 
         # Если игрок умер, то надо открыть экран конца игры
-        if not player.alive:
+        if player.destroyed:
             # Останавливаем все звуки (даже музыку)
             pygame.mixer.pause()
             pygame.mixer.music.pause()
@@ -263,8 +272,8 @@ def play(screen: pygame.surface.Surface,
                     # Очищаем все группы со спрайтами
                     all_sprites.empty()
                     tiles_group.empty()
+                    furniture_group.empty()
                     collidable_tiles_group.empty()
-                    player_sprites.empty()
                     enemies_group.empty()
                     doors_group.empty()
                     torches_group.empty()
@@ -274,8 +283,10 @@ def play(screen: pygame.surface.Surface,
                     # Создаем целиком новый уровень с помощью функции из generation_map
                     level, level_seed = generate_new_level(0)
                     # Создаем монстров и плитки, проходя по уровню
-                    player, monsters_seed = initialise_level(level, all_sprites, tiles_group, collidable_tiles_group,
-                                                             enemies_group, doors_group, torches_group, end_of_level, 0)
+                    player, monsters_seed = initialise_level(level, level_number, all_sprites, tiles_group,
+                                                             furniture_group, collidable_tiles_group,
+                                                             enemies_group, doors_group, torches_group, end_of_level,
+                                                             current_seed.split('\n')[1].split() if current_seed else 0)
                     current_seed = ' '.join(level_seed) + '\n' + ' '.join(monsters_seed) + '\n' + str(level_number)
                     save(current_seed)
 
@@ -312,10 +323,3 @@ def play(screen: pygame.surface.Surface,
 
     # Код возврата 0 для закрытия игры
     return 0
-
-
-def save(current_seed: str):
-    if 'data' not in os.listdir():
-        os.mkdir('data')
-    with open('data\\save.txt', 'w') as file:
-        file.write(current_seed)

@@ -125,8 +125,11 @@ class Entity(pygame.sprite.Sprite):
             if not self.alive:
                 self.cur_frame = self.cur_frame + 1
                 if self.cur_frame >= len(self.__class__.death_frames) - 1:
-                    for group in self.groups():
-                        group.remove(self)
+                    if self.__class__.__name__ == 'Player':
+                        self.destroyed = True
+                    else:
+                        for group in self.groups():
+                            group.remove(self)
                 try:
                     self.image = self.__class__.death_frames[self.cur_frame]
                 except IndexError:
@@ -197,6 +200,8 @@ class Entity(pygame.sprite.Sprite):
         :return: None
         """
 
+        if not self.alive:
+            return
         if spell_type == 'ice':
             self.ice_buff += action_time
         if spell_type == 'poison' and damage >= 5:
@@ -219,9 +224,9 @@ class Entity(pygame.sprite.Sprite):
             damage *= 0.25
 
         self.last_damage_time = pygame.time.get_ticks()
-        damage *= 10000
-        damage += randint(-damage * 0.4, damage * 0.4)
-        damage /= 10000
+        damage *= 1000
+        damage += randint(round(-damage * 0.4), round(damage * 0.4))
+        damage /= 1000
         self.health -= damage
         if self.health <= 0:
             self.health = 0

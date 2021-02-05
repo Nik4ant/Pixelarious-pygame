@@ -633,45 +633,45 @@ l....E....r
 '''
 
 COVERT_ROOM_1 = '''
-03333333339
-5.........1
-5.........1
-5..T...T..1
-5....C....1
-5...C.C...1
-5....C....1
-5..T...T..1
-5.........1
-5.........1
--777777777=
+           
+ 033333339 
+ 5.......1 
+ 5.T...T.1 
+ 5...C...1 
+ 5..C.C..1 
+ 5...C...1 
+ 5.T...T.1 
+ 5.......1 
+ -7777777= 
+           
 '''
 
 COVERT_ROOM_2 = '''
-03333333339
-5.........1
-5.........1
-5..T...T..1
-5...C.C...1
-5.........1
-5...C.C...1
-5..T...T..1
-5.........1
-5.........1
--777777777=
+           
+ 033333339 
+ 5.......1 
+ 5.T...T.1 
+ 5..C.C..1 
+ 5.......1 
+ 5..C.C..1 
+ 5.T...T.1 
+ 5.......1 
+ -7777777= 
+           
 '''
 
 COVERT_ROOM_3 = '''
-03333333339
-5CT.....TC1
-5T.......T1
-5.........1
-5.........1
-5.........1
-5.........1
-5.........1
-5T.......T1
-5CT.....TC1
--777777777=
+           
+ 033333339 
+ 5CT...TC1 
+ 5T.....T1 
+ 5.......1 
+ 5.......1 
+ 5.......1 
+ 5T.....T1 
+ 5CT...TC1 
+ -7777777= 
+           
 '''
 
 COVERT_ROOM_4 = '''
@@ -811,9 +811,9 @@ RRR   S
 LEVEL_8 = '''
 RR RRRR
  RRR  R
-RR R  R
- R    R
-RRRRE S
+RR RR R
+ R R  R
+RRRE  S
  R    R
 '''      # 20
 
@@ -835,18 +835,225 @@ RR  R
 ER R  R
 '''      # 21
 
+LEVEL_11 = '''
+RRRRE
+C RRR
+RRRR 
+ R R 
+  RRR
+SRR  
+R   C
+'''  # 22
+
+LEVEL_12 = '''
+RRR E
+R RRR
+R  R 
+R  RR
+S RRR
+R R  
+ RR C
+'''  # 19
+
+LEVEL_13 = '''
+ C ER
+R   R
+RR RR
+RRRR 
+R R C
+  R  
+SRR  
+'''      # 24
+
+LEVEL_14 = '''
+ RRR  
+RR RRR
+R   RR
+RR   R
+S  RER
+ C R  
+'''      # 21
+
+LEVEL_15 = '''
+RRRRRR
+  R RE
+C R   
+ RR   
+  RRRR
+SRR  R
+'''      # 24
+
+LEVEL_16 = '''
+ RRRR
+ R  R
+RS RR
+ R   
+ RR C
+  R  
+RRRRE
+'''      # 20
+
+LEVEL_17 = '''
+ERRRR 
+ R  R 
+RR   C
+ RRR  
+  R  S
+RRRRRR
+'''      # 24
+
+LEVEL_18 = '''
+CRRR 
+   RR
+E   R
+RRRRR
+ R R 
+RR R 
+R  RS
+'''      # 22
+
+LEVEL_19 = '''
+R R E
+RRRRR
+ R   
+ R RR
+ RRR 
+RR C 
+R SRR
+'''      # 22
+
+LEVEL_20 = '''
+R RRR 
+RRR RR
+ R   E
+RC    
+RRR CR
+ SRRR 
+'''      # 24
+
+LEVEL_21 = '''
+R  RRRE
+RRR R C
+R RRRR 
+R R  R 
+ SR CR 
+'''      # 22
+
+LEVEL_22 = '''
+S RRRRR
+R R   R
+RR    R
+R   ERR
+RRR C  
+'''      # 22
+
+LEVEL_23 = '''
+ERRRR
+    R
+RRRRR
+R   C
+RRRRR
+    R
+SRRRR
+'''      # 22
+
+LEVEL_24 = '''
+RRRS 
+R    
+RR  C
+ R   
+RR R 
+ R R 
+ RRE 
+'''      # 22
+
+LEVEL_25 = '''
+ERRRR
+ R  R
+RR  R
+R RRR
+RRR  
+R S  
+  C  
+'''      # 20
+
+LEVEL_26 = '''
+RRR  E
+C RRRR
+ RR   
+R R RR
+RRR S 
+ RRRR 
+'''      # 22
+
+LEVEL_27 = '''
+ R RR
+  SR 
+CR RR
+ RC R
+R R R
+R RRR
+E RRR
+'''      # 23
+
+LEVEL_28 = '''
+ RRRRR 
+RR   RR
+S C C E
+RR   RR
+ RRRRR 
+'''      # 24
+
+LEVEL_29 = '''
+S  R  
+RRRRR 
+   R  
+ R RR 
+RRRRR 
+C E RR
+'''      # 22
+
+LEVEL_30 = '''
+ RC   
+RSRRRR
+R R R 
+ RR R 
+ R RRR
+ RRR E
+'''      # 23
+
 # Группа уровней
 FORMS = {
-    'L1': LEVEL_1,
-    'L2': LEVEL_2,
-    'L3': LEVEL_3,
-    'L4': LEVEL_4,
-    'L5': LEVEL_5,
-    'L6': LEVEL_6,
-    'L7': LEVEL_7,
-    'L8': LEVEL_8,
-    'L9': LEVEL_9,
-    'L10': LEVEL_10
+    'L1':  LEVEL_1,
+    'L2':  LEVEL_2,
+    'L3':  LEVEL_3,
+    'L4':  LEVEL_4,
+    'L5':  LEVEL_5,
+    'L6':  LEVEL_6,
+    'L7':  LEVEL_7,
+    'L8':  LEVEL_8,
+    'L9':  LEVEL_9,
+    'L10': LEVEL_10,
+    'L11': LEVEL_11,
+    'L12': LEVEL_12,
+    'L13': LEVEL_13,
+    'L14': LEVEL_14,
+    'L15': LEVEL_15,
+    'L16': LEVEL_16,
+    'L17': LEVEL_17,
+    'L18': LEVEL_18,
+    'L19': LEVEL_19,
+    'L20': LEVEL_20,
+    'L21': LEVEL_21,
+    'L22': LEVEL_22,
+    'L23': LEVEL_23,
+    'L24': LEVEL_24,
+    'L25': LEVEL_25,
+    'L26': LEVEL_26,
+    'L27': LEVEL_27,
+    'L28': LEVEL_28,
+    'L29': LEVEL_29,
+    'L30': LEVEL_30,
 }
 
 
@@ -1076,7 +1283,7 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
     return bool(int(seed[-1]))
 
 
-def initialise_level(level_map, all_sprites, tiles_group, barriers_group, enemies_group,
+def initialise_level(level_map, level, all_sprites, tiles_group, furniture_group, barriers_group, enemies_group,
                      doors_group, torches_group, end_of_level, user_seed=None):
     """
     Функция для инициализации уровня
@@ -1087,6 +1294,7 @@ def initialise_level(level_map, all_sprites, tiles_group, barriers_group, enemie
     :param level_map: Уровень
     :param all_sprites: Группа со всеми спрайтами
     :param tiles_group: Группа со спрайтами плиток пола
+    :param furniture_group: Группа со спрайтами ящиков на уровне
     :param barriers_group: Группа для спрайтов с тайлами, сквозь которые нельзя ходить
     :param enemies_group: Группа врагов
     :param doors_group: Группа дверей
@@ -1104,7 +1312,8 @@ def initialise_level(level_map, all_sprites, tiles_group, barriers_group, enemie
     # Установка общих физических объектов для всех сущностей
     Entity.set_global_collisions_group(barriers_group)
     # Установка общих физических объектов для всех заклинаний
-    Spell.set_global_collisions_group(barriers_group, doors_group)
+    Spell.set_global_collisions_group(barriers_group)
+    Spell.set_global_breaking_group(doors_group, furniture_group)
 
     for y in range(len(level_map)):
         for x in range(len(level_map[y])):
@@ -1122,7 +1331,7 @@ def initialise_level(level_map, all_sprites, tiles_group, barriers_group, enemie
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites, tiles_group)
                 else:
                     Tile('.', x, y, all_sprites, tiles_group)
-                random_monster(x, y, all_sprites, enemies_group, seed, user_seed)
+                random_monster(x, y, level, all_sprites, enemies_group, seed, user_seed)
             elif level_map[y][x] in 'F.':
                 if true_with_chance(CRACKED_FLOOR_CHANCE):
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites, tiles_group)
@@ -1133,7 +1342,8 @@ def initialise_level(level_map, all_sprites, tiles_group, barriers_group, enemie
                     Tile(choice(['.0', '.1', '.2', '.3']), x, y, all_sprites, tiles_group)
                 else:
                     Tile('.', x, y, all_sprites, tiles_group)
-                Tile(('B', 'B1', 'C')[true_with_chance(50) + true_with_chance(40)], x, y, all_sprites, barriers_group)
+                Tile(('B', 'B1', 'C')[true_with_chance(50) + true_with_chance(40)], x, y,
+                     all_sprites, furniture_group, barriers_group)
             # Если добавим сундуки
             #
             # elif level_map[y][x] == 'C':

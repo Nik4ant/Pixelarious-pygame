@@ -251,7 +251,7 @@ class ShootingMonster(Entity):
         enemies_group = self.groups()[1]
         enemies_group.remove(self)
         args = (self.rect.centerx, self.rect.centery, player.rect.centerx,
-                player.rect.centery, [player] + list(enemies_group), self.spells, all_sprites)
+                player.rect.centery, self.extra_damage, [player] + list(enemies_group), self.spells, all_sprites)
         enemies_group.add(self)
         if isinstance(self, FireWizard):
             spell = FireSpell(*args)
@@ -304,12 +304,12 @@ class Demon(WalkingMonster):
     FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "little_steps.mp3"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, x, y, *args):
+    def __init__(self, x, y, level, *args):
         super().__init__(x, y, *args)
         self.alive = True
         self.visibility_range = TILE_SIZE * 8
 
-        self.health = 40
+        self.health = round(40 * (1 + 0.05 * level))
         self.full_health = self.health
 
 
@@ -348,12 +348,12 @@ class GreenSlime(WalkingMonster):
     FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "slime_sound.mp3"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, x, y, *args):
+    def __init__(self, x, y, level, *args):
         super().__init__(x, y, *args)
         self.alive = True
         self.visibility_range = TILE_SIZE * 6
 
-        self.health = 100
+        self.health = round(100 * (1 + 0.05 * level))
         self.full_health = self.health
 
 
@@ -394,12 +394,12 @@ class DirtySlime(WalkingMonster):
     FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "slime_sound_1.ogg"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, x, y, *args):
+    def __init__(self, x, y, level, *args):
         super().__init__(x, y, *args)
         self.alive = True
         self.visibility_range = TILE_SIZE * 8
 
-        self.health = 130
+        self.health = round(130 * (1 + 0.05 * level))
         self.full_health = self.health
 
 
@@ -439,12 +439,12 @@ class Zombie(WalkingMonster):
     FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "stone_steps_1.mp3"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, x, y, *args):
+    def __init__(self, x, y, level, *args):
         super().__init__(x, y, *args)
         self.alive = True
         self.visibility_range = TILE_SIZE * 8
 
-        self.health = 80
+        self.health = round(80 * (1 + 0.05 * level))
         self.full_health = self.health
 
 
@@ -456,7 +456,6 @@ class FireWizard(ShootingMonster):
     Средний урон
     Устойчивость к молниям
     Слабость к льду"""
-    damage = 10
     size = (TILE_SIZE // 8 * 7,) * 2
     frames = cut_sheet(load_image('wizard_run.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('wizard_idle.png', 'assets\\enemies'), 4, 2, size)
@@ -482,12 +481,13 @@ class FireWizard(ShootingMonster):
     FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "wizard_rustle.mp3"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, x, y, *args):
+    def __init__(self, x, y, level, *args):
         super().__init__(x, y, *args)
         self.alive = True
         self.visibility_range = TILE_SIZE * 9
 
-        self.health = FireSpell.damage
+        self.extra_damage = 1 + 0.05 * level
+        self.health = round(50 * (1 + 0.05 * level))
         self.full_health = self.health
 
 
@@ -526,18 +526,19 @@ class VoidWizard(ShootingMonster):
     FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "wizard_rustle.mp3"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, x, y, *args):
+    def __init__(self, x, y, level, *args):
         super().__init__(x, y, *args)
 
         self.visibility_range = TILE_SIZE * 13
 
-        self.health = VoidSpell.damage
+        self.extra_damage = 1 + 0.05 * level
+        self.health = round(100 * (1 + 0.05 * level))
         self.full_health = self.health
 
         self.reload_time = self.reload_time * 4 / 3
 
 
-def random_monster(x, y, all_sprites, enemies_group, seed, user_seed=None):
+def random_monster(x, y, level, all_sprites, enemies_group, seed, user_seed=None):
     if user_seed:
         n = int(user_seed[0])
         del user_seed[0]
@@ -545,7 +546,7 @@ def random_monster(x, y, all_sprites, enemies_group, seed, user_seed=None):
         n = randint(1, 15)
     # Запишем получившееся значение в сид
     seed.append(str(n))
-    args = (x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5,
+    args = (x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5, level - 1,
             all_sprites, enemies_group)
 
     if n in (1, 2):

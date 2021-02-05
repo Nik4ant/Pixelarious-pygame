@@ -11,13 +11,13 @@ class Player(Entity):
 
     # Кадры для анимации игрока
     size = (TILE_SIZE * 7 // 8, TILE_SIZE)
-    frames = cut_sheet(load_image('player_sprite_sheet.png', 'assets'), 4, 4, size)
-    death_frames = []
-    cast_frames = cut_sheet(load_image('player_cast_sprite_sheet.png', 'assets'), 5, 4, size)
+    frames = cut_sheet(load_image('normal_player.png', 'assets'), 4, 4, size)
+    death_frames = cut_sheet(load_image('player_death.png'), 28, 1, size)[0]
+    cast_frames = cut_sheet(load_image('player_cast.png', 'assets'), 5, 4, size)
 
     # Переменные добавляющие эти значения к здоровью и мане каждую итерацию update()
     MANA_UP = 0.4
-    HEALTH_UP = 0.1
+    HEALTH_UP = 0.5
     # Время неуязвимости, после атаки врагом (в миллисекундах)
     INVULNERABILITY_TIME_AFTER_HIT = 300
 
@@ -34,10 +34,8 @@ class Player(Entity):
         (1, 1): 2
     }
 
-    # время перезарядки заклинания в миллисекундах
-    spell_reload_time = 400
     # Время между кастами заклинаний
-    between_shoots_range = 80
+    between_shoots_range = 300
     # эффект замедления после атаки заклинанием
     after_spell_freezing = 300
 
@@ -51,7 +49,7 @@ class Player(Entity):
     dash_minimum_speed = 0.8
 
     # Скорость по умолчанию (используется при эффекте замедления)
-    default_speed = TILE_SIZE * 0.015
+    default_speed = TILE_SIZE * 0.02
     # отметка при превышении которой, скорость игрока автоматически возврастает
     min_delta_to_start_run = 1.5
     # Максимальное ускорение игрока (при перемещении, на дэш не влияет)
@@ -76,18 +74,17 @@ class Player(Entity):
         # Конструктор класса Entity
         super().__init__(x, y, all_sprites, *args)
         self.alive = True
-
-        # Ширина и высота изображения после инициализации
-        self.width, self.height = self.image.get_size()
+        self.destroyed = False
 
         # Графический прямоугольник
         self.rect = self.image.get_rect()
-        self.rect.centerx = x
-        self.rect.centery = y
+        self.rect.center = x, y
 
         # Скорость
         self.dx = self.dy = 0
         self.distance_to_player = 0.0001
+
+        self.extra_damage = 1
 
         # Здоровье
         self.health = 500
@@ -96,6 +93,9 @@ class Player(Entity):
         # Мана
         self.mana = 500
         self.full_mana = self.mana
+
+        #
+        self.assistants = pygame.sprite.Group()
 
         # Группа со спрайтами заклинаний
         self.spells = pygame.sprite.Group()
@@ -117,7 +117,7 @@ class Player(Entity):
         # (Нужно для определения перезарядился дэш или нет)
         self.dash_last_time = pygame.time.get_ticks()
 
-        # Инициализация прицеда для игрока
+        # Инициализация прицела для игрока
         self.scope = PlayerScope(x, y)
         # Установка начального состояния джойстика
         self.joystick = get_joystick() if check_any_joystick() else None
@@ -125,9 +125,13 @@ class Player(Entity):
     def update(self):
         super().update()
 
+        self.assistants.update()
         if self.alive:
             self.mana = min(self.mana + Player.MANA_UP, self.full_mana)
             self.health = min(self.health + Player.HEALTH_UP, self.full_health)
+        else:
+            self.update_frame_state()
+            return
 
         # Обновляем состояние джойстика
         self.joystick = get_joystick() if check_any_joystick() else None
@@ -164,10 +168,10 @@ class Player(Entity):
             keys = pygame.key.get_pressed()
 
             # Направления движения по x и y
-            current_direction_x = int(int(keys[CONTROLS["KEYBOARD_LEFT"]]) * -1
-                                      + int(keys[CONTROLS["KEYBOARD_RIGHT"]]))
-            current_direction_y = int(int(keys[CONTROLS["KEYBOARD_UP"]]) * -1
-                                      + int(keys[CONTROLS["KEYBOARD_DOWN"]]))
+            current_direction_x = int(keys[CONTROLS["KEYBOARD_LEFT"][0]] or keys[CONTROLS["KEYBOARD_LEFT"][1]]) * -1
+            current_direction_x += int(keys[CONTROLS["KEYBOARD_RIGHT"][0]] or keys[CONTROLS["KEYBOARD_RIGHT"][1]])
+            current_direction_y = int(keys[CONTROLS["KEYBOARD_UP"][0]] or keys[CONTROLS["KEYBOARD_UP"][1]]) * -1
+            current_direction_y += int(keys[CONTROLS["KEYBOARD_DOWN"][0]] or keys[CONTROLS["KEYBOARD_DOWN"][1]])
 
             # Проверка на использование дэша
             was_dash_activated = keys[CONTROLS["KEYBOARD_DASH"]]
@@ -274,11 +278,11 @@ class Player(Entity):
             previous_dx, previous_dy = self.dx, self.dy
             self.dx -= 0.35 * -1 if self.dx < 0 else 1
             self.dy -= 0.35 * -1 if self.dy < 0 else 1
-            if (previous_dx > 0 and self.dx < 0) or (previous_dx < 0 and self.dx > 0):
+            if previous_dx > 0 and self.dx < 0 or previous_dx < 0 and self.dx > 0:
                 self.dx = 0
                 self.is_boosting_from_enemy = False
 
-            if (previous_dy > 0 and self.dy < 0) or (previous_dy < 0 and self.dy > 0):
+            if previous_dy > 0 and self.dy < 0 or previous_dy < 0 and self.dy > 0:
                 self.dy = 0
                 self.is_boosting_from_enemy = False
 
@@ -318,21 +322,23 @@ class Player(Entity):
     def draw(self, screen):
         screen.blit(self.image, self.rect.topleft)
 
+    def add_assistant(self, assistant):
+        self.assistants.add(assistant)
+
     def shoot(self, spell_type: str, group):
         if not self.alive:
             return
 
         current_ticks = pygame.time.get_ticks()
         # Если не прошло время перезарядки, то заклинания не создаются
-        if current_ticks - Player.spell_reload_time < self.shoot_last_time or \
-                current_ticks - Player.between_shoots_range < self.shoot_last_time:
+        if current_ticks - Player.between_shoots_range < self.shoot_last_time:
             return
         self.shoot_last_time = current_ticks
 
         # Получение угла относительно прицела и оружия
         dx, dy = self.rect.centerx - self.scope.rect.centerx, self.rect.centery - self.scope.rect.centery
         angle = (degrees(atan2(dx, 0.00001 if not dy else dy)) + 360) % 360
-        args = (*self.rect.center, self.scope.rect.centerx, self.scope.rect.centery, group)
+        args = (*self.rect.center, self.scope.rect.centerx, self.scope.rect.centery, self.extra_damage, group)
 
         if spell_type == Spell.FIRE:
             spell = FireSpell(*args)
@@ -369,6 +375,7 @@ class Player(Entity):
             self.ice_buff += 10
             self.shoot_last_time = current_ticks
         else:
+            spell.kill()
             self.sounds_channel.play(Player.NO_MANA_SOUND)
 
     def death(self):
@@ -428,3 +435,91 @@ class PlayerScope(pygame.sprite.Sprite):
         :param position: Кортеж с координатами
         """
         self.rect.center = position
+
+
+class PlayerAssistant(Entity):
+    """
+    Класс отвечающий за игрока
+    """
+
+    # Кадры для анимации игрока
+    size = (TILE_SIZE * 7 // 8, TILE_SIZE)
+    frames = cut_sheet(load_image('assistant.png'), 4, 4, size)
+    death_frames = cut_sheet(load_image('player_death.png'), 28, 1, size)[0]
+    cast_frames = cut_sheet(load_image('player_cast.png'), 5, 4, size)
+
+    # Переменные добавляющие эти значения к здоровью и мане каждую итерацию update()
+    MANA_UP = 0.4
+    HEALTH_UP = 0.5
+    # Время неуязвимости, после атаки врагом (в миллисекундах)
+    INVULNERABILITY_TIME_AFTER_HIT = 300
+
+    # Словарь типа (направлениями взгляда): *индекс ряда в frames для анимации*
+    look_directions = {
+        (-1, -1): 3,
+        (-1, 0): 3,
+        (0, -1): 1,
+        (-1, 1): 3,
+        (0, 0): 0,
+        (0, 1): 0,
+        (1, -1): 2,
+        (1, 0): 2,
+        (1, 1): 2
+    }
+
+    # Время между кастами заклинаний
+    between_shoots_range = 300
+    # эффект замедления после атаки заклинанием
+    after_spell_freezing = 300
+
+    # время перезарядки дэша в миллисекундах
+    dash_reload_time = 2000
+    # сила дэша, которая устанавливается в самом начале
+    dash_force_base = 3
+    # сила замедляющая дэш со временем
+    dash_force_slower = 0.04
+    # Минимальгая скорость дэша
+    dash_minimum_speed = 0.8
+
+    # Скорость по умолчанию (используется при эффекте замедления)
+    default_speed = TILE_SIZE * 0.02
+    # отметка при превышении которой, скорость игрока автоматически возврастает
+    min_delta_to_start_run = 1.5
+    # Максимальное ускорение игрока (при перемещении, на дэш не влияет)
+    max_delta_movements = 2
+    # сила с которой игрок будет набирать/уменьшать свою скорость
+    delta_changer = 0.3
+
+    # Канал для звуков
+    sounds_channel = pygame.mixer.Channel(1)
+
+    # Звуки
+    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "footstep.ogg"))
+    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+
+    def __init__(self, x, y, player, all_sprites, *groups):
+        super().__init__(x, y, all_sprites, *groups)
+
+        self.player = player
+        self.alive = True
+
+        # Графический прямоугольник
+        self.rect = self.image.get_rect()
+        self.rect.center = x, y
+
+        # Скорость
+        self.dx = self.dy = 0
+        self.distance_to_player = 0.0001
+
+        # Здоровье
+        self.health = 500
+        self.full_health = self.health
+
+        # Мана
+        self.mana = 500
+        self.full_mana = self.mana
+
+        # Группа со спрайтами заклинаний
+        self.spells = pygame.sprite.Group()
+        self.shoot_last_time = pygame.time.get_ticks()
+        self.last_hit_time = 0

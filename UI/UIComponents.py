@@ -21,7 +21,7 @@ class Button(pygame.sprite.Sprite):
                  hover_button_filename="button_hover.png", *args):
         super().__init__(*args)
 
-        # События, которые будут вызываться pygame внутри update
+        # События, которые будут вызываться PyGame внутри update
         # (с помощью sender_text будет определено какая кнопка нажата)
         self.PRESS_EVENT = pygame.event.Event(Button.PRESS_TYPE, {"sender_text": text})
         self.HOVER_EVENT = pygame.event.Event(Button.HOVER_TYPE, {"sender_text": text})
@@ -232,19 +232,17 @@ class PlayerIcon:
         # Иконка заклинания
         x1, y1 = self.position
 
-        health_line = pygame.sprite.Sprite()
         health_length = round(264 * (self.player.health / self.player.full_health) + 0.5)
-        health_line.image = pygame.surface.Surface((health_length, 24))
-        health_line.image.fill((255, 30, 30))
-        screen.blit(health_line.image, (x1 + 132, y1 + 12))
+        health_line = pygame.surface.Surface((health_length, 24))
+        health_line.fill((255, 30, 30))
+        screen.blit(health_line, (x1 + 132, y1 + 12))
         screen.blit(self.font.render(f'{round(self.player.health + 0.5)}/{self.player.full_health}',
                                      True, (255, 255, 255)), (x1 + 220, y1 + 10))
 
-        mana_line = pygame.sprite.Sprite()
         mana_length = round(264 * (self.player.mana / self.player.full_mana) + 0.5)
-        mana_line.image = pygame.surface.Surface((mana_length, 24))
-        mana_line.image.fill((30, 30, 255))
-        screen.blit(mana_line.image, (x1 + 132, y1 + 52))
+        mana_line = pygame.surface.Surface((mana_length, 24))
+        mana_line.fill((30, 30, 255))
+        screen.blit(mana_line, (x1 + 132, y1 + 52))
         screen.blit(self.font.render(f'{round(self.player.mana + 0.5)}/{self.player.full_mana}',
                                      True, (255, 255, 255)), (x1 + 220, y1 + 50))
 

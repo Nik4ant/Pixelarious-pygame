@@ -4,6 +4,9 @@ from UI.UIComponents import Button, LogoImage, MessageBox
 from config import FPS, CONTROLS, JOYSTICK_SENSITIVITY, DEFAULT_MUSIC_VOLUME
 from engine import load_image, check_any_joystick, get_joystick, concat_two_file_paths
 
+AUTHORS = """Никита Сошнев (Nik4ant)
+Максим Рудаков (Massering)"""
+
 
 def execute(screen: pygame.surface.Surface) -> int:
     """
@@ -65,9 +68,8 @@ def execute(screen: pygame.surface.Surface) -> int:
     сквозь подземелье, заполненное врагами.
     Желаем удачи!"""
     about_message_box = MessageBox(text, 32, (screen.get_width() * 0.5, screen.get_height() * 0.5))
-    text = """Никита Сошнев (Nik4ant)
-    Максим Рудаков (Massering)"""
-    authors_message_box = MessageBox(text, 32, (screen.get_width() * 0.5, screen.get_height() * 0.5))
+
+    authors_message_box = MessageBox(AUTHORS, 32, (screen.get_width() * 0.5, screen.get_height() * 0.5))
 
     # Фоновое изоюражение
     background_image = load_image("main_menu_BG.png", "assets/UI")
