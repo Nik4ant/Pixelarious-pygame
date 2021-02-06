@@ -1,5 +1,6 @@
 from entities.base_entity import Entity
 from entities.spells import *
+from entities.items import *
 from engine import *
 from config import *
 
@@ -17,7 +18,8 @@ class Player(Entity):
 
     # Переменные добавляющие эти значения к здоровью и мане каждую итерацию update()
     MANA_UP = 0.4
-    HEALTH_UP = 0.5
+    HEALTH_UP = 0.001
+    MEAT_HEALTH_UP = 50
     # Время неуязвимости, после атаки врагом (в миллисекундах)
     INVULNERABILITY_TIME_AFTER_HIT = 300
 
@@ -49,7 +51,7 @@ class Player(Entity):
     dash_minimum_speed = 0.8
 
     # Скорость по умолчанию (используется при эффекте замедления)
-    default_speed = TILE_SIZE * 0.02
+    default_speed = TILE_SIZE * 0.017
     # отметка при превышении которой, скорость игрока автоматически возврастает
     min_delta_to_start_run = 1.5
     # Максимальное ускорение игрока (при перемещении, на дэш не влияет)
@@ -81,6 +83,7 @@ class Player(Entity):
         self.rect.center = x, y
 
         # Скорость
+        self.speed = 0
         self.dx = self.dy = 0
         self.distance_to_player = 0.0001
 
@@ -94,8 +97,12 @@ class Player(Entity):
         self.mana = 500
         self.full_mana = self.mana
 
-        #
+        # Монеты
+        self.money_count = 0
+
+        # Помощники
         self.assistants = pygame.sprite.Group()
+        self.assistants.add(PlayerAssistant(*self.rect.bottomleft, self, Entity.all_sprites))
 
         # Группа со спрайтами заклинаний
         self.spells = pygame.sprite.Group()
@@ -123,15 +130,12 @@ class Player(Entity):
         self.joystick = get_joystick() if check_any_joystick() else None
 
     def update(self):
-        super().update()
-
         self.assistants.update()
         if self.alive:
             self.mana = min(self.mana + Player.MANA_UP, self.full_mana)
             self.health = min(self.health + Player.HEALTH_UP, self.full_health)
         else:
             self.update_frame_state()
-            return
 
         # Обновляем состояние джойстика
         self.joystick = get_joystick() if check_any_joystick() else None
@@ -186,7 +190,7 @@ class Player(Entity):
 
         # Обработка активации дэша
         if (was_dash_activated and pygame.time.get_ticks() -
-                self.dash_last_time > Player.dash_reload_time):
+                self.dash_last_time > Player.dash_reload_time and self.alive):
             self.dash_force_x = self.dash_force_y = self.dash_force_base
             # Обновляем время последнего использования дэша
             self.dash_last_time = pygame.time.get_ticks()
@@ -268,21 +272,21 @@ class Player(Entity):
                 self.dy += current_direction_y * 0.4
 
         # Если игрок не совершает дэш и направления движения нет, то
-        # ускорение збрасывается
+        # ускорение сбрасывается
         elif (self.dash_force_x == 0 and self.dash_force_y == 0 and
               not self.is_boosting_from_enemy):
             self.dx = self.dy = 0
-            if pygame.time.get_ticks() - self.shoot_last_time > Player.after_spell_freezing:
+            if pygame.time.get_ticks() - self.shoot_last_time > Player.after_spell_freezing and self.alive:
                 self.set_first_frame()
         elif self.is_boosting_from_enemy:
             previous_dx, previous_dy = self.dx, self.dy
             self.dx -= 0.35 * -1 if self.dx < 0 else 1
             self.dy -= 0.35 * -1 if self.dy < 0 else 1
-            if previous_dx > 0 and self.dx < 0 or previous_dx < 0 and self.dx > 0:
+            if previous_dx > 0 > self.dx or previous_dx < 0 < self.dx:
                 self.dx = 0
                 self.is_boosting_from_enemy = False
 
-            if previous_dy > 0 and self.dy < 0 or previous_dy < 0 and self.dy > 0:
+            if previous_dy > 0 > self.dy or previous_dy < 0 < self.dy:
                 self.dy = 0
                 self.is_boosting_from_enemy = False
 
@@ -293,7 +297,7 @@ class Player(Entity):
         if ((abs(self.dx) > Player.delta_changer or
              abs(self.dy) > Player.delta_changer)
                 and self.dash_force_x == self.dash_force_y == 0 and
-                not Player.sounds_channel.get_busy()):
+                not Player.sounds_channel.get_busy() and self.alive):
             Player.sounds_channel.play(Player.FOOTSTEP_SOUND)
 
         # Если игрок движется по диагонали, то его скорость надо
@@ -306,16 +310,25 @@ class Player(Entity):
             self.speed *= TILE_SIZE * 0.055
 
         # Перемещение игрока
-        self.move(self.dx * self.speed, self.dy * self.speed)
+        if self.alive:
+            self.move(self.dx * self.speed, self.dy * self.speed)
+        super().update()
 
         # Обновление анимации
-        if pygame.time.get_ticks() - self.shoot_last_time > Player.after_spell_freezing:
+        if pygame.time.get_ticks() - self.shoot_last_time > Player.after_spell_freezing and self.alive:
             if self.dx or self.dy:
                 self.update_frame_state()
             else:
                 self.is_boosting_from_enemy = False
                 self.set_first_frame()
 
+        for item in pygame.sprite.spritecollide(self.collider, GroundItem.item_group, False):
+            if item.type == 'meat':
+                self.get_damage(-self.MEAT_HEALTH_UP * item.count)
+            elif item.type == 'money':
+                self.money_count += item.count
+            self.sounds_channel.play(item.sound)
+            item.kill()
         # Обновление прицела
         self.scope.update(new_scope_x, new_scope_y)
 

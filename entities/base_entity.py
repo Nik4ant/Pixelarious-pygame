@@ -13,23 +13,31 @@ class Entity(pygame.sprite.Sprite):
     # Группа со спрайтами, которые считаются физическими объектами
     # общими для всех сущностей.
     collisions_group: pygame.sprite.Group
+    all_sprites: pygame.sprite.Group
+
+    # Группа со всеми сущностями (экземплярами этого класса)
+    # Нужна в основном для коллизий между существами
+    entities_group = pygame.sprite.Group()
+    damages = pygame.sprite.Group()
 
     WAITING_TIME = 2000
     UPDATE_TIME = 120
     HEALTH_LINE_WIDTH = 10
     HEALTH_LINE_TIME = 5000
 
-    POISON_DAMAGE = 0.05
+    POISON_DAMAGE = 5
+    BETWEEN_POISON_DAMAGE = 1000
 
     size = (int(TILE_SIZE),) * 2
     sleeping_frames = cut_sheet(load_image('sleep_icon_spritesheet.png', 'assets\\enemies'), 4, 1, size)
     poison_frames = cut_sheet(load_image('poison_static.png', 'assets\\spells'), 5, 1, size)[0]
 
-    font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 15)
+    small_font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 15)
+    font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 24)
 
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
-        super().__init__(*args)
+        super().__init__(*((Entity.entities_group,) + args))
 
         # Изображение
         self.cur_frame = 0
@@ -38,6 +46,7 @@ class Entity(pygame.sprite.Sprite):
         self.width, self.height = self.image.get_size()
 
         self.last_damage_time = -Entity.HEALTH_LINE_TIME
+        self.last_poison_damage = 0
         self.sleeping_time = None
         self.cur_sleeping_frame = 0
         self.cur_poison_frame = 0
@@ -49,9 +58,8 @@ class Entity(pygame.sprite.Sprite):
         self.point = None
 
         self.rect = self.image.get_rect()
-        self.rect.centerx = x
-        self.rect.centery = y
-        self.collider = Collider(self.rect.centerx, self.rect.centery)
+        self.rect.center = x, y
+        self.collider = Collider(*self.rect.center)
 
         # Скорость
         self.dx = self.dy = 0
@@ -61,13 +69,30 @@ class Entity(pygame.sprite.Sprite):
         self.look_direction_y = 1
 
     def update(self) -> None:
+        # self.collider.update(*self.rect.center)
+        # for other in pygame.sprite.spritecollide(self.collider, Entity.entities_group, False):
+        #     if other == self:
+        #         continue
+        #     other.collider.update(*other.rect.center)
+        #     dx, dy = self.rect.centerx - other.rect.centerx, self.rect.centery - other.rect.centery
+        #     print('da, ya v etom cikle      ', self.__class__.__name__, other.__class__.__name__, '     ', dx, dy)
+        #     new_dx = dx * 0.1
+        #     new_dy = dx * 0.1
+        #     if dx == 0:
+        #         new_dx = 1
+        #     if dy == 0:
+        #         new_dy = 1
+        #     self.move(new_dx, new_dy)
+
         if self.ice_buff:
             self.ice_buff -= 1
             self.speed = self.__class__.default_speed * 0.3
         else:
             self.speed = self.__class__.default_speed
 
-        if self.poison_buff:
+        ticks = pygame.time.get_ticks()
+        if self.poison_buff and ticks - self.last_poison_damage > Entity.BETWEEN_POISON_DAMAGE:
+            self.last_poison_damage = ticks
             self.poison_buff -= 1
             self.get_damage(Entity.POISON_DAMAGE, 'poison')
 
@@ -86,29 +111,29 @@ class Entity(pygame.sprite.Sprite):
         pos = self.rect.x, self.rect.y
 
         self.rect.x = round(self.rect.x + dx)
-        self.collider.update(self.rect.centerx, self.rect.centery)
+        self.collider.update(*self.rect.center)
 
         # Если плохо, возвращаем к исходному
         if pygame.sprite.spritecollide(self.collider, Entity.collisions_group, False):
             self.rect.x = pos[0]
             self.dx = 0
             if self.__class__.__name__.lower() == "player":
-                self.dash_force_x = 0
+                self.dash_force_x *= 0.8
                 self.dash_direction_x = self.look_direction_x
-                self.dash_force_y = 0
+                self.dash_force_y *= 0.8
                 self.dash_direction_y = self.look_direction_y
 
         self.rect.y = round(self.rect.y + dy)
-        self.collider.update(self.rect.centerx, self.rect.centery)
+        self.collider.update(*self.rect.center)
 
         # Если плохо, возвращаем к исходному
         if pygame.sprite.spritecollide(self.collider, Entity.collisions_group, False):
             self.rect.y = pos[1]
             self.dy = 0
             if self.__class__.__name__.lower() == "player":
-                self.dash_force_x = 0
+                self.dash_force_x *= 0.8
                 self.dash_direction_x = self.look_direction_x
-                self.dash_force_y = 0
+                self.dash_force_y *= 0.8
                 self.dash_direction_y = self.look_direction_y
 
     def update_frame_state(self, n=0):
@@ -154,22 +179,28 @@ class Entity(pygame.sprite.Sprite):
         :param screen: Экран отрисовки
         :return: None
         """
-        if pygame.time.get_ticks() - self.last_damage_time < Entity.HEALTH_LINE_TIME:
-            line_width = Entity.HEALTH_LINE_WIDTH
-            x, y = self.rect.centerx, self.rect.centery
-            width, height = self.rect.size
-            x1, y1 = x - width * 0.5, y - height * 0.5
+        line_width = Entity.HEALTH_LINE_WIDTH
+        x, y = self.rect.center
+        width, height = self.rect.size
+        x1, y1 = x - width * 0.5, y - height * 0.5
 
+        if pygame.time.get_ticks() - self.last_damage_time < Entity.HEALTH_LINE_TIME:
             pygame.draw.rect(screen, 'dark grey', (x1 - 1, y1 - 10 - 1, width + 2, line_width + 2))
             health_length = width * max(self.health, 0) / self.full_health
             color = '#00b300' if str(self.__class__.__name__) == 'Player' else 'red'
             pygame.draw.rect(screen, color, (x1, y1 - 10, health_length, line_width))
 
             health_text = f'{round(self.health + 0.5)}/{self.full_health}'
-            health = self.font.render(health_text, True, (255, 255, 255))
+            health = self.small_font.render(health_text, True, (255, 255, 255))
             rect = health.get_rect()
             rect.center = (x1 + width // 2, y1 - 5)
             screen.blit(health, rect.topleft)
+
+        if self.__class__.__name__ != 'Player':
+            name = self.font.render(self.name, True, (255, 255, 255))
+            rect = name.get_rect()
+            rect.center = (x1 + width // 2, y1 - 12 - line_width)
+            screen.blit(name, rect.topleft)
 
         if not self.alive:
             return
@@ -197,6 +228,8 @@ class Entity(pygame.sprite.Sprite):
         Получение дамага
 
         :param damage: Столько здоровья надо отнять
+        :param spell_type: Тип урона, чтоб узнавать, на кого он действует сильнее
+        :param action_time: Время действия (для льда и отравления)
         :return: None
         """
 
@@ -225,9 +258,16 @@ class Entity(pygame.sprite.Sprite):
 
         self.last_damage_time = pygame.time.get_ticks()
         damage *= 1000
-        damage += randint(round(-damage * 0.4), round(damage * 0.4))
+        damage += randint(-abs(round(-damage * 0.4)), abs(round(damage * 0.4)))
         damage /= 1000
-        self.health -= damage
+        if self.__class__.__name__ in ('Player', 'PlayerAssistant'):
+            if damage >= 0:
+                ReceivingDamage(*self.rect.midtop, damage, Entity.all_sprites, Entity.damages, color=(255, 30, 30))
+            else:
+                ReceivingDamage(*self.rect.midtop, damage, Entity.all_sprites, Entity.damages, color=(30, 255, 30))
+        else:
+            ReceivingDamage(self.rect.centerx, self.rect.top, damage, Entity.all_sprites, Entity.damages)
+        self.health = min(self.health - damage, self.full_health)
         if self.health <= 0:
             self.health = 0
             self.death()
@@ -243,16 +283,18 @@ class Entity(pygame.sprite.Sprite):
         self.image = self.__class__.frames[look][self.cur_frame]
 
     @staticmethod
-    def set_global_collisions_group(group: pygame.sprite.Group):
+    def set_global_groups(collisions_group: pygame.sprite.Group, all_sprites: pygame.sprite.Group):
         """
         Метод устанавливает группу со спрайтами, которые будут считаться
         физическими объектами для всех сущностей на уровне.
         (Кроме индивидуальных спрайтов у конкретных объектов,
         например у врагов будет отдельное взаимодействие с игроком).
         Метод нужен при инициализации
-        :param group: Новая группа
+        :param collisions_group: Новая группа
+        :param all_sprites: Группа всех спрайтов
         """
-        Entity.collisions_group = group
+        Entity.collisions_group = collisions_group
+        Entity.all_sprites = all_sprites
 
 
 class Collider(pygame.sprite.Sprite):
@@ -262,9 +304,36 @@ class Collider(pygame.sprite.Sprite):
     def __init__(self, x: float, y: float, size=(round(TILE_SIZE * 0.5), round(TILE_SIZE * 0.5))):
         self.image = pygame.surface.Surface(size)
         self.rect = self.image.get_rect()
-        self.rect.centerx, self.rect.centery = x, y
+        self.rect.center = x, y
 
     def update(self, x: float, y: float, size=None):
-        self.rect.centerx, self.rect.centery = x, y
+        self.rect.center = x, y
         if size:
             self.rect.size = size
+
+
+class ReceivingDamage(pygame.sprite.Sprite):
+    update_time = 40
+    delta_up = 1
+    delta_transparent = 5
+
+    def __init__(self, x: float, y: float, damage: float, *groups, color=(252, 241, 139)):
+        super().__init__(*groups)
+        self.font = pygame.font.Font("assets\\UI\\pixel_font.ttf", round(20 + damage / 3))
+        self.last_update_time = 0
+
+        self.damage = round(damage)
+        self.color = color + (255,)
+        self.image = self.font.render(str(round(damage)), True, self.color).convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.center = x + randint(-TILE_SIZE // 2, TILE_SIZE // 2), y
+
+    def update(self):
+        # ticks = pygame.time.get_ticks()
+        # if ticks - self.last_update_time < self.update_time:
+        self.rect.y -= self.delta_up
+        self.color = self.color[:3] + (self.color[3] - self.delta_transparent,)
+        if self.color[-1] <= 0:
+            self.kill()
+            return
+        self.image = self.font.render(str(round(self.damage, 1)), True, self.color).convert_alpha()

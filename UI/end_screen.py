@@ -3,7 +3,7 @@ import os
 import pygame
 
 from UI.UIComponents import LogoImage, AnimatedBackground
-from engine import concat_two_file_paths
+from engine import concat_two_file_paths, load_image
 from UI.start_screen import AUTHORS
 
 
@@ -21,6 +21,10 @@ def execute(screen: pygame.surface.Surface, is_win=False):
         pygame.mixer.music.load(concat_two_file_paths("assets\\audio", "win_screen_BG.ogg"))
         pygame.mixer.music.play(-1)
         animated_background = AnimatedBackground("triumph_screen\\win_{0}.png", 1, 8, 60, screen.get_size())
+
+        title_you_win = load_image('you_win.png', 'assets\\UI')
+        you_win_rect = title_you_win.get_rect()
+        you_win_rect.center = screen.get_rect().centerx, int(screen.get_rect().centery * 0.7)
     else:
         # Фоновая музыка для проигравшего
         pygame.mixer.music.load(concat_two_file_paths("assets\\audio", "fail_screen_BG.mp3"))
@@ -58,6 +62,8 @@ def execute(screen: pygame.surface.Surface, is_win=False):
         next_y = 20
 
         if is_win:
+            screen.blit(title_you_win, you_win_rect)
+
             for text_surface in text_surfaces_1:
                 y_pos = screen.get_height() * 0.6 + next_y
                 screen.blit(text_surface, text_surface.get_rect(midtop=(screen.get_rect().centerx + 2, y_pos + 2)))

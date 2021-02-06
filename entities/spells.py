@@ -54,14 +54,14 @@ class Spell(pygame.sprite.Sprite):
 
         self.image = self.frames[0][0]
         self.rect = self.image.get_rect()
-        self.rect.centerx, self.rect.centery = subject_x, subject_y
+        self.rect.center = subject_x, subject_y
 
-        self.collider = Collider(self.rect.centerx, self.rect.centery, (TILE_SIZE * 0.1,) * 2)
+        self.collider = Collider(*self.rect.center, (TILE_SIZE * 0.2, TILE_SIZE * 0.2))
 
         self.update()
 
     def update(self) -> None:
-        if (self.rect.centerx, self.rect.centery) == self.point:
+        if self.rect.center == self.point:
             ticks = pygame.time.get_ticks()
             if ticks - self.last_update_time < self.UPDATE_TIME:
                 return
@@ -72,9 +72,10 @@ class Spell(pygame.sprite.Sprite):
                 else:
                     if isinstance(self, VoidSpell):
                         size = (round((self.rect.w / 3)),) * 2
-                        self.collider.update(self.rect.centerx, self.rect.centery, size)
+                        self.collider.update(*self.rect.center, size)
                     else:
-                        self.collider.update(self.rect.centerx, self.rect.centery)
+                        size = (round((self.rect.w / 2)),) * 2
+                        self.collider.update(*self.rect.center, size)
                     pygame.sprite.spritecollide(self.collider, Spell.furniture_group, True)
                     pygame.sprite.spritecollide(self.collider, Spell.doors_group, True)
                     for obj in self.object_group:
@@ -96,7 +97,7 @@ class Spell(pygame.sprite.Sprite):
         else:
             self.cur_frame = (self.cur_frame + 1) % len(self.__class__.frames[0])
 
-            self_x, self_y = self.rect.centerx, self.rect.centery
+            self_x, self_y = self.rect.center
             point_x, point_y = self.point
             distance_to_object = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
             part_move = max(distance_to_object / self.speed, 0.5)
@@ -105,7 +106,7 @@ class Spell(pygame.sprite.Sprite):
             self.rect.x = self.rect.x + dx
             self.rect.y = self.rect.y + dy
 
-            self.collider.update(self.rect.centerx, self.rect.centery)
+            self.collider.update(*self.rect.center)
             do_kill = False
             for obj in pygame.sprite.spritecollide(self.collider, self.object_group, False):
                 if obj.alive:
@@ -260,7 +261,7 @@ class PoisonSpell(Spell):
     Зеленых слизеней"""
     spell_type = Spell.POISON
     damage = 10
-    action_time = 1000
+    action_time = 10
     extra_damage = Entity.POISON_DAMAGE * action_time
     mana_cost = 50
     UPDATE_TIME = 40
@@ -311,7 +312,7 @@ class VoidSpell(Spell):
     speed = TILE_SIZE * 0.24
     acceleration = 3
     UPDATE_TIME = 40
-    damage_frame = 5
+    damage_frame = 2
     action_time = 0
 
     size = (TILE_SIZE * 3,) * 2
@@ -358,7 +359,7 @@ class FlashSpell(Spell):
     UPDATE_TIME = 60
     speed = TILE_SIZE * 0.5
     acceleration = 1
-    damage_frame = 5
+    damage_frame = 2
     action_time = 0
 
     size = (TILE_SIZE // 2 * 2, TILE_SIZE // 2 * 5)
@@ -460,14 +461,8 @@ class HealingSpell(Spell):
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "teleport_sound.ogg"))
+    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "call_zombies.ogg"))
     CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
-
-    SPELL_SOUNDS = (
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "teleport_sound.ogg")),
-    )
-    for sound in SPELL_SOUNDS:
-        sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
                  object_group, *groups):
@@ -480,3 +475,11 @@ class HealingSpell(Spell):
         self.start_sprite.rect = self.start_sprite.image.get_rect()
         self.start_sprite.rect.center = object_group[0].rect.center
 
+
+class CallZombiesSpell(Spell):
+    # Канал для звуков
+    sounds_channel = pygame.mixer.Channel(3)
+
+    # Звуки
+    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "call_zombies.ogg"))
+    CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME * 1.5)

@@ -2,9 +2,10 @@ from random import randint
 
 import pygame
 
-from engine import load_tile, cut_sheet, load_image, concat_two_file_paths
+from engine import load_tile, cut_sheet, load_image, concat_two_file_paths, true_with_chance
 from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
 from entities.base_entity import Collider
+from entities.items import spawn_item
 
 
 class Tile(pygame.sprite.Sprite):
@@ -21,10 +22,7 @@ class Tile(pygame.sprite.Sprite):
         '0':  load_tile('TOP_LEFT_WALL.png'),
         '-':  load_tile('DOWN_LEFT_WALL_FLAT.png'),
         '=':  load_tile('DOWN_RIGHT_WALL_FLAT.png'),
-        'B':  load_tile('BARREL.png'),
-        'B1': load_tile('BOX.png'),
         'P':  load_tile('UPSTAIRS.png'),
-        'C':  load_tile('BOX_1.png'),
         'E':  load_tile('DOWNSTAIRS.png'),
         '.':  load_tile('FLOOR.png'),
         '.0': load_tile('FLOOR_CRACKED_0.png'),
@@ -59,6 +57,25 @@ class Tile(pygame.sprite.Sprite):
             self.collider = Collider(x, y)
 
 
+class Furniture(pygame.sprite.Sprite):
+    IMAGES = {
+        'B1':  load_tile('BARREL.png'),
+        'B2': load_tile('BOX.png'),
+        'B3':  load_tile('BOX_1.png'),
+    }
+
+    def __init__(self, tile_type: str, x: float, y: float, *groups):
+        super().__init__(*groups)
+        self.image = self.IMAGES[tile_type]
+        self.rect = self.image.get_rect().move(x * TILE_SIZE, y * TILE_SIZE)
+        self.collider = Collider(x, y)
+
+    def kill(self):
+        if true_with_chance(5):
+            spawn_item(*self.rect.center)
+        super().kill()
+
+
 class Torch(pygame.sprite.Sprite):
     frames = cut_sheet(load_image('TORCH.png', 'assets\\tiles'), 8, 1, (round(TILE_SIZE / 4 * 3),) * 2)
 
@@ -82,10 +99,10 @@ class Torch(pygame.sprite.Sprite):
     def update(self, player=None) -> None:
         ticks = pygame.time.get_ticks()
         if ticks - Torch.update_sounds_channel > 100:
-            Torch.update_sounds_channel = ticks
+            Torch.update_sounds_channel = ticks + randint(-20, 20)
             Torch.min_distance_to_player = 100
             return
-        if ticks - self.update_time > 100 + randint(-20, 20):
+        if ticks - self.update_time > 100:
             self.update_time = pygame.time.get_ticks()
             while 1:
                 n = randint(0, 7)
@@ -107,6 +124,7 @@ class Door(pygame.sprite.Sprite):
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(0)
     min_distance_to_player = 100
+    update_sounds_channel = 0
 
     # Звуки
     OPEN_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "door_open.mp3"))
@@ -123,7 +141,12 @@ class Door(pygame.sprite.Sprite):
         self.opened = False
 
     def update(self, player=None, enemies_group=None, player_group=None) -> None:
-        if not player:
+        ticks = pygame.time.get_ticks()
+        if ticks - Door.update_sounds_channel > 100:
+            Door.update_sounds_channel = ticks
+            Door.min_distance_to_player = 100
+            return
+        if not player_group[0]:
             Door.min_distance_to_player = 100000
             return
         collide = pygame.sprite.spritecollide
@@ -151,3 +174,13 @@ class Door(pygame.sprite.Sprite):
             self.sounds_channel.play(self.CLOSE_SOUND)
             self.opened = False
             self.image = Door.frames[0]
+
+
+class Chest(pygame.sprite.Sprite):
+    frame = load_tile('CHEST.png')
+
+    def __init__(self, x, y, *args):
+        super().__init__(*args)
+        self.image = self.frame
+        self.rect = self.image.get_rect().move(x * TILE_SIZE, y * TILE_SIZE)
+        self.collider = Collider(x, y)

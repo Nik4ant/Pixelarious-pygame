@@ -15,8 +15,8 @@ if __name__ == '__main__':
     pygame.mixer.init(44100, -16, 12, 64)
 
     # Экран (он же будет использован везде)
-    screen = pygame.display.set_mode((1920, 1080), flags=pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF, vsync=True)
-    #
+    screen = pygame.display.set_mode(flags=pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF, vsync=True)
+    # (1920, 1080),
     # эти модули нужно импортировать именно тут,
     # т.к. в них происходит загрузка картинок, а в UI ещё и звуков.
     # (А это можно сделать только после инициализации pygame.mixer и экрана)

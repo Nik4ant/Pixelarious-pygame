@@ -2,7 +2,7 @@ import os
 import sys
 import pygame
 from PIL import Image
-from random import randint
+from random import randint, random
 
 from config import TILE_SIZE, BACKGROUND_COLOR
 
@@ -123,3 +123,27 @@ def scale_frame(image: pygame.surface.Surface, size: (int, int), k: int = 40):
             new_pix[i, j] = pix[a, b]
 
     return pygame.image.fromstring(new_image.tobytes(), size, 'RGBA')
+
+
+# Функция, возвращающая случайное булевое значение с вводящимся шансом
+def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: list = None) -> bool:
+    """
+    Функция принимает целое число и переводит в коэффицент, 0 <= k <= 1.
+    Затем генерирует случайное число с помощью функции рандом.
+    Если случайное число меньше либо равно коэффиценту, функция возвращает True.
+    Получившееся значение записывается в переданный сид (в виде числа 1 или 0, для краткости).
+
+    :param percentage_chance: шанс выпадания значения True, в процентах
+    :param seed: в сид записывается полученное значение
+    :param user_seed: если пользовательский сид передан, значение берётся из него
+    :return: булевое значение (True/False)
+    """
+    if user_seed and seed:
+        is_true = int(user_seed[0])
+        seed.append(user_seed[0])
+        del user_seed[0]
+    else:
+        is_true = [0, 1][round(random() * 100) <= percentage_chance]
+        if seed:
+            seed.append(str(is_true))
+    return is_true

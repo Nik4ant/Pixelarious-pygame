@@ -232,6 +232,8 @@ class PlayerIcon:
         # Иконка заклинания
         x1, y1 = self.position
 
+        screen.blit(self.font.render(f'{round(self.player.money_count)}', True, (255, 255, 30)), (10, 200))
+
         health_length = round(264 * (self.player.health / self.player.full_health) + 0.5)
         health_line = pygame.surface.Surface((health_length, 24))
         health_line.fill((255, 30, 30))

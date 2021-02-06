@@ -48,7 +48,7 @@ CONTROLS = {
     "MOUSE_SPELL_LIGHT": 4,
 
     "KEYBOARD_PAUSE": pygame.K_ESCAPE,
-    "KEYBOARD_DASH": pygame.K_q,
+    "KEYBOARD_DASH": pygame.K_LSHIFT,
     "KEYBOARD_LEFT": (pygame.K_a, pygame.K_LEFT),
     "KEYBOARD_RIGHT": (pygame.K_d, pygame.K_RIGHT),
     "KEYBOARD_UP": (pygame.K_w, pygame.K_UP),
@@ -57,4 +57,4 @@ CONTROLS = {
 # Цвет фона в игре, экране загрузки и т.д.
 BACKGROUND_COLOR = (20, 10, 20)
 # сторона одного тайла
-TILE_SIZE = 48
+TILE_SIZE = 64

@@ -1,5 +1,10 @@
+from time import time
+
 from generation_map import initialise_level, generate_new_level
 from entities.spells import *
+from entities.base_entity import *
+from entities.items import GroundItem
+from entities.enemies import WalkingMonster, ShootingMonster
 from UI import end_screen, game_menu
 from UI.UIComponents import SpellContainer, PlayerIcon
 from config import *
@@ -27,6 +32,8 @@ class Camera:
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
+        if isinstance(self, (WalkingMonster, ShootingMonster)):
+            print(f'APPLIED WAS {obj.__class__.__name__}     ', (self.dx, self.dy))
 
     # Функция сдвигает точку спавна существа и точку, к которой он идет
     def apply_point(self, obj):
@@ -37,8 +44,17 @@ class Camera:
 
     # метод позиционирования камеры на объекте target
     def update(self, target):
-        self.dx = -(target.rect.x + target.rect.width * 0.5 - self.screen_width * 0.5)
-        self.dy = -(target.rect.y + target.rect.height * 0.5 - self.screen_height * 0.5)
+        self.dx = -(target.rect.centerx - self.screen_width * 0.5)
+        self.dy = -(target.rect.centery - self.screen_height * 0.5)
+
+    def move(self, target, group):
+        self.dx = -(target.rect.centerx - self.screen_width * 0.5)
+        self.dy = -(target.rect.centery - self.screen_height * 0.5)
+        for sprite in group:
+            sprite.rect.x = sprite.rect.x - self.dx
+            sprite.rect.y = sprite.rect.y - self.dy
+            if isinstance(sprite, (WalkingMonster, ShootingMonster)):
+                self.apply_point(sprite)
 
 
 def play(screen: pygame.surface.Surface,
@@ -89,6 +105,8 @@ def play(screen: pygame.surface.Surface,
                                              furniture_group, collidable_tiles_group,
                                              enemies_group, doors_group, torches_group, end_of_level,
                                              current_seed.split('\n')[1].split() if current_seed else 0)
+    all_sprites.add(player)
+
     # Обновляем сид после инициализации уровня
     current_seed = ' '.join(level_seed) + '\n' + ' '.join(monsters_seed) + '\n' + str(level_number)
     save(current_seed)
@@ -101,12 +119,6 @@ def play(screen: pygame.surface.Surface,
     player_sprites.add(player)
     player.scope.init_scope_position((screen_width * 0.5, screen_height * 0.5))
     player_sprites.add(player.scope)
-    all_sprites.add(player)
-
-    # Фоновая музыка
-    pygame.mixer.music.load(concat_two_file_paths("assets\\audio", "game_bg.ogg"))
-    pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
     fps_font = pygame.font.Font('assets\\UI\\pixel_font.ttf', 48)
 
@@ -124,8 +136,18 @@ def play(screen: pygame.surface.Surface,
     )
     player_icon = PlayerIcon((20, 20), player)
 
+    # Фоновая музыка
+    pygame.mixer.music.load(concat_two_file_paths("assets\\audio", "game_bg.ogg"))
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
+
+    t = time(), pygame.time.get_ticks()
     # Игровой цикл
     while is_game_open:
+        if time() - t[0] >= 1:
+            print(pygame.time.get_ticks() - t[1])
+            t = time(), pygame.time.get_ticks()
+
         was_pause_activated = False
         keys = pygame.key.get_pressed()
         buttons = pygame.mouse.get_pressed(5)
@@ -201,11 +223,14 @@ def play(screen: pygame.surface.Surface,
         enemies_group.update(all_sprites, player)
         torches_group.update(player)
         doors_group.update(player, enemies_group, [player])
+        Entity.damages.update()
 
         # Обновление объектов относительно камеры
         camera.update(player)
         for sprite in all_sprites:
             camera.apply(sprite)
+        for item in GroundItem.item_group:
+            camera.apply(item)
 
         for spell in player.spells:
             camera.apply(spell)
@@ -215,12 +240,14 @@ def play(screen: pygame.surface.Surface,
         tiles_group.draw(screen)
         collidable_tiles_group.draw(screen)
         torches_group.draw(screen)
+        GroundItem.item_group.draw(screen)
         doors_group.draw(screen)
         enemies_group.draw(screen)
         player.draw(screen)
         player.draw_health_bar(screen)
         player.spells.update()
         player.spells.draw(screen)
+        Entity.damages.draw(screen)
 
         # Индивидуальная обработка спрайтов врагов
         for enemy in enemies_group:
@@ -270,14 +297,16 @@ def play(screen: pygame.surface.Surface,
                 # Иначе перезагрука некоторых данных и новый уровень
                 else:
                     # Очищаем все группы со спрайтами
-                    all_sprites.empty()
-                    tiles_group.empty()
-                    furniture_group.empty()
-                    collidable_tiles_group.empty()
-                    enemies_group.empty()
-                    doors_group.empty()
-                    torches_group.empty()
-                    end_of_level.empty()
+                    all_sprites = pygame.sprite.Group()
+                    tiles_group = pygame.sprite.Group()
+                    furniture_group = pygame.sprite.Group()
+                    collidable_tiles_group = pygame.sprite.Group()
+                    enemies_group = pygame.sprite.Group()
+                    doors_group = pygame.sprite.Group()
+                    torches_group = pygame.sprite.Group()
+                    end_of_level = pygame.sprite.Group()
+                    GroundItem.item_group = pygame.sprite.Group()
+                    Entity.damages = pygame.sprite.Group()
 
                     level_number += 1  # номер уровня
                     # Создаем целиком новый уровень с помощью функции из generation_map
@@ -286,9 +315,15 @@ def play(screen: pygame.surface.Surface,
                     player, monsters_seed = initialise_level(level, level_number, all_sprites, tiles_group,
                                                              furniture_group, collidable_tiles_group,
                                                              enemies_group, doors_group, torches_group, end_of_level,
-                                                             current_seed.split('\n')[1].split() if current_seed else 0)
+                                                             current_seed.split('\n')[1].split() if current_seed else 0,
+                                                             player)
+                    all_sprites.add(player)
+
                     current_seed = ' '.join(level_seed) + '\n' + ' '.join(monsters_seed) + '\n' + str(level_number)
                     save(current_seed)
+                    # Создаем камеру
+                    camera = Camera(screen_width, screen_height)
+                    camera.move(player, all_sprites)
 
                     # Заного заполняем индивидуальные спрайты
                     player_sprites.add(player)
