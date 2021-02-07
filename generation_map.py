@@ -1304,7 +1304,7 @@ def initialise_level(level_map, level, all_sprites, tiles_group, furniture_group
                     # Помещаем игрока в центр текущего тайла
                     if not player:
                         player = Player(x * TILE_SIZE + TILE_SIZE * 0.5,
-                                        y * TILE_SIZE + TILE_SIZE * 0.5, all_sprites)
+                                        y * TILE_SIZE + TILE_SIZE * 0.5, level, all_sprites)
                     else:
                         player.rect.center = x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5
                     Tile(level_map[y][x], x, y, all_sprites, tiles_group)

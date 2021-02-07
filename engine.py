@@ -147,3 +147,7 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
         if seed:
             seed.append(str(is_true))
     return is_true
+
+
+def hypot(coords1: (int, int), coords2: (int, int)):
+    return ((coords2[0] - coords1[0]) ** 2 + (coords2[1] - coords1[1]) ** 2) ** 0.5

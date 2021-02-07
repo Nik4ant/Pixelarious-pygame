@@ -159,7 +159,7 @@ class SpellContainer:
         self.information = f'''{spell_class.__doc__}
 
         Урон: {spell_class.damage}{f' + {spell_class.extra_damage}' if spell_class.__name__ == 'PoisonSpell' else ''}
-        {'Время действия: ' + str(spell_class.action_time // 60) + ' c' 
+        {'Время действия: ' + str(spell_class.action_time) + ' c' 
         if spell_class.__name__ in ('IceSpell', 'PoisonSpell') else 'Мгновенное действие'}
         Затраты маны: {spell_class.mana_cost}'''.strip()
         self.massage_box = MessageBox(self.information, 30, (0, 0))
@@ -220,40 +220,45 @@ class PlayerIcon:
     FRAME = load_image('player_icon_frame.png', 'assets\\UI\\icons')
     POISON_ICON = pygame.transform.scale(load_image('poison_icon.png', 'assets\\UI\\icons'), size)
 
-    def __init__(self, position: tuple, player):
-        self.position = position
+    def __init__(self, player):
         self.player = player
 
-    def draw(self, screen: pygame.surface.Surface):
+    def draw(self, screen: pygame.surface.Surface, position=(0, 0), size_coefficient=1):
         """
         Рисует UI элемент на экране screen
         :param screen: Экран для отрисовки
+        :param position: позиция отрисовки от левого верхнего угла экрана
+        :param size_coefficient: Размер иконки
         """
         # Иконка заклинания
-        x1, y1 = self.position
+        x1, y1 = (0, 0)
 
-        screen.blit(self.font.render(f'{round(self.player.money_count)}', True, (255, 255, 30)), (10, 200))
-
+        image = pygame.surface.Surface(self.FRAME.get_size(), pygame.SRCALPHA)
         health_length = round(264 * (self.player.health / self.player.full_health) + 0.5)
         health_line = pygame.surface.Surface((health_length, 24))
         health_line.fill((255, 30, 30))
-        screen.blit(health_line, (x1 + 132, y1 + 12))
-        screen.blit(self.font.render(f'{round(self.player.health + 0.5)}/{self.player.full_health}',
-                                     True, (255, 255, 255)), (x1 + 220, y1 + 10))
+        image.blit(health_line, (x1 + 132, y1 + 12))
+        image.blit(self.font.render(f'{round(self.player.health + 0.5)}/{self.player.full_health}',
+                                    True, (255, 255, 255)), (x1 + 220, y1 + 10))
 
         mana_length = round(264 * (self.player.mana / self.player.full_mana) + 0.5)
         mana_line = pygame.surface.Surface((mana_length, 24))
         mana_line.fill((30, 30, 255))
-        screen.blit(mana_line, (x1 + 132, y1 + 52))
-        screen.blit(self.font.render(f'{round(self.player.mana + 0.5)}/{self.player.full_mana}',
-                                     True, (255, 255, 255)), (x1 + 220, y1 + 50))
+        image.blit(mana_line, (x1 + 132, y1 + 52))
+        image.blit(self.font.render(f'{round(self.player.mana + 0.5)}/{self.player.full_mana}',
+                                    True, (255, 255, 255)), (x1 + 220, y1 + 50))
 
-        screen.blit(self.FACE, (x1 + 25, y1 + 20))
-        screen.blit(self.FRAME, self.position)
+        image.blit(self.FACE, (x1 + 25, y1 + 20))
+        image.blit(self.FRAME, (x1, y1))
 
-        pos = (self.position[0] + 8, self.position[1] + 14)
         text_surface = self.font.render('', True, (255, 255, 255))
-        screen.blit(text_surface, pos)
+        image.blit(text_surface, (x1 + 8, y1 + 14))
+        screen.blit(pygame.transform.scale(image, (int(self.FRAME.get_width() * size_coefficient),
+                                                   int(self.FRAME.get_height() * size_coefficient))), position)
+
+        if self.player.__class__.__name__ == 'Player':
+            screen.blit(self.font.render(f'{round(self.player.money_count)}', True, (255, 255, 30)),
+                        (self.FRAME.get_width() + 20, 20))
 
 
 class LogoImage(pygame.sprite.Sprite):

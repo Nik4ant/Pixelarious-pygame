@@ -155,10 +155,8 @@ class Entity(pygame.sprite.Sprite):
                     else:
                         for group in self.groups():
                             group.remove(self)
-                try:
+                if self.cur_frame < len(self.__class__.death_frames):
                     self.image = self.__class__.death_frames[self.cur_frame]
-                except IndexError:
-                    pass
                 return
 
             look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
@@ -174,7 +172,7 @@ class Entity(pygame.sprite.Sprite):
     def draw_health_bar(self, screen):
         """
         Функция отрисовки полоски здоровья
-        Отрисовка знака сна (Z-Z-Z) или восклицательного знака.
+        Отрисовка знака сна (Z-Z-Z).
 
         :param screen: Экран отрисовки
         :return: None
@@ -187,7 +185,7 @@ class Entity(pygame.sprite.Sprite):
         if pygame.time.get_ticks() - self.last_damage_time < Entity.HEALTH_LINE_TIME:
             pygame.draw.rect(screen, 'dark grey', (x1 - 1, y1 - 10 - 1, width + 2, line_width + 2))
             health_length = width * max(self.health, 0) / self.full_health
-            color = '#00b300' if str(self.__class__.__name__) == 'Player' else 'red'
+            color = '#00b300' if self.__class__.__name__ in ('Player', 'PlayerAssistant') else 'red'
             pygame.draw.rect(screen, color, (x1, y1 - 10, health_length, line_width))
 
             health_text = f'{round(self.health + 0.5)}/{self.full_health}'
@@ -196,7 +194,7 @@ class Entity(pygame.sprite.Sprite):
             rect.center = (x1 + width // 2, y1 - 5)
             screen.blit(health, rect.topleft)
 
-        if self.__class__.__name__ != 'Player':
+        if self.__class__.__name__ not in ('Player',):
             name = self.font.render(self.name, True, (255, 255, 255))
             rect = name.get_rect()
             rect.center = (x1 + width // 2, y1 - 12 - line_width)
@@ -212,12 +210,7 @@ class Entity(pygame.sprite.Sprite):
                 self.cur_poison_frame = (self.cur_poison_frame + 1) % len(Entity.poison_frames)
             screen.blit(Entity.poison_frames[self.cur_poison_frame], (self.rect.x, self.rect.y))
 
-        # if self.player_observed:
-        #     font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 96)
-        #     text = font.render("!", True, (250, 20, 20))
-        #     screen.blit(text, (self.rect.centerx, self.rect.y - 60))
-
-        if self.__class__.__name__ != 'Player' and not self.player_observed:
+        if self.__class__.__name__ not in ('Player', 'PlayerAssistant') and not self.player_observed:
             if not self.sleeping_time or ticks - self.sleeping_time >= 250:
                 self.cur_sleeping_frame = (self.cur_sleeping_frame + 1) % len(self.sleeping_frames[0])
                 self.sleeping_time = ticks
@@ -240,6 +233,12 @@ class Entity(pygame.sprite.Sprite):
         if spell_type == 'poison' and damage >= 5:
             self.poison_buff += action_time
 
+        if damage >= 0:
+            look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
+            self.image = self.get_damage_frames[look]
+            self.last_update = pygame.time.get_ticks() + 50
+            self.last_damage_time = pygame.time.get_ticks()
+
         if (self.__class__.__name__ == 'Demon' and spell_type == 'ice' or
                 self.__class__.__name__ == 'GreenSlime' and spell_type == 'flash' or
                 self.__class__.__name__ == 'DirtySlime' and spell_type == 'void' or
@@ -256,17 +255,23 @@ class Entity(pygame.sprite.Sprite):
                 self.__class__.__name__ == 'VoidWizard' and spell_type == 'void'):
             damage *= 0.25
 
-        self.last_damage_time = pygame.time.get_ticks()
         damage *= 1000
         damage += randint(-abs(round(-damage * 0.4)), abs(round(damage * 0.4)))
         damage /= 1000
+
+        x, y = self.rect.midtop
         if self.__class__.__name__ in ('Player', 'PlayerAssistant'):
             if damage >= 0:
-                ReceivingDamage(*self.rect.midtop, damage, Entity.all_sprites, Entity.damages, color=(255, 30, 30))
+                ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages, color=(255, 30, 30))
+            elif spell_type == 'poison':
+                ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages, color=(100, 35, 35))
             else:
-                ReceivingDamage(*self.rect.midtop, damage, Entity.all_sprites, Entity.damages, color=(30, 255, 30))
+                ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages, color=(30, 255, 30))
+        elif spell_type == 'poison':
+            ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages, color=(100, 230, 125))
         else:
-            ReceivingDamage(self.rect.centerx, self.rect.top, damage, Entity.all_sprites, Entity.damages)
+            ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages)
+
         self.health = min(self.health - damage, self.full_health)
         if self.health <= 0:
             self.health = 0
@@ -319,21 +324,19 @@ class ReceivingDamage(pygame.sprite.Sprite):
 
     def __init__(self, x: float, y: float, damage: float, *groups, color=(252, 241, 139)):
         super().__init__(*groups)
-        self.font = pygame.font.Font("assets\\UI\\pixel_font.ttf", round(20 + damage / 3))
+        self.font = pygame.font.Font("assets\\UI\\pixel_font.ttf", round(24 + damage / 3))
         self.last_update_time = 0
 
         self.damage = round(damage)
-        self.color = color + (255,)
-        self.image = self.font.render(str(round(damage)), True, self.color).convert_alpha()
+        self.color = color + (0,)
+        self.image = self.font.render(str(self.damage), True, self.color).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = x + randint(-TILE_SIZE // 2, TILE_SIZE // 2), y
 
     def update(self):
-        # ticks = pygame.time.get_ticks()
-        # if ticks - self.last_update_time < self.update_time:
         self.rect.y -= self.delta_up
-        self.color = self.color[:3] + (self.color[3] - self.delta_transparent,)
-        if self.color[-1] <= 0:
+        self.color = self.color[:3] + (self.color[3] + self.delta_transparent,)
+        if self.color[-1] > 255:
             self.kill()
             return
-        self.image = self.font.render(str(round(self.damage, 1)), True, self.color).convert_alpha()
+        self.image = self.font.render(str(self.damage), True, self.color).convert_alpha()

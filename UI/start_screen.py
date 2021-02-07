@@ -14,78 +14,80 @@ def execute(screen: pygame.surface.Surface) -> int:
     зависимости от действий возвращает свой код
     0 - была нажата кнопка выйти
     1 - была нажата кнопка играть
-    :param screen: Экран на котором надо отрисовывать менюв
+    :param screen: Экран, на котором надо отрисовывать меню
     :return: Код
     """
     is_open = True
     clock = pygame.time.Clock()
     joystick = get_joystick() if check_any_joystick() else None
 
-    # Смещение между UI элементами
+    # Смещение между ui элементами
     button_margin = 55
 
-    # Создание UI элементов
-    game_logo = LogoImage((screen.get_width() // 2, screen.get_height() // 6 - button_margin))
+    screen_center = screen.get_width() // 2
+    # Создание ui элементов
+    game_logo = LogoImage((screen_center, screen.get_height() // 6 - button_margin))
     next_y = game_logo.rect.y + game_logo.rect.height + button_margin * 2
 
-    button_play = Button((screen.get_width() // 2, next_y), "Играть", 32)
+    button_play = Button((screen_center, next_y), "Играть", 32)
     next_y = button_play.rect.y + button_play.rect.height + button_margin
 
-    button_controls = Button((screen.get_width() // 2, next_y), "Управление", 32)
+    button_controls = Button((screen_center, next_y), "Управление", 32)
     next_y = button_controls.rect.y + button_controls.rect.height + button_margin
 
-    button_about = Button((screen.get_width() // 2, next_y), "Об игре", 32)
+    button_about = Button((screen_center, next_y), "Об игре", 32)
     next_y = button_about.rect.y + button_about.rect.height + button_margin
 
-    button_authors = Button((screen.get_width() // 2, next_y), "Авторы", 32)
+    button_authors = Button((screen_center, next_y), "Авторы", 32)
     next_y = button_authors.rect.y + button_authors.rect.height + button_margin
 
-    button_exit = Button((screen.get_width() // 2, next_y), "Выйти", 32)
+    button_exit = Button((screen_center, next_y), "Выйти", 32)
 
     # Добавление в группу
-    UI_sprites = pygame.sprite.Group()
-    UI_sprites.add(game_logo)
-    UI_sprites.add(button_play)
-    UI_sprites.add(button_controls)
-    UI_sprites.add(button_about)
-    UI_sprites.add(button_authors)
-    UI_sprites.add(button_exit)
+    ui_sprites = pygame.sprite.Group()
+    ui_sprites.add(game_logo)
+    ui_sprites.add(button_play)
+    ui_sprites.add(button_controls)
+    ui_sprites.add(button_about)
+    ui_sprites.add(button_authors)
+    ui_sprites.add(button_exit)
 
     # Текущие диалог (может появлятся при нажатии кнопок)
     current_message_box = None
 
-    text = """На клавиатуре: 
-    WASD - двигаться; Q - рывок;
+    control_text = """На клавиатуре: 
+    WASD/ - двигаться; Shift - рывок;
     1-5 - заклинания; E - телепорт;
 
     На джойстике: 
     PADS - двигаться; R1 - рывок;
     Остальное я не знаю, подберите там;"""
-    control_message_box = MessageBox(text, 32, (screen.get_width() * 0.5, screen.get_height() * 0.5))
-    text = """
+    control_message_box = MessageBox(control_text, 32, (screen_center, screen.get_height() * 0.5))
+
+    about_text = """
     Игра жанра Roguelite с видом сверху,
     в которой Вам предстоит пройти
     сквозь подземелье, заполненное врагами.
     Желаем удачи!"""
-    about_message_box = MessageBox(text, 32, (screen.get_width() * 0.5, screen.get_height() * 0.5))
+    about_message_box = MessageBox(about_text, 32, (screen_center, screen.get_height() * 0.5))
 
-    authors_message_box = MessageBox(AUTHORS, 32, (screen.get_width() * 0.5, screen.get_height() * 0.5))
+    authors_message_box = MessageBox(AUTHORS, 32, (screen_center, screen.get_height() * 0.5))
 
     # Фоновое изоюражение
-    background_image = load_image("main_menu_BG.png", "assets/UI")
+    background_image = load_image("main_menu_BG.png", "assets\\UI")
     # Меняем размер картинки в зависимости от размера экрана
     background_image = pygame.transform.scale(background_image,
                                               (screen.get_width(), screen.get_height()))
 
     # Делаем курсор мыши невидимым и загружаем вместо него своё изображение
     pygame.mouse.set_visible(False)
-    cursor_image = load_image("cursor.png", "assets/UI/icons")
+    cursor_image = load_image("cursor.png", "assets\\UI\\icons")
     # координаты курсора
-    cursor_x, cursor_y = screen.get_width() * 0.5, screen.get_height() * 0.1
+    cursor_x, cursor_y = screen_center, screen.get_height() * 0.1
     cursor_speed = 30  # скорость курсора (нужно если используется джойстик)
 
     # Фоновая музыка
-    pygame.mixer.music.load(concat_two_file_paths("assets/audio", "main_menu.ogg"))
+    pygame.mixer.music.load(concat_two_file_paths("assets\\audio", "main_menu.ogg"))
     # Воспроизведение музыки вечно
     pygame.mixer.music.play(-1)
     # Установка громкости
@@ -146,14 +148,14 @@ def execute(screen: pygame.surface.Surface) -> int:
         else:
             cursor_x, cursor_y = pygame.mouse.get_pos()
 
-        cursor_position = (cursor_x, cursor_y)
-        # Обновляем все UI элементы
-        UI_sprites.update(cursor_position, was_click)
+        cursor_position = cursor_x, cursor_y
+        # Обновляем все ui элементы
+        ui_sprites.update(cursor_position, was_click)
 
         # Фоновое изобраджение
         screen.blit(background_image, (0, 0))
-        # Рисуем весь UI
-        UI_sprites.draw(screen)
+        # Рисуем весь ui
+        ui_sprites.draw(screen)
         # Если есть диалог, то его тоже обновляем и рисуем
         if current_message_box:
             if current_message_box.need_to_draw:

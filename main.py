@@ -43,7 +43,7 @@ if __name__ == '__main__':
                 # Если seed пустой, то присваем ему None
                 if seed:
                     data = seed.split('\n')
-                    seed, level_number = '\n'.join(data[:-1]), int(data[-1])
+                    seed, level_number = '\n'.join(data[:3]), int(data[3])
 
             # Результат того, чем закончилась игра
             code = game.play(screen, level_number=level_number, user_seed=seed)

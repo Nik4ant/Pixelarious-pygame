@@ -3,7 +3,7 @@ from random import choice
 from entities.base_entity import Entity
 from entities.items import *
 from entities.spells import *
-from engine import load_image, cut_sheet, concat_two_file_paths, true_with_chance
+from engine import *
 from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
 
 
@@ -36,17 +36,23 @@ class WalkingMonster(Entity):
             super().update_frame_state()
             return
 
+        target = player
+        min_dist = hypot(self.rect.center, player.rect.center)
+        for assistant in player.assistants:
+            if hypot(self.rect.center, assistant.rect.center) < min_dist and assistant.alive:
+                target = assistant
+
         # Сокращаем написание координат объекта
         self_x, self_y = self.rect.center
         delta = 0
 
-        point_x, point_y = player.rect.centerx, player.rect.centery
+        point_x, point_y = target.rect.center
         # Находим расстояние между врагом и игроком
         self.distance_to_player = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
         line = self.distance_to_player
 
         # Если игрок далеко, крутимся у своей стартовой точки
-        if line >= self.visibility_range or not player.alive:
+        if line >= self.visibility_range or not target.alive:
             if pygame.time.get_ticks() - self.stopping_time < Entity.WAITING_TIME:
                 # Обновляем спрайты со сдвигом в 2 (спрайты без движения)
                 super().update_frame_state(2)
@@ -81,7 +87,7 @@ class WalkingMonster(Entity):
 
         self.collider.update(*self.rect.center)
 
-        if pygame.sprite.collide_rect(self.collider, player.collider):
+        if pygame.sprite.collide_rect(self.collider, target.collider):
             if self.alive:
                 ticks = pygame.time.get_ticks()
                 # 2.17 - это коээфицент ускорения, был высчитан путём проб и ошибок
@@ -89,9 +95,9 @@ class WalkingMonster(Entity):
                 boost_dx = (self.dx + player.max_delta_movements) * 2.17
                 boost_dy = (self.dy + player.max_delta_movements) * 2.17
                 # Чтобы игрок не умирал мгновенно, не понимая, что случилось
-                if ticks - player.last_hit_time > player.INVULNERABILITY_TIME_AFTER_HIT:
-                    player.get_damage(self.damage)
-                player.boost_from_enemy(boost_dx, boost_dy)
+                if ticks - target.last_hit_time > player.INVULNERABILITY_TIME_AFTER_HIT:
+                    target.get_damage(self.damage)
+                target.boost_from_enemy(boost_dx, boost_dy)
 
             self.rect.center = self_x, self_y
             self.stun_time = pygame.time.get_ticks()
@@ -162,7 +168,7 @@ class ShootingMonster(Entity):
         self.reload_time = 1500
         self.assistants = pygame.sprite.Group()
 
-        self.stopping_time = pygame.time.get_ticks() + randint(-750, 750)
+        self.stopping_time = pygame.time.get_ticks() + randint(-500, 500)
 
     def update(self, *args):
         all_sprites, player = args
@@ -171,19 +177,25 @@ class ShootingMonster(Entity):
         self_x, self_y = self.rect.center
         delta = 0
 
-        point_x, point_y = player.rect.centerx, player.rect.centery
+        target = player
+        min_dist = hypot(self.rect.center, player.rect.center)
+        for assistant in player.assistants:
+            if hypot(self.rect.center, assistant.rect.center) < min_dist and assistant.alive:
+                target = assistant
+
+        point_x, point_y = target.rect.centerx, target.rect.centery
         # Расстояние между врагом и игроком
         self.distance_to_player = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
         line = self.distance_to_player
 
         # Если игрок далеко, крутимся у своей стартовой точки
-        if line >= self.visibility_range or not player.alive:
+        if line >= self.visibility_range or not target.alive:
             if pygame.time.get_ticks() - self.stopping_time < Entity.WAITING_TIME:
                 super().update_frame_state(2)
                 self.spells.update()
                 return
             if not self.point or self.point == self.rect.center:
-                self.stopping_time = pygame.time.get_ticks()
+                self.stopping_time = pygame.time.get_ticks() + randint(-500, 500)
                 self.point = (self.start_position[0] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75),
                               self.start_position[1] + randint(-TILE_SIZE * 0.75, TILE_SIZE * 0.75))
             point_x, point_y = self.point
@@ -199,9 +211,9 @@ class ShootingMonster(Entity):
 
         # Если игрок слишком близко, отходим, мы же дальний бой
         elif line <= self.visibility_range * 0.4:
-            # for assistant in self.assistants:
-            #     assistant.point = player.rect.center
-            #     assistant.player_observed = True
+            for assistant in self.assistants:
+                assistant.point = target.rect.center
+                assistant.player_observed = True
 
             part_move = max(line / self.speed, 1)
             self.dx = -(point_x - self_x) * 4 / part_move
@@ -210,9 +222,9 @@ class ShootingMonster(Entity):
 
         # Если игрок пытается уйти из радиуса нашего поражения, догоняем
         elif line >= self.visibility_range * 0.6:
-            # for assistant in self.assistants:
-            #     assistant.point = player.rect.center
-            #     assistant.player_observed = True
+            for assistant in self.assistants:
+                assistant.point = target.rect.center
+                assistant.player_observed = True
 
             part_move = max(line / self.speed, 1)
             self.dx = (point_x - self_x) * 4 / part_move
@@ -221,9 +233,9 @@ class ShootingMonster(Entity):
 
         # Иначе стоим и постреливаем (чуть дальше)
         else:
-            # for assistant in self.assistants:
-            #     assistant.point = player.rect.center
-            #     assistant.player_observed = True
+            for assistant in self.assistants:
+                assistant.point = target.rect.center
+                assistant.player_observed = True
 
             self.dx = self.dy = 0
             self.player_observed = True
@@ -240,7 +252,7 @@ class ShootingMonster(Entity):
                 if pygame.time.get_ticks() - self.last_shot_time > reload_time:
                     self.last_shot_time = pygame.time.get_ticks()
                     # Стреляем в игрока
-                    if self.alive and player.alive:
+                    if self.alive and target.alive:
                         self.shoot(player, all_sprites)
 
         # Направление взгляда
@@ -271,19 +283,16 @@ class ShootingMonster(Entity):
             if assistant in enemies_group:
                 enemies_group.remove(assistant)
         args = (*self.rect.center, *player.rect.center, self.extra_damage,
-                list(enemies_group) + [player], self.spells, all_sprites)
+                list(enemies_group) + [player] + list(player.assistants), self.spells, all_sprites)
         for assistant in self.assistants:
             enemies_group.add(assistant)
         enemies_group.add(self)
-
-        if player in enemies_group:
-            print('ОН БЫЛ ЗДЕЕЕСЬ')
 
         if isinstance(self, FireWizard):
             spell = FireSpell(*args)
 
         elif isinstance(self, VoidWizard):
-            if len(self.assistants) < 7 and true_with_chance(20):
+            if len(self.assistants) < 7 and true_with_chance(15):
                 spell = CallZombiesSpell
                 args = (self.level, all_sprites, self.assistants, enemies_group)
                 for m in [(-1, 0), (0, -1), (1, 0), (0, 1)]:
@@ -297,6 +306,7 @@ class ShootingMonster(Entity):
                         while True:
                             zombie.rect.center = (self.rect.centerx + randint(-TILE_SIZE, TILE_SIZE),
                                                   self.rect.centery + randint(-TILE_SIZE, TILE_SIZE))
+                            zombie.collider.update(*zombie.rect.center)
                             if not pygame.sprite.spritecollideany(zombie.collider, Entity.collisions_group):
                                 break
 
@@ -324,20 +334,23 @@ class ShootingMonster(Entity):
 
 
 class Demon(WalkingMonster):
-    """Демон
+    """
+    Демон
 
     Мало жизней
     Быстрый
     Больно бьёт
     Устойчивойть к огню
-    Слабость к льду"""
+    Слабость к льду
+    """
     name = 'Демон'
     damage = 50
     size = (int(TILE_SIZE // 8 * 5),) * 2
     frames = cut_sheet(load_image('demon_run.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('demon_idle.png', 'assets\\enemies'), 4, 2, size)
 
-    death_frames = cut_sheet(load_image('demon_dying.png', 'assets\\enemies'), 16, 1)[0]
+    get_damage_frames = cut_sheet(load_image('demon_get_damage.png', 'assets\\enemies'), 2, 1, size)[0]
+    death_frames = cut_sheet(load_image('demon_dying.png', 'assets\\enemies'), 16, 1, size)[0]
 
     UPDATE_TIME = 60
     default_speed = TILE_SIZE * 0.03
@@ -371,20 +384,22 @@ class Demon(WalkingMonster):
 
 
 class GreenSlime(WalkingMonster):
-    """Зеленый слизень
+    """
+    Cлизень
 
     Медленный
     Среднее количество жизней
     Не очень большой урон
     Устойчивость к отравлению
     (я сам отравление)
-    Слабость к молниям"""
+    Слабость к молниям
+    """
     name = 'Слизень'
     damage = 60
-    size = (int(TILE_SIZE // 8 * 7),) * 2
     frames = cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2)
 
+    get_damage_frames = cut_sheet(load_image('green_slime_get_damage.png', 'assets\\enemies'), 2, 1)[0]
     death_frames = cut_sheet(load_image('green_slime_dying.png', 'assets\\enemies'), 16, 1)[0]
 
     default_speed = TILE_SIZE * 0.015
@@ -419,7 +434,7 @@ class GreenSlime(WalkingMonster):
 class DirtySlime(WalkingMonster):
     """
     Грязный слизень
-    Я как Зеленый, но чуть крепче
+    Я как , но чуть крепче
 
     Медленный
     Много жизней
@@ -429,10 +444,10 @@ class DirtySlime(WalkingMonster):
     """
     name = 'Грязный слизень'
     damage = 70
-    size = (int(TILE_SIZE // 8 * 7),) * 2
     frames = cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2)
 
+    get_damage_frames = cut_sheet(load_image('dirty_slime_get_damage.png', 'assets\\enemies'), 2, 1)[0]
     death_frames = cut_sheet(load_image('dirty_slime_dying.png', 'assets\\enemies'), 16, 1)[0]
 
     default_speed = TILE_SIZE * 0.02
@@ -465,7 +480,8 @@ class DirtySlime(WalkingMonster):
 
 
 class Zombie(WalkingMonster):
-    """Зомби
+    """
+    Зомби
 
     Не медленный, но и не быстрый
     Среднее количество жизней
@@ -473,13 +489,14 @@ class Zombie(WalkingMonster):
     Устойчивость к молниям
     (они двигают мои нейроны)
     Слабость - огонь
-    (земля пухом учёным)"""
+    (земля пухом учёным)
+    """
     name = 'Зомби'
     damage = 30
-    size = (int(TILE_SIZE // 4 * 3),) * 2
     frames = cut_sheet(load_image('zombie_run.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('zombie_idle.png', 'assets\\enemies'), 4, 2)
 
+    get_damage_frames = cut_sheet(load_image('zombie_get_damage.png', 'assets\\enemies'), 2, 1)[0]
     death_frames = cut_sheet(load_image('zombie_dying.png', 'assets\\enemies'), 16, 1)[0]
 
     default_speed = TILE_SIZE * 0.02
@@ -512,19 +529,22 @@ class Zombie(WalkingMonster):
 
 
 class FireWizard(ShootingMonster):
-    """Маг
+    """
+    Маг
 
     Подвижный
     Маловато жизней
     Средний урон
     Устойчивость к молниям
-    Слабость к льду"""
+    Слабость к льду
+    """
     name = 'Маг огня'
     size = (TILE_SIZE // 8 * 7,) * 2
     frames = cut_sheet(load_image('wizard_run.png', 'assets\\enemies'), 4, 2, size)
     frames += cut_sheet(load_image('wizard_idle.png', 'assets\\enemies'), 4, 2, size)
 
-    death_frames = cut_sheet(load_image('wizard_dying.png', 'assets\\enemies'), 16, 1)[0]
+    get_damage_frames = cut_sheet(load_image('wizard_get_damage.png', 'assets\\enemies'), 2, 1, size)[0]
+    death_frames = cut_sheet(load_image('wizard_dying.png', 'assets\\enemies'), 16, 1, size)[0]
 
     default_speed = TILE_SIZE * 0.012
     look_directions = {
@@ -557,20 +577,22 @@ class FireWizard(ShootingMonster):
 
 
 class VoidWizard(ShootingMonster):
-    """Большой маг
+    """
+    Большой маг
 
     Подвижный
     Среднее количество жизней
     Большой урон
     Устойчивость к пустоте
     Слабость к огню
-    (МОЙ ПЛАЩ ГОРИТ)"""
+    (МОЙ ПЛАЩ ГОРИТ)
+    """
     name = 'Древний маг'
     damage = 20
-    size = (int(TILE_SIZE // 8 * 7),) * 2
     frames = cut_sheet(load_image('long_wizard_run.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('long_wizard_idle.png', 'assets\\enemies'), 4, 2)
 
+    get_damage_frames = cut_sheet(load_image('long_wizard_get_damage.png', 'assets\\enemies'), 2, 1)[0]
     death_frames = cut_sheet(load_image('long_wizard_dying.png', 'assets\\enemies'), 16, 1)[0]
 
     default_speed = TILE_SIZE * 0.01
@@ -598,7 +620,7 @@ class VoidWizard(ShootingMonster):
         self.visibility_range = TILE_SIZE * 13
 
         self.extra_damage = 1 + 0.05 * level
-        self.health = round(100 * (1 + 0.05 * level))
+        self.health = round(100 * (1 + 0.1 * level))
         self.health += randint(-round(self.health * 0.2), round(self.health * 0.2))
         self.full_health = self.health
 

@@ -199,10 +199,6 @@ class FireSpell(Spell):
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
-                 object_group, *groups):
-        super().__init__(subject_x, subject_y, object_x, object_y, extra_damage, object_group, *groups)
-
 
 class IceSpell(Spell):
     """Ледяное заклинание
@@ -244,10 +240,6 @@ class IceSpell(Spell):
     )
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
-
-    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
-                 object_group, *groups):
-        super().__init__(subject_x, subject_y, object_x, object_y, extra_damage, object_group, *groups)
 
 
 class PoisonSpell(Spell):
@@ -293,10 +285,6 @@ class PoisonSpell(Spell):
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
-                 object_group, *groups):
-        super().__init__(subject_x, subject_y, object_x, object_y, extra_damage, object_group, *groups)
-
 
 class VoidSpell(Spell):
     """Заклинание пустоты
@@ -339,10 +327,6 @@ class VoidSpell(Spell):
     )
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
-
-    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
-                 object_group, *groups):
-        super().__init__(subject_x, subject_y, object_x, object_y, extra_damage, object_group, *groups)
 
 
 class FlashSpell(Spell):
@@ -388,10 +372,6 @@ class FlashSpell(Spell):
     )
     for sound in SPELL_SOUNDS:
         sound.set_volume(DEFAULT_SOUNDS_VOLUME)
-
-    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
-                 object_group, *groups):
-        super().__init__(subject_x, subject_y, object_x, object_y, extra_damage, object_group, *groups)
 
 
 class TeleportSpell(Spell):

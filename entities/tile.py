@@ -146,9 +146,6 @@ class Door(pygame.sprite.Sprite):
             Door.update_sounds_channel = ticks
             Door.min_distance_to_player = 100
             return
-        if not player_group[0]:
-            Door.min_distance_to_player = 100000
-            return
         collide = pygame.sprite.spritecollide
 
         if not self.opened and (collide(self, enemies_group, False) or collide(self, player_group, False)):

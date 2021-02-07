@@ -5,6 +5,7 @@ from entities.spells import *
 from entities.base_entity import *
 from entities.items import GroundItem
 from entities.enemies import WalkingMonster, ShootingMonster
+from entities.player import Player, PlayerAssistant
 from UI import end_screen, game_menu
 from UI.UIComponents import SpellContainer, PlayerIcon
 from config import *
@@ -101,14 +102,18 @@ def play(screen: pygame.surface.Surface,
     # Создаем уровень с помощью функции из generation_map
     level, level_seed = generate_new_level(current_seed.split('\n')[0].split() if current_seed else 0)
     # Создаем монстров и плитки, проходя по уровню
+    player = None
+    if current_seed:
+        player = Player(*current_seed.split('\n')[2].split(), all_sprites)
     player, monsters_seed = initialise_level(level, level_number, all_sprites, tiles_group,
                                              furniture_group, collidable_tiles_group,
                                              enemies_group, doors_group, torches_group, end_of_level,
-                                             current_seed.split('\n')[1].split() if current_seed else 0)
-    all_sprites.add(player)
+                                             current_seed.split('\n')[1].split() if current_seed else 0, player)
+
+    player.add_assistant(PlayerAssistant(*player.rect.center, player, all_sprites))
 
     # Обновляем сид после инициализации уровня
-    current_seed = ' '.join(level_seed) + '\n' + ' '.join(monsters_seed) + '\n' + str(level_number)
+    current_seed = ' '.join(level_seed) + '\n' + ' '.join(monsters_seed) + '\n' + str(player) + '\n' + str(level_number)
     save(current_seed)
 
     # Создаем камеру
@@ -134,7 +139,8 @@ def play(screen: pygame.surface.Surface,
         SpellContainer("light_spell.png", FlashSpell, player),
         SpellContainer("teleport_spell.png", TeleportSpell, player),
     )
-    player_icon = PlayerIcon((20, 20), player)
+    player_icon = PlayerIcon(player)
+    assistants_height = 200
 
     # Фоновая музыка
     pygame.mixer.music.load(concat_two_file_paths("assets\\audio", "game_bg.ogg"))
@@ -222,7 +228,7 @@ def play(screen: pygame.surface.Surface,
 
         enemies_group.update(all_sprites, player)
         torches_group.update(player)
-        doors_group.update(player, enemies_group, [player])
+        doors_group.update(player, enemies_group, [player] + list(player.assistants))
         Entity.damages.update()
 
         # Обновление объектов относительно камеры
@@ -243,11 +249,14 @@ def play(screen: pygame.surface.Surface,
         GroundItem.item_group.draw(screen)
         doors_group.draw(screen)
         enemies_group.draw(screen)
+        player.assistants.update(enemies_group, all_sprites)
+        player.assistants.draw(screen)
+        for assistant in player.assistants:
+            assistant.draw_health_bar(screen)
         player.draw(screen)
         player.draw_health_bar(screen)
         player.spells.update()
         player.spells.draw(screen)
-        Entity.damages.draw(screen)
 
         # Индивидуальная обработка спрайтов врагов
         for enemy in enemies_group:
@@ -256,6 +265,7 @@ def play(screen: pygame.surface.Surface,
             for spell in enemy.spells:
                 camera.apply_point(spell)
             enemy.spells.draw(screen)
+        Entity.damages.draw(screen)
 
         # Определение параметров для отрисовки контейнеров с заклинаниями
         if player.joystick:
@@ -267,7 +277,11 @@ def play(screen: pygame.surface.Surface,
             pos = (screen_width * (0.375 + 0.05 * i), screen_height * 0.9)
             spells_containers[i].draw(screen, pos, bool(player.joystick), spell_args[i])
 
-        player_icon.draw(screen)
+        player_icon.draw(screen, (10, 10))
+        for number_of_assistant, assistant in enumerate(player.assistants):
+            if not assistant.icon:
+                assistant.icon = PlayerIcon(assistant)
+            assistant.icon.draw(screen, (10, assistants_height + number_of_assistant * 100), 0.5)
         player.scope.draw(screen)
 
         # Отрисовка фпс
@@ -318,12 +332,15 @@ def play(screen: pygame.surface.Surface,
                                                              current_seed.split('\n')[1].split() if current_seed else 0,
                                                              player)
                     all_sprites.add(player)
+                    all_sprites.add(player.assistants)
+                    for assistant in player.assistants:
+                        assistant.rect.center = player.rect.center
 
-                    current_seed = ' '.join(level_seed) + '\n' + ' '.join(monsters_seed) + '\n' + str(level_number)
+                    current_seed = ' '.join(level_seed) + '\n' + ' '.join(monsters_seed) + '\n' + str(
+                        player) + '\n' + str(level_number)
                     save(current_seed)
                     # Создаем камеру
                     camera = Camera(screen_width, screen_height)
-                    camera.move(player, all_sprites)
 
                     # Заного заполняем индивидуальные спрайты
                     player_sprites.add(player)
@@ -339,7 +356,6 @@ def play(screen: pygame.surface.Surface,
                         SpellContainer("light_spell.png", FlashSpell, player),
                         SpellContainer("teleport_spell.png", TeleportSpell, player),
                     )
-                    player_icon = PlayerIcon((20, 20), player)
                     pygame.mixer.music.play(-1)
                     continue
         else:
