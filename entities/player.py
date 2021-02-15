@@ -1,4 +1,5 @@
 from entities.enemies import *
+from entities.base_entity import *
 from engine import *
 from config import *
 
@@ -18,7 +19,7 @@ class Player(Entity):
 
     # Переменные добавляющие эти значения к здоровью и мане каждую итерацию update()
     MANA_UP = 0.4
-    HEALTH_UP = 0.001
+    HEALTH_UP = 0.01
     MEAT_HEALTH_UP = 50
     # Время неуязвимости, после атаки врагом (в миллисекундах)
     INVULNERABILITY_TIME_AFTER_HIT = 300
@@ -72,12 +73,14 @@ class Player(Entity):
     NO_MANA_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "no_mana_sound.ogg"))
     NO_MANA_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME + 20)
 
-    def __init__(self, x: float, y: float, level: int, all_sprites: pygame.sprite.Group, *args):
+    def __init__(self, x: float, y: float, level: int, all_sprites: pygame.sprite.Group,
+                 health=0, mana=0, money=0):
         # Конструктор класса Entity
-        x, y, level = float(x), float(y), int(level)
-        super().__init__(x, y, all_sprites, *args)
+        x, y, level, health, mana, money = float(x), float(y), int(level), float(health), float(mana), int(money)
+        super().__init__(x, y, all_sprites)
         self.alive = True
         self.destroyed = False
+        Entity.player = self
 
         self.level = level
 
@@ -86,22 +89,28 @@ class Player(Entity):
         self.rect.center = x, y
 
         # Скорость
-        self.speed = 0
+        self.speed = 1
         self.dx = self.dy = 0
         self.distance_to_player = 0.0001
 
         self.extra_damage = 1
 
         # Здоровье
-        self.health = 500
-        self.full_health = self.health
+        self.full_health = 500
+        if health:
+            self.health = health
+        else:
+            self.health = self.full_health
 
         # Мана
-        self.mana = 500
-        self.full_mana = self.mana
+        self.full_mana = 500
+        if mana:
+            self.mana = mana
+        else:
+            self.mana = self.full_mana
 
         # Монеты
-        self.money_count = 0
+        self.money = money
 
         # Помощники
         self.assistants = pygame.sprite.Group()
@@ -132,7 +141,12 @@ class Player(Entity):
         self.joystick = get_joystick() if check_any_joystick() else None
 
     def __str__(self):
-        return str(self.rect.centerx) + ' ' + str(self.rect.centery) + ' ' + str(self.level)
+        delta_pos = self.rect.centerx - self.start_position[0], self.rect.centery - self.start_position[1]
+        player_args = [*delta_pos, self.level, self.health, self.mana, self.money, len(self.assistants)]
+        args = [' '.join(map(str, player_args))]
+        for assistant in self.assistants:
+            args.append(str(assistant))
+        return '\n'.join(args)
 
     def update(self):
         if self.alive:
@@ -151,9 +165,9 @@ class Player(Entity):
 
         # Если джойстик подключен, то управление идёт с него
         if self.joystick:
-            # Получение направления куда указываеют нажатые стрелки геймпада
-            current_direction_x = self.joystick.get_button(13) * -1 + self.joystick.get_button(14)
-            current_direction_y = self.joystick.get_button(11) * -1 + self.joystick.get_button(12)
+            # Получение направления куда указывают нажатые стрелки геймпада
+            current_direction_x = round(self.joystick.get_axis(0)) > 0 - round(self.joystick.get_axis(0)) < 0
+            current_direction_y = round(self.joystick.get_axis(1)) > 0 - round(self.joystick.get_axis(1)) < 0
 
             # Получение позиции правой оси у контроллера
             axis_right_x = self.joystick.get_axis(2)
@@ -327,10 +341,11 @@ class Player(Entity):
                 self.set_first_frame()
 
         for item in pygame.sprite.spritecollide(self.collider, GroundItem.item_group, False):
+            item: GroundItem
             if item.type == 'meat':
                 self.get_damage(-self.MEAT_HEALTH_UP * item.count)
             elif item.type == 'money':
-                self.money_count += item.count
+                self.money += item.count
             self.sounds_channel.play(item.sound)
             item.kill()
         # Обновление прицела
@@ -396,6 +411,50 @@ class Player(Entity):
         else:
             self.sounds_channel.play(Player.NO_MANA_SOUND)
 
+    def get_damage(self, damage, spell_type='', action_time=0):
+        """
+        Получение дамага
+
+        :param damage: Столько здоровья надо отнять
+        :param spell_type: Тип урона, чтоб узнавать, на кого он действует сильнее
+        :param action_time: Время действия (для льда и отравления)
+        :return: None
+        """
+        if not self.alive:
+            return
+
+        if spell_type == 'ice':
+            self.ice_buff += action_time
+        if spell_type == 'poison' and damage >= 5:
+            self.poison_buff += action_time
+
+        if damage >= 0:
+            look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
+            self.image = self.get_damage_frames[look]
+            self.last_update = pygame.time.get_ticks() + 50
+            self.last_damage_time = pygame.time.get_ticks()
+
+        if self.__class__.__name__ == 'Player' and self.joystick:
+            pass
+            # self.joystick.vibrate(1)
+
+        damage *= 1000
+        damage += randint(-abs(round(-damage * 0.4)), abs(round(damage * 0.4)))
+        damage /= 1000
+
+        x, y = self.rect.midtop
+        if damage >= 0:
+            ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages, color=(255, 30, 30))
+        elif spell_type == 'poison':
+            ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages, color=(100, 35, 35))
+        else:
+            ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages, color=(30, 255, 30))
+
+        self.health = min(self.health - damage, self.full_health)
+        if self.health <= 0:
+            self.health = 0
+            self.death()
+
     def death(self):
         self.alive = False
         self.cur_frame = 0
@@ -436,13 +495,12 @@ class PlayerScope(pygame.sprite.Sprite):
         # Скорость перемещения
         self.speed = 15
 
-    def update(self, x=-1, y=-1):
+    def update(self, x, y):
         # Т.к. update вызывается ещё и в игровом цикле, то
         # стоит делать проверку на наличие аргументов x и y
         # (но предполагается, что x и y - это координаты)
-        if x >= 0 and y >= 0:
-            # Если размер текущего экрана
-            self.rect.center = x, y
+        # Если размер текущего экрана
+        self.rect.center = x, y
 
     def draw(self, screen):
         screen.blit(self.image, self.rect.topleft)
@@ -463,8 +521,9 @@ class PlayerAssistant(Player):
     # Кадры для анимации игрока
     size = (TILE_SIZE * 6 // 8, TILE_SIZE * 7 // 8)
     frames = cut_sheet(load_image('assistant.png'), 4, 4, size)
-    death_frames = cut_sheet(load_image('player_death.png'), 28, 1, size)[0]
-    cast_frames = cut_sheet(load_image('player_cast.png'), 5, 4, size)
+    cast_frames = cut_sheet(load_image('assistant_cast.png'), 5, 4, size)
+    get_damage_frames = cut_sheet(load_image('assistant_get_damage.png'), 4, 1, size)[0]
+    death_frames = cut_sheet(load_image('assistant_death.png'), 28, 1, size)[0]
 
     # Переменные добавляющие эти значения к здоровью и мане каждую итерацию update()
     MANA_UP = 0.4
@@ -473,6 +532,7 @@ class PlayerAssistant(Player):
     INVULNERABILITY_TIME_AFTER_HIT = 300
 
     WAITING_TIME = 1000
+    TARGET_UPDATE_TIME = 300
 
     # Словарь типа (направление взгляда): *индекс ряда в frames для анимации*
     look_directions = {
@@ -495,7 +555,7 @@ class PlayerAssistant(Player):
     # время перезарядки в миллисекундах
     reload_time = 2000
 
-    teleport_range = TILE_SIZE * 15
+    teleport_range = TILE_SIZE * 12
 
     visible_range = TILE_SIZE * 10
 
@@ -510,14 +570,26 @@ class PlayerAssistant(Player):
     # сила с которой игрок будет набирать/уменьшать свою скорость
     delta_changer = 0.3
 
-    names = ['Александр', 'Александра', 'Алиса', 'Анастасия', 'Андрей', 'Антон', 'Аня', 'Арина',
-             'Артем', 'Валерия', 'Валя', 'Вика', 'Виктория',  'Глеб', 'Данил', 'Дарья', 'Даша', 'Демьян',
-             'Диана', 'Дима', 'Ева', 'Егор', 'Екатерина', 'Емелъян', 'Женя', 'Иван', 'Игнат', 'Илья', 'Катя',
-             'Кира', 'Кирилл', 'Костя', 'Ксения', 'Ксюша', 'Лера', 'Лиза', 'Максим', 'Марианна', 'Мария',
-             'Милана', 'Мирослава', 'Миша', 'Надя', 'Настя', 'Никита', 'Николай', 'Оля', 'Павел', 'Петр',
-             'Полина', 'Роман', 'Саша', 'Света', 'Семен', 'Сергей', 'Сима', 'София', 'Степан', 'Таисия',
-             'Ульяна', 'Цирилла', 'Зираэль', 'Фалька', 'Фольтест']
-    font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 28)
+    names = [
+        'Aдрахил', 'Aлмариан', 'Aндвайс', 'Aнкалагон', 'Aнкалимон', 'Aулендил', 'Авель',
+        'Адалдрида', 'Аделард', 'Анакин', 'Ариан', 'Аркан', 'Аркана', 'Армандо', 'Асия',
+        'Аскаланте', 'Астор', 'Аттилло', 'Барлиман', 'Бенедикт', 'Бофаро', 'Брооклин',
+        'Вассиан', 'Ваучер', 'Вербер', 'Вилкольм', 'Виринея', 'Вирсавия', 'Виссарион',
+        'Витольд', 'Владигор', 'Володар', 'Гарий', 'Гермоген', 'Гимилзагар', 'Гликерий',
+        'Графиелита', 'Гринат', 'Громель', 'Гус', 'Дан', 'Данаида', 'Дарий', 'Доримедонт',
+        'Евстафий', 'Зородал', 'Иагон', 'Иаоса', 'Изаура', 'Илларий', 'Илларион', 'Калистрат',
+        'Калисфен', 'Каллист', 'Капитон', 'Каспиан', 'Кассиопея', 'Клементий', 'Лаврентий',
+        'Ларион', 'Лика', 'Луара', 'Люцифер', 'Максимиан', 'Меланфий', 'Мефодий', 'Неолина',
+        'Нимфадора', 'Обафеми', 'Оллард', 'Офелия', 'Памфил', 'Парфён', 'Патрикий', 'Пафнутий',
+        'Пофистал', 'Ратибор', 'Ревмир', 'Револьд', 'Рубентий', 'Рувим', 'Селиван', 'Серапион',
+        'Серафим', 'Согдиана', 'Софрон', 'Телемах', 'Тирион', 'Тодор', 'Трифилий', 'Троадий',
+        'Фабиан', 'Фалькор', 'Феанор', 'Феникс', 'Финарфин', 'Флавиан', 'Фрумгар', 'Хамфаст',
+        'Хартвиг', 'Хейнер', 'Хродрик', 'Эвмей', 'Эгнор', 'Эктелион', 'Эланор', 'Элеммакил',
+        'Элим', 'Элуна', 'Эмельдир', 'Эмметт', 'Эрандир', 'Эрендис', 'Эрестор', 'Эрнест',
+        'Эстелмо', 'Ювеналий', 'Юст', 'Юстиниан'
+    ]
+
+    font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 32)
 
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(7)
@@ -526,11 +598,15 @@ class PlayerAssistant(Player):
     FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "footstep.ogg"))
     FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
-    def __init__(self, x, y, player, all_sprites, *groups):
-        super(Player, self).__init__(x, y, all_sprites, *groups)
+    def __init__(self, x, y, player, all_sprites, health=0, mana=0, name=()):
+        x, y, health, mana = float(x), float(y), float(health), float(mana)
+        super(Player, self).__init__(x, y, all_sprites)
 
         self.player = player
-        self.name = choice(PlayerAssistant.names)
+        if name:
+            self.name = ' '.join(name)
+        else:
+            self.name = choice(PlayerAssistant.names)
         self.icon = None
         self.level = player.level
         self.alive = True
@@ -544,18 +620,31 @@ class PlayerAssistant(Player):
         self.dx = self.dy = 0
         self.distance_to_player = 0.0001
         self.stopping_time = pygame.time.get_ticks()
+        self.target = None
+        self.is_boosting_from_enemy = False
 
         # Здоровье
-        self.health = 500
-        self.full_health = self.health
+        self.full_health = 300
+        if health:
+            self.health = health
+        else:
+            self.health = self.full_health
 
         # Мана
-        self.mana = 500
-        self.full_mana = self.mana
+        self.full_mana = 300
+        if mana:
+            self.mana = mana
+        else:
+            self.mana = self.full_mana
 
         # Группа со спрайтами заклинаний
         self.shoot_last_time = pygame.time.get_ticks()
         self.last_hit_time = 0
+        self.last_target_update = 0
+
+    def __str__(self):
+        args = [*self.rect.center, self.health, self.mana, self.name]
+        return ' '.join(map(str, args))
 
     def update(self, *args):
         if self.alive:
@@ -566,7 +655,7 @@ class PlayerAssistant(Player):
             return
 
         player = self.player
-        enemies_group, all_sprites = args[:2]
+        enemies_group = args[0]
         # Сокращаем написание координат объекта
         self_x, self_y = self.rect.center
 
@@ -576,12 +665,11 @@ class PlayerAssistant(Player):
         line = self.distance_to_player
 
         self.dx = self.dy = 0
-        # Если игрок далеко, крутимся у своей стартовой точки
-        if line >= self.teleport_range:
-            self.shoot(player, enemies_group)
-            self.point = None
 
-        elif line > self.keeping_distant_to_player:
+        if line > self.keeping_distant_to_player:
+            if line >= self.teleport_range:
+                self.shoot(self.player)
+                self.point = None
             part_move = max(line / self.speed, 0.5)
             self.dx = round((point_x - self_x) / part_move)
             self.dy = round((point_y - self_y) / part_move)
@@ -602,14 +690,7 @@ class PlayerAssistant(Player):
 
         self.move(self.dx, self.dy)
 
-        min_dist_to_enemy = self.visible_range + 1
-        nearest_enemy = None
-        for enemy in enemies_group:
-            if not enemy.alive:
-                continue
-            dist_to_enemy = hypot(self.rect.center, enemy.rect.center)
-            if dist_to_enemy < min_dist_to_enemy:
-                nearest_enemy = enemy
+        nearest_enemy = self.update_target(enemies_group)
 
         if nearest_enemy:
             self.shoot(nearest_enemy, enemies_group)
@@ -631,13 +712,22 @@ class PlayerAssistant(Player):
             super(Player, self).update_frame_state()
         else:
             self.set_first_frame()
-            # self.point = None
+
+        # Сбор вещей и отдача их игроку
+        for item in pygame.sprite.spritecollide(self.collider, GroundItem.item_group, False):
+            item: GroundItem
+            if item.type == 'meat':
+                self.player.get_damage(-self.MEAT_HEALTH_UP * item.count)
+            elif item.type == 'money':
+                self.player.money += item.count
+            self.sounds_channel.play(item.sound)
+            item.kill()
 
         # Обновляем спрайт
         super(Player, self).update()
 
-    def shoot(self, target, enemies_group):
-        if not self.alive:
+    def shoot(self, target, enemies_group=None):
+        if not self.alive or not target or not target.alive:
             return
 
         current_ticks = pygame.time.get_ticks()
@@ -646,10 +736,9 @@ class PlayerAssistant(Player):
             return
         self.shoot_last_time = current_ticks
 
-        if self.player == target:
-            print(self.rect.center, target.rect.center, self.mana)
+        if isinstance(target, Player):
             spell = TeleportSpell
-            poses = self.rect.centerx, self.rect.centery, *target.rect.center
+            poses = *self.rect.center, *target.rect.center
             args = *poses, 0.5 + 0.05 * self.level, [self], self.player.spells
         else:
             if isinstance(target, Demon):
@@ -672,13 +761,37 @@ class PlayerAssistant(Player):
 
             else:
                 return
-            poses = self.rect.centerx, self.rect.centery, target.rect.centerx, target.rect.centery
+            poses = *self.rect.center, *target.rect.center
             args = *poses, 0.5 + 0.05 * self.level, enemies_group, self.player.spells
 
         if self.mana >= spell.mana_cost:
-            spell(*args)
-            self.sounds_channel.play(spell.CAST_SOUND)
             self.mana -= spell.mana_cost
+            self.sounds_channel.play(spell.CAST_SOUND)
+            spell(*args)
+
+            # Получение угла относительно прицела и оружия
+            dx, dy = self.rect.centerx - target.rect.centerx, self.rect.centery - target.rect.centery
+            angle = (degrees(atan2(dx, 0.00001 if not dy else dy)) + 360) % 360
+
+            number_of_frame = (round((angle - 0) / 18) + 27) % 20
+            self.image = self.cast_frames[number_of_frame // 5][number_of_frame % 5]
+            self.last_update = pygame.time.get_ticks() + 300
+
+    def update_target(self, enemies_group) -> Monster:
+        self.last_target_update = pygame.time.get_ticks()
+
+        min_dist_to_enemy = self.visible_range + 1
+        nearest_enemy = None
+        for enemy in enemies_group:
+            if not enemy.alive:
+                continue
+
+            dist_to_enemy = hypot(self.rect.center, enemy.rect.center)
+            if dist_to_enemy < min_dist_to_enemy:
+                min_dist_to_enemy = dist_to_enemy
+                nearest_enemy = enemy
+
+        return nearest_enemy
 
     def death(self):
         if not self.alive:

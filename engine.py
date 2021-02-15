@@ -67,7 +67,7 @@ def cut_sheet(sheet, columns, rows, size=(TILE_SIZE, TILE_SIZE)):
     return frames
 
 
-def load_image(filename: str, path_to_folder="assets", colorkey=None):
+def load_image(filename: str, path_to_folder="assets", size=None, colorkey=None):
     fullname = concat_two_file_paths(path_to_folder, filename)
     # если файл не существует, то выходим
     if not os.path.isfile(fullname):
@@ -83,6 +83,8 @@ def load_image(filename: str, path_to_folder="assets", colorkey=None):
         image.set_colorkey(colorkey)
     else:
         image = image.convert_alpha()
+    if size:
+        image = pygame.transform.scale(image, size)
     return image
 
 
@@ -146,7 +148,7 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
         is_true = [0, 1][round(random() * 100) <= percentage_chance]
         if seed:
             seed.append(str(is_true))
-    return is_true
+    return bool(is_true)
 
 
 def hypot(coords1: (int, int), coords2: (int, int)):

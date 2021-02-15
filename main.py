@@ -15,8 +15,9 @@ if __name__ == '__main__':
     pygame.mixer.init(44100, -16, 12, 64)
 
     # Экран (он же будет использован везде)
-    screen = pygame.display.set_mode(flags=pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF, vsync=True)
+    screen = pygame.display.set_mode(flags=pygame.FULLSCREEN |pygame.HWSURFACE | pygame.DOUBLEBUF, vsync=True)
     # (1920, 1080),
+    # pygame.FULLSCREEN |
     # эти модули нужно импортировать именно тут,
     # т.к. в них происходит загрузка картинок, а в UI ещё и звуков.
     # (А это можно сделать только после инициализации pygame.mixer и экрана)
@@ -39,11 +40,11 @@ if __name__ == '__main__':
             # Читаем файл сохранения, если он существует
             if os.path.isfile("data\\save.txt"):
                 with open('data\\save.txt', 'r', encoding="utf-8") as file:
-                    seed = ' '.join(file.readlines())
-                # Если seed пустой, то присваем ему None
+                    seed = file.read()
+
                 if seed:
                     data = seed.split('\n')
-                    seed, level_number = '\n'.join(data[:3]), int(data[3])
+                    seed, level_number = '\n'.join(data[:-1]), int(data[-1])
 
             # Результат того, чем закончилась игра
             code = game.play(screen, level_number=level_number, user_seed=seed)

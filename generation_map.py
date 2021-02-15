@@ -2,7 +2,7 @@ from random import choice
 
 from entities.base_entity import Entity
 from entities.tile import *
-from entities.player import Player
+from entities.player import Player, PlayerAssistant
 from entities.enemies import random_monster
 from entities.spells import Spell
 from config import TILE_SIZE
@@ -43,26 +43,26 @@ l..T.P.T..r
 
 EVIL_ROOM_1 = '''
 03338t63339
-5.........1
-5.......M.1
+5..B...B.B1
+5.....B.M.1
 5..B......1
-8.........6
+8.B....B.B6
 l.........r
-2...B.....4
+2B..B.....4
 5......T..1
-5.M.......1
-5.........1
+5.M...B..B1
+5..B...B..1
 -7772b4777=
 '''
 
 EVIL_ROOM_2 = '''
 03338t63339
-5.......MC1
+5M......MC1
 5.47777777=
-5.633333339
-8....B...B6
-l.........r
-2.T.......4
+5B633333339
+8...BB.B.B6
+l...M.....r
+2.TBB.B.B.4
 -77777772.1
 033333338.1
 5.........1
@@ -72,110 +72,110 @@ l.........r
 EVIL_ROOM_3 = '''
 03338t63339
 5........B1
-5.........1
+5......B..1
 5..T......1
 8.........6
-l....C.M..r
-2.........4
+l....B.M..r
+2.B.......4
 5....M....1
 5...B.....1
-5.........1
+5.......B.1
 -7772b4777=
 '''
 
 EVIL_ROOM_4 = '''
 03338t63339
-5B........1
+5B....B...1
 -2.......4=
-08.......69
+08..B....69
 8........B6
 l.........r
 2B.....T..4
 -2.M.....4=
-08.......69
+08....B..69
 5.........1
 -7772b4777=
 '''
 
 EVIL_ROOM_5 = '''
 03338t63339
-5.........1
-5.........1
+5B.....B..1
+5....B....1
 5..47772..1
-8..1   5..6
+8B.1   5B.6
 l..1   5..r
-2..1   5..4
-5..63338..1
+2.B1   5..4
+5..63338B.1
 5.T..M...B1
-5.......BB1
+5..B....BB1
 -7772b4777=
 '''
 
 EVIL_ROOM_6 = '''
 03338t6339 
-5........69
-5.........1
-5.........1
-8.........6
+5.M.B....69
+5B....B..M1
+5.B.......1
+8..B..B..B6
 l....T....r
-2.........4
+2B....B..B4
 5..M......1
-5......B..1
--2.....BBB1
+5......B.B1
+-2.B...BBB1
  -772b4777=
 '''
 
 EVIL_ROOM_7 = '''
 03338t63339
-5.......BB1
-5.........1
-5M........1
-8.........6
-l...T.....r
-2.........4
-5.........1
-5.B.......1
-5......477=
+5.B...B.BB1
+5..B.....B1
+5M..B.....1
+8..B...B..6
+l...T...B.r
+2.B.......4
+5.....B..B1
+5.B..M....1
+5.B...B477=
 -7772b4=   
 '''
 
 EVIL_ROOM_8 = '''
 03908t69039
-5.15..B15.1
-5.68...68.1
-5.....M...1
-8.........6
-l....T....r
-2.........4
-5.........1
+5.15..B15M1
+5M68...68.1
+5..B..M...1
+8..BB....B6
+l....T.B..r
+2.B.......4
+5...B.B..B1
 5.42...42.1
-5B15...15.1
+5B15..B15.1
 -7=-2b4=-7=
 '''
 
 EVIL_ROOM_9 = '''
  0338t6339 
-08......B69
+08B.B..BB69
 5........B1
-5.........1
-8.........6
-l....T....r
-2.........4
-5.....M...1
-5.........1
--2.......4=
+5B.B....B.1
+8..B..B..B6
+l...BT....r
+2......B.B4
+5.BB..M...1
+5.....B.BB1
+-2.B...B.4=
  -772b477= 
 '''
 
 EVIL_ROOM_10 = '''
   038t639  
-  5.....1  
-038.....639
-5B........1
+  5....B1  
+038B....639
+5B..M..B..1
 8...472...6
-l..T1 5...r
-2...638...4
-5.........1
+l..T1 5M..r
+2.M.638B..4
+5.B..B...B1
 -72.....47=
   5...BB1  
   -72b47=  
@@ -184,56 +184,56 @@ l..T1 5...r
 EVIL_ROOM_11 = '''
 03338t63339
 5..B...B..1
-5.BB......1
+5.BB...B..1
 5...B.....1
-8........B6
-l....T....r
-2......B..4
+8B....B..B6
+l....T..B.r
+2B.....B..4
 5..B..M...1
-5.....B...1
-5.........1
+5.....B..B1
+5.M....B..1
 -7772b4777=
 '''
 
 EVIL_ROOM_12 = '''
 03338t63339
-5.........1
-5.........1
+5.......B.1
+5B........1
 5.....M...1
 8.........6
 l...BT.B..r
-2....B.B.B4
-5.BB.BBB.B1
-5..BB...BB1
+2......B.B4
+5.BB..BB.B1
+5M.BB...BB1
 5B....BB.B1
 -7772b4777=
 '''
 
 EVIL_ROOM_13 = '''
 03338t63339
-5B......BB1
+5B..B...BB1
 5B........1
-5.........1
-8...M.....6
-l....TM...r
-2...M.....4
-5.........1
-5.........1
-5.........1
+5.B....B..1
+8...M....B6
+l...BTM...r
+2B..M.....4
+5......B.B1
+5.B.......1
+5..B...B..1
 -7772b4777=
 '''
 
 EVIL_ROOM_14 = '''
 03338t639  
-5B......69 
-5........69
-5.........1
+5B.B...B69 
+5M..B....69
+5..B...B..1
 8.........6
-l....T....r
-2.........4
-5B......B.1
+l....T..B.r
+2...B.B...4
+5BBM....B.1
 -2B..B...M1
- -2.....B.1
+ -2.B...B.1
   -72b4777=
 '''
 
@@ -243,7 +243,7 @@ EVIL_ROOM_15 = '''
     5.1    
 09  5.1  09
 86338.63386
-l.........r
+l..B..M...r
 24772.47724
 -=  5.1  -=
     5.1    
@@ -256,25 +256,25 @@ EVIL_ROOM_16 = '''
 5.........1
 5....M....1
 5..47772..1
-8..10338..6
-l..15.....r
-2..1-772T.4
+8B.10338BM6
+l..15C.MM.r
+2..1-772TM4
 5..63338..1
-5....BBB..1
-5BB......B1
+5..B.BBB..1
+5BB...B..B1
 -7772b4777=
 '''
 
 EVIL_ROOM_17 = '''
    08t69   
   08...69  
- 08.....69 
-08.......69
-8B........6
-l....T....r
+ 08..B..69 
+08.....B.69
+8B.B......6
+l....T..B.r
 2..M......4
 -2.......4=
- -2.....4= 
+ -2..B..4= 
   -2...4=  
    -2b4=   
 '''
@@ -283,12 +283,12 @@ EVIL_ROOM_18 = '''
    08t69   
   08...69  
  08....B69 
-08.....B.69
+08.B...B.69
 8.....B...6
 l....T....r
-2.......M.4
+2..B....M.4
 -2.......4=
- -2.....4= 
+ -2..B..4= 
   -2B..4=  
    -2b4=   
 '''
@@ -297,10 +297,10 @@ EVIL_ROOM_19 = '''
    08t69   
   08...69  
  08.....69 
-08.......69
+08..B....69
 8.........6
-l.........r
-2BB.......4
+l.....M...r
+2BB..B....4
 -2.T.....4=
  -2....M4= 
   -2B..4=  
@@ -311,11 +311,11 @@ EVIL_ROOM_20 = '''
    08t69   
   08...69  
  08.....69 
-08.......69
-8......B..6
+08...B...69
+8.M....B..6
 l.....BB..r
 2...T.....4
--2....M..4=
+-2.B..M..4=
  -2.....4= 
   -2...4=  
    -2b4=   
@@ -340,12 +340,12 @@ EVIL_ROOM_22 = '''
 -7772.4777=
     5.1    
     5.69   
-33338..6333
-l.........r
+33338.M6333
+l.M.......r
 77772.47777
     5.69   
-03338.C6339
-5...TM....1
+03338.B6339
+5...TM...M1
 -7772b4777=
 '''
 
@@ -357,8 +357,8 @@ EVIL_ROOM_23 = '''
 8B...B....6
 l.B....B..r
 2..T.B.BBB4
-5...B.B...1
-5.......B.1
+5B..B.B...1
+5.M.....B.1
 -7772.4777=
     5b1    
 '''
@@ -366,11 +366,11 @@ l.B....B..r
 EVIL_ROOM_24 = '''
     5t1    
  0338.6339 
- 5......B1 
- 5.......1 
+ 5M.....B1 
+ 5.B...B.1 
 38.......63
-l....T....r
-72.......47
+l..B.T....r
+72.....B.47
  5..M....1 
  5.B..B.B1 
  -772.477= 
@@ -381,11 +381,11 @@ EVIL_ROOM_25 = '''
     5t1    
     5.1    
   038.639  
-  5....B1  
-338.....633
-l....T....r
-772.....477
-  5.M...1  
+  5MB..B1  
+338....B633
+l..B.T....r
+772....M477
+  5BM.B.1  
   -72.47=  
     5.1    
     5b1    
@@ -393,10 +393,10 @@ l....T....r
 
 EVIL_ROOM_26 = '''
 03338t639  
-5.......639
+5M......639
 5.BBT.....1
-5M.B......1
-8BBB......6
+5M.BB.....1
+8BBBB.....6
 l.........r
 2.........4
 5........B1
@@ -408,14 +408,14 @@ l.........r
 EVIL_ROOM_27 = '''
 03338t69   
 5.B...B6339
-5.........1
-5B........1
+5......B..1
+5B....BM..1
 8.........6
-l....T....r
-2.........4
-5......B.M1
-5.B.....B.1
--772....BC1
+l..M.TBB..r
+2.B...BB..4
+5B....BBMM1
+5.B....BB.1
+-772...BBC1
    -2b4777=
 '''
 
@@ -424,7 +424,7 @@ EVIL_ROOM_28 = '''
     5.1    
     5.1    
    08.69   
-3338...6333
+3338M..6333
 l....T....r
 7772..M4777
    -2.4=   
@@ -439,7 +439,7 @@ EVIL_ROOM_29 = '''
     5.1    
     5.1    
 33338.63333
-l.........r
+l....M....r
 77772.47777
     5.1    
     5.1    
@@ -450,42 +450,70 @@ l.........r
 EVIL_ROOM_30 = '''
    08t69   
   08...69  
- 08.....69 
-08.......69
-8....M.B..6
-l.....BB..r
+ 08B....69 
+08M......69
+8....M.B.M6
+l..B..BB..r
 2...T.....4
--2.....MC4=
+-2.B...MC4=
  -2.....4= 
   -2...4=  
    -2b4=   
 '''
 
+EVIL_ROOM_31 = '''
+   08t69   
+   5..M1   
+   -2.4=   
+03908.69039
+8.68...68B6
+l....MT...r
+2.42...42.4
+-7=-2.4=-7=
+   08.69   
+   5...1   
+   -2b4=   
+'''
+
+EVIL_ROOM_32 = '''
+03338t639  
+5CM....M639
+-7772M...B1
+03395B..B.1
+8..68..B..6
+l..B......r
+2T....42.M4
+5...B.1-77=
+5B.M..63339
+-72.....B.1
+  -72b4777=
+'''
+
 DOUBLE_EVIL_ROOM_1 = '''
 03338t6333903338t63339
-5.........68.........1
--2...............B..4=
+5.....B...68.........1
+-2.B....B....B...B..4=
 08.42B....42.....42.69
-8..68..T..68..T..68..6
-l....................r
+8..68..TB.68..T.B68..6
+l.....B.....B........r
 2B.42..T..42..T..42..4
 -2.68.....68B...B68.4=
-08..................69
-5.........42.........1
+08B....B......B.....69
+5...B.....42.....BB..1
 -7772b4777=-7772b4777=
 '''
 
 DOUBLE_EVIL_ROOM_2 = '''
  0338t6333903338t6339 
-08........68........69
-5.....B...M...B......1
-5..M.............M...1
-8.......T...T........6
-l..B.....C.C.....B...r
-2.......T...T........4
-5..M.............M...1
-5.....B...M...B......1
--2........42........4=
+08.B......68...B....69
+5.....B...M...B..B.B.1
+5..M....B......B.M...1
+8....B..T...T........6
+l..BB....C.C.....B...r
+2.......T...T.B......4
+5..M....B........M...1
+5.....B...M...B....B.1
+-2..B.....42.....B..4=
  -772b4777=-7772b477= 
 '''
 
@@ -497,7 +525,7 @@ DOUBLE_EVIL_ROOM_3 = '''
 8........4772........6
 l........1  5........r
 2.......B6338....M...4
-5........BBC.........1
+5........BBM.........1
 5......T......T......1
 5.......477772.......1
 -7772b47=    -72b4777=
@@ -505,12 +533,12 @@ l........1  5........r
 
 DOUBLE_EVIL_ROOM_4 = '''
 03338t6333333338t63339
-5..M...............C.1
-5.42.42.42..42.42.42.1
-5.68.68.68..68.68.68.1
-8..B...T......T......6
-l....................r
-2......T......T......4
+5..M.............MBCB1
+5.42.42.42..42.42.42B1
+5.68.68.68..68.68.68M1
+8..BBB.TB.M..BT..BBB.6
+l....M.....BB...M..B.r
+2...BB.T..B...T.B.B..4
 5.42.42.42..42.42.42.1
 5.68.68.68..68.68.68.1
 5...............M....1
@@ -521,7 +549,7 @@ DOUBLE_EVIL_ROOM_5 = '''
 03338t6333333338t63339
 5....................1
 5.472B.472..472..472.1
-5.1 5..1 5.C1 5..1 5.1
+5.1 5..1 5.B1 5..1 5.1
 8.638..638..638..638.6
 l.......T....T.......r
 2.472..472M.472..472.4
@@ -535,11 +563,11 @@ DOUBLE_EVIL_ROOM_6 = '''
 03338t6333333338t63339
 5....................1
 5.BBBBBBBBBBBBBBBBBB.1
-5.B.T..B....T........1
+5.B.TM.B.M..T........1
 8.B.BB.BBBBB.BBBBBBB.6
-l.B.B...T.CB.BM.T..B.r
+l.B.B..MT.CB.BM.T..B.r
 2.BMBBBBBBBB.BBBBB.B.4
-5.B..T........T....B.1
+5.B..T...M....T....B.1
 5.BBBBBBBBBBBBBBBBBB.1
 5....................1
 -7772b4777777772b4777=
@@ -547,72 +575,16 @@ l.B.B...T.CB.BM.T..B.r
 
 DOUBLE_EVIL_ROOM_7 = '''
 03338t6333333338t63339
-5.B.......B..........1
-5..T..............T..1
-5...............B....1
-8...B........CM......6
-l....................r
-2......MC............4
-5BB......B......B....1
-5..T..............T..1
-5.BB..........B......1
+5.B...B...B....B...B.1
+5..T.........B....T..1
+5.....M....B....B....1
+8...B...B....CM....B.6
+l.B......B.......B...r
+2......MB...B.......B4
+5BB.B..B.B...B..B..BB1
+5B.T..B..B.B.B.B..TB.1
+5.BBB..B.B..B.BB..B.B1
 -7772b4777777772b4777=
-'''
-
-CHEST_ROOM_1 = '''
-   08t69   
-   5...1   
-   -2.4=   
-03908.69039
-8.68...68B6
-l.....T...r
-2.42...42.4
--7=-2.4=-7=
-   08.69   
-   5...1   
-   -2b4=   
-'''
-
-CHEST_ROOM_2 = '''
-03338t63339
-5.B.......1
-5.........1
-5B........1
-8.....B...6
-l..BCB....r
-2...B..T..4
-5........B1
-5.........1
-5.......BB1
--7772b4777=
-'''
-
-CHEST_ROOM_3 = '''
-03338t639  
-5C......639
--7772....B1
-03395B....1
-8..68.....6
-l.........r
-2T....42..4
-5.....1-77=
-5B....63339
--72.......1
-  -72b4777=
-'''
-
-CHEST_ROOM_4 = '''
-03338t63339
-5.........1
-5.........1
-5......T..1
-8.........6
-l.........r
-2.........4
-5..T......1
-5.........1
-5.........1
--7772b4777=
 '''
 
 EMPTY_ROOM = '''           \n           \n           
@@ -636,10 +608,10 @@ l....E....r
 COVERT_ROOM_1 = '''
            
  033333339 
- 5.......1 
- 5.T...T.1 
- 5...C...1 
- 5..C.C..1 
+ 5BB..BB.1 
+ 5.T..BT.1 
+ 5...CBB.1 
+ 5B.CBC..1 
  5...C...1 
  5.T...T.1 
  5.......1 
@@ -650,13 +622,13 @@ COVERT_ROOM_1 = '''
 COVERT_ROOM_2 = '''
            
  033333339 
- 5.......1 
+ 5.B.BB.B1 
  5.T...T.1 
- 5..C.C..1 
- 5.......1 
- 5..C.C..1 
+ 5B.C.C..1 
+ 5......B1 
+ 5B.C.C..1 
  5.T...T.1 
- 5.......1 
+ 5B..B...1 
  -7777777= 
            
 '''
@@ -666,10 +638,10 @@ COVERT_ROOM_3 = '''
  033333339 
  5CT...TC1 
  5T.....T1 
+ 5....B..1 
+ 5.B.....1 
  5.......1 
- 5.......1 
- 5.......1 
- 5T.....T1 
+ 5T...B.T1 
  5CT...TC1 
  -7777777= 
            
@@ -677,29 +649,113 @@ COVERT_ROOM_3 = '''
 
 COVERT_ROOM_4 = '''
 03333333339
-5.........1
+5.BBB.B.BB1
 5.C.....C.1
-5..T...T..1
-5.........1
-5.........1
-5.........1
+5..T..BT.B1
+5BB......B1
+5..B.B....1
+5..B....B.1
 5..T...T..1
 5.C.....C.1
-5.........1
+5.....B...1
 -777777777=
+'''
+
+COVERT_ROOM_5 = '''
+           
+  0333339  
+  5B..B.1  
+  5C..BC1  
+  5TB..T1  
+  5...B.1  
+  5TB..T1  
+  5C...C1  
+  5.B.BB1  
+  -77777=  
+           
+'''
+
+COVERT_ROOM_6 = '''
+           
+ 033333339 
+ 5CT..BTC1 
+ 5T.B..BT1 
+ 5B....B.1 
+ 5B....B.1 
+ 5.B....B1 
+ 5T..B..T1 
+ 5CTB..TC1 
+ -7777777= 
+           
+'''
+
+COVERT_ROOM_7 = '''
+           
+           
+  0333339  
+  5CT.TC1  
+  5TBB.T1  
+  5B..B.1  
+  5TB..T1  
+  5CT.TC1  
+  -77777=  
+           
+           
+'''
+
+COVERT_ROOM_8 = '''
+           
+  0333339  
+  5CTBTC1  
+  5T.B.T1  
+  5.B...1  
+  5..B..1  
+  5.BB.B1  
+  5T.B.T1  
+  5CT.BC1  
+  -77777=  
+           
+'''
+
+COVERT_ROOM_9 = '''
+           
+           
+  0333339  
+  5CTBTC1  
+  5T.B.T1  
+  5B..B.1  
+  5T.B.T1  
+  5CT.TC1  
+  -77777=  
+           
+           
+'''
+
+COVERT_ROOM_10 = '''
+           
+           
+ 033333339 
+ 5CTB.BTC1 
+ 5T..BB.T1 
+ 5B.B..B.1 
+ 5T....BT1 
+ 5CTBB.TC1 
+ -7777777= 
+           
+           
 '''
 
 # Группы комнат по использованию
 STANDARD_ROOMS = {
-      'E1': EVIL_ROOM_1,
-      'E2': EVIL_ROOM_2,
-      'E3': EVIL_ROOM_3,
-      'E4': EVIL_ROOM_4,
-      'E5': EVIL_ROOM_5,
-      'E6': EVIL_ROOM_6,
-      'E7': EVIL_ROOM_7,
-      'E8': EVIL_ROOM_8,
-      'E9': EVIL_ROOM_9,
+      'E1':  EVIL_ROOM_1,
+      'E2':  EVIL_ROOM_2,
+      'E3':  EVIL_ROOM_3,
+      'E4':  EVIL_ROOM_4,
+      'E5':  EVIL_ROOM_5,
+      'E6':  EVIL_ROOM_6,
+      'E7':  EVIL_ROOM_7,
+      'E8':  EVIL_ROOM_8,
+      'E9':  EVIL_ROOM_9,
       'E10': EVIL_ROOM_10,
       'E11': EVIL_ROOM_11,
       'E12': EVIL_ROOM_12,
@@ -721,10 +777,8 @@ STANDARD_ROOMS = {
       'E28': EVIL_ROOM_28,
       'E29': EVIL_ROOM_29,
       'E30': EVIL_ROOM_30,
-      'C1': CHEST_ROOM_1,
-      'C2': CHEST_ROOM_2,
-      'C3': CHEST_ROOM_3,
-      'C4': CHEST_ROOM_4,
+      'E31': EVIL_ROOM_31,
+      'E32': EVIL_ROOM_32,
 }
 
 DOUBLE_ROOMS = {
@@ -734,24 +788,31 @@ DOUBLE_ROOMS = {
     'D4': DOUBLE_EVIL_ROOM_4,
     'D5': DOUBLE_EVIL_ROOM_5,
     'D6': DOUBLE_EVIL_ROOM_6,
-    'D7': DOUBLE_EVIL_ROOM_7
+    'D7': DOUBLE_EVIL_ROOM_7,
 }
 
 SECRET_ROOMS = {
-    'C1': COVERT_ROOM_1,
-    'C2': COVERT_ROOM_2,
-    'C3': COVERT_ROOM_3
+    'C1':  COVERT_ROOM_1,
+    'C2':  COVERT_ROOM_2,
+    'C3':  COVERT_ROOM_3,
+    'C4':  COVERT_ROOM_4,
+    'C5':  COVERT_ROOM_5,
+    'C6':  COVERT_ROOM_6,
+    'C7':  COVERT_ROOM_7,
+    'C8':  COVERT_ROOM_8,
+    'C9':  COVERT_ROOM_9,
+    'C10': COVERT_ROOM_10,
 }
 
 
 # Карты комнат в уровнях
 LEVEL_1 = '''
-RRS CRR
-R     R
-RRR RRR
-  R R  
-RRR RRR
-R     R
+RRRSRRR
+R    RR
+RRR RR 
+  RRR C
+RRR RR 
+R    RR
 RRRERRR
 '''      # 31
 
@@ -770,12 +831,12 @@ RERRRR
   R  RR
 RRRRR R
   R  RR
- SRRRR 
+RRRRRS 
 '''      # 21
 
 LEVEL_4 = '''
 SRRRR C
- R    R
+ R  R R
 RR  RRR
  R  R R
  RRRR  
@@ -783,11 +844,11 @@ RR  RRR
 '''      # 20
 
 LEVEL_5 = '''
-ER RRRS
+ER RRRR
  R R R 
  R RRR 
  RRR R 
-RR   RR
+RR   RS
 C     C
 '''      # 21
 
@@ -795,15 +856,15 @@ LEVEL_6 = '''
 R RRR R
 RRR RRS
  R     
-RRRRRE 
+RRRRRR 
   R R  
-RRRRRC 
+ERRRRC 
 '''      # 21
 
 LEVEL_7 = '''
 RE  RRR
  RRRR R
-  R RR 
+  R RRR
  RR  R 
   RRRRR
 RRR   S
@@ -812,7 +873,7 @@ RRR   S
 LEVEL_8 = '''
 RR RRRR
  RRR  R
-RR RR R
+RR RRRR
  R R  R
 RRRE  S
  R    R
@@ -820,7 +881,7 @@ RRRE  S
 
 LEVEL_9 = '''
 RER RR
-  R  R
+R R  R
 R RRRR
 RRR  R
   R RS
@@ -829,7 +890,7 @@ CRRRR
 
 LEVEL_10 = '''
   RRRRS
-C   R  
+C R R  
 R   RRR
 RR  R  
  RRRRRR
@@ -843,7 +904,7 @@ RRRR
  R R 
  RRRR
 SRR  
-R   C
+R R C
 '''  # 22
 
 LEVEL_12 = '''
@@ -859,11 +920,11 @@ RRR C
 LEVEL_13 = '''
  C ER
 R   R
-RR RR
-RRRR 
-R R  
-  R  
-SRR  
+RRRRR
+RRR  
+R R C
+ RR  
+SRRRR
 '''      # 24
 
 LEVEL_14 = '''
@@ -1009,13 +1070,13 @@ LEVEL_29 = '''
 S  R  
 RRRRR 
    R  
- R RR 
+ R RRR
 RRRRR 
 C E RR
 '''      # 22
 
 LEVEL_30 = '''
- RC   
+ RC  R
 RSRRRR
 R R R 
  RR R 
@@ -1076,8 +1137,8 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
     level = []
     seed = []
     if user_seed:
-        seed.append(user_seed[0])
-        del user_seed[0]
+        seed.append(user_seed.pop(0))
+        # del user_seed[0]
     else:
         seed.append(choice(list(FORMS)))
     level_form = FORMS[seed[-1]]
@@ -1260,15 +1321,15 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
 
 
 def initialise_level(level_map, level, all_sprites, tiles_group, furniture_group, barriers_group, enemies_group,
-                     doors_group, torches_group, end_of_level, user_seed=None, player=None):
+                     doors_group, torches_group, end_of_level, monster_seed, boxes_seed, player):
     """
     Функция для инициализации уровня
     Проходит по переданной ей карте уровня и на каждый символ карты создает тайл и что-то на нем, если есть
     Если передается сид, монстры будут такие, как записано в сиде
-    Разные тайлы пола, предметов на уровне (бочек, коробок) будут всегда разные (только текстура)
+    Разные тайлы пола, предметов на уровне (бочек, коробок) будут всегда одинаковые
 
     :param level_map: Уровень
-    :param level:
+    :param level: Номер уровня, нужен для расчета сложности
     :param all_sprites: Группа со всеми спрайтами
     :param tiles_group: Группа со спрайтами плиток пола
     :param furniture_group: Группа со спрайтами ящиков на уровне
@@ -1277,13 +1338,16 @@ def initialise_level(level_map, level, all_sprites, tiles_group, furniture_group
     :param doors_group: Группа дверей
     :param torches_group: Группа с факелами
     :param end_of_level: Группа тайла лестницы вниз, при касании с которым произойдет переход на следующий уровень
-    :param user_seed: Сид, по которому будут расставлены монстры
+    :param monster_seed: Сид, по которому будут расставлены монстры
+    :param boxes_seed: Сид, по которому будут расставлены бочки
     :param player: Если он передан, просто перемещаем его на новое место, а иначе создаем нового
 
-    :return Player: Игрок, размещённый в нужном месте
+    :return player: Игрок, размещённый в нужном месте
     :return monster_seed: Враги, размещённые в нужном месте
+    :return boxes_seed: Ящики, размещённые или нет в нужном месте
     """
-    seed = []
+    new_monster_seed = []
+    new_boxes_seed = []
     level_map = [list(i) for i in level_map]
 
     # Установка общих физических объектов для всех сущностей
@@ -1305,19 +1369,49 @@ def initialise_level(level_map, level, all_sprites, tiles_group, furniture_group
                     if not player:
                         player = Player(x * TILE_SIZE + TILE_SIZE * 0.5,
                                         y * TILE_SIZE + TILE_SIZE * 0.5, level, all_sprites)
+                        player.add_assistant(PlayerAssistant(-10000, -10000, player, all_sprites))
                     else:
-                        player.rect.center = x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5
+                        player.start_position = (x + 0.5) * TILE_SIZE, (y + 0.5) * TILE_SIZE
+                        player.rect.center = (x + 0.5) * TILE_SIZE, (y + 0.5) * TILE_SIZE
                     Tile(level_map[y][x], x, y, all_sprites, tiles_group)
 
                 elif level_map[y][x] == 'M':    # МОНСТР
-                    random_monster(x, y, level, all_sprites, enemies_group, seed, user_seed)
+                    random_monster(x, y, level, all_sprites, enemies_group, new_monster_seed, monster_seed)
 
                 elif level_map[y][x] == 'B':    # МЕБЕЛЬ (бочки)
-                    Furniture(choice(['B1', 'B2', 'B3']), x, y,
-                              all_sprites, furniture_group, barriers_group)
+                    if boxes_seed:
+                        n = int(boxes_seed.pop(0))
+                    else:
+                        n = randint(0, 3)
+                    index = len(new_boxes_seed)
+
+                    if n == 1:
+                        Furniture('B1', x, y, new_boxes_seed, index, all_sprites, furniture_group, barriers_group)
+                    elif n == 2:
+                        Furniture('B2', x, y, new_boxes_seed, index, all_sprites, furniture_group, barriers_group)
+                    elif n == 3:
+                        Furniture('B3', x, y, new_boxes_seed, index, all_sprites, furniture_group, barriers_group)
+                    new_boxes_seed.append(str(n))
 
                 elif level_map[y][x] == 'C':    # СУНДУКИ
-                    Chest(x, y, all_sprites, barriers_group)
+                    if boxes_seed:
+                        n = int(boxes_seed.pop(0))
+                    else:
+                        n = [randint(1, 3), 4][true_with_chance(80)]
+                    index = len(new_boxes_seed)
+
+                    if n == 4:
+                        Chest(x, y, new_boxes_seed, index, all_sprites, barriers_group)
+                    elif n == 1:
+                        Furniture('B1', x, y, new_boxes_seed, index,
+                                  all_sprites, furniture_group, barriers_group)
+                    elif n == 2:
+                        Furniture('B2', x, y, new_boxes_seed, index,
+                                  all_sprites, furniture_group, barriers_group)
+                    elif n == 3:
+                        Furniture('B3', x, y, new_boxes_seed, index,
+                                  all_sprites, furniture_group, barriers_group)
+                    new_boxes_seed.append(str(n))
 
                 elif level_map[y][x] in 'ltT':    # ДВЕРИ И ФАКЕЛА
                     if level_map[y][x] == 'l':
@@ -1334,4 +1428,4 @@ def initialise_level(level_map, level, all_sprites, tiles_group, furniture_group
             elif level_map[y][x] != ' ':
                 Tile(level_map[y][x], x, y, all_sprites, tiles_group)
     # вернем игрока и сид монстров
-    return player, seed
+    return player, new_monster_seed, new_boxes_seed

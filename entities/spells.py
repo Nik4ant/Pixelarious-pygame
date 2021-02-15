@@ -341,7 +341,7 @@ class FlashSpell(Spell):
     spell_type = Spell.FLASH
     mana_cost = 150
     UPDATE_TIME = 60
-    speed = TILE_SIZE * 0.5
+    speed = TILE_SIZE * 3
     acceleration = 1
     damage_frame = 2
     action_time = 0
@@ -380,9 +380,9 @@ class TeleportSpell(Spell):
     Переносит игрока в позицию прицела"""
     spell_type = Spell.TELEPORT
     damage = '---'
-    mana_cost = 200
+    mana_cost = 250
     UPDATE_TIME = 40
-    speed = TILE_SIZE * 1
+    speed = TILE_SIZE * 3
     acceleration = 0
     damage_frame = 2
     action_time = 0

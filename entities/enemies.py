@@ -7,18 +7,43 @@ from engine import *
 from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
 
 
-class WalkingMonster(Entity):
+class Monster(Entity):
     """
     Класс монстров ближнего боя.
     Если игрок дальше их видимости, они ходят вокруг точки спавна.
     Если они видят игрока, они идут к нему
     """
-    def __init__(self, x: float, y: float, level: int, *args):
-        # Конструктор класса Sprite
+    def __init__(self, x, y, level, seed, *args):
         super().__init__(x, y, *args)
+        self.level = level
+        self.seed = seed
+
+    def death(self):
+        if not self.alive:
+            return
+
+        if true_with_chance(30):
+            spawn_item(*self.rect.center, all_sprites=Entity.all_sprites,
+                       k=randint(1, [2, 3][isinstance(self, ShootingMonster)]))
+
+        if self.seed:
+            self.seed[self.index_in_seed] = '0'
+        self.alive = False
+        self.cur_frame = 0
+        self.speed = 0.0001
+
+
+class WalkingMonster(Monster):
+    """
+    Класс монстров ближнего боя.
+    Умом они не блещут, ИИ пока такой:
+    Если игрок дальше их видимости, они ходят вокруг точки спавна.
+    Если они видят игрока, они идут к нему
+    """
+    def __init__(self, x: float, y: float, level: int, seed, *args):
+        super().__init__(x, y, level, seed, *args)
 
         self.player_observed = False
-
         # Значения по-умолчанию
         self.stun_time = 0
         self.visibility_range = TILE_SIZE * 6
@@ -26,11 +51,10 @@ class WalkingMonster(Entity):
         self.distance_to_player = 100
         self.speed = 1
 
-        self.level = level
         self.spells = pygame.sprite.Group()
 
     def update(self, *args):
-        screen, player = args
+        player = args[0]
 
         if not self.alive:
             super().update_frame_state()
@@ -127,19 +151,8 @@ class WalkingMonster(Entity):
         super().update()
         super().update_frame_state(delta)
 
-    def death(self):
-        if not self.alive:
-            return
 
-        if true_with_chance():
-            spawn_item(*self.rect.center, k=randint(2, 3))
-
-        self.alive = False
-        self.cur_frame = 0
-        self.speed = 0.00001
-
-
-class ShootingMonster(Entity):
+class ShootingMonster(Monster):
     """
     Класс монстров дальнего боя.
     Чуть сложнее устроен:
@@ -150,10 +163,9 @@ class ShootingMonster(Entity):
     Если игрок подходит слишком близко, отходим, разрываем дистанцию.
     (В этот момент если монстр не сдвинулся, значит преграда, так что снова стреляем)
     """
-    def __init__(self, x: float, y: float, level: int, *args):
+    def __init__(self, x: float, y: float, level: int, seed, *args):
         # Конструктор класса Sprite
-        super().__init__(x, y, *args)
-        self.level = level
+        super().__init__(x, y, level, seed, *args)
 
         # Значения по-умолчанию
         self.visibility_range = TILE_SIZE * 13
@@ -171,7 +183,7 @@ class ShootingMonster(Entity):
         self.stopping_time = pygame.time.get_ticks() + randint(-500, 500)
 
     def update(self, *args):
-        all_sprites, player = args
+        player = args[0]
         super().update()
 
         self_x, self_y = self.rect.center
@@ -253,7 +265,7 @@ class ShootingMonster(Entity):
                     self.last_shot_time = pygame.time.get_ticks()
                     # Стреляем в игрока
                     if self.alive and target.alive:
-                        self.shoot(player, all_sprites)
+                        self.shoot(player)
 
         # Направление взгляда
         if self.dx > 0:
@@ -274,7 +286,7 @@ class ShootingMonster(Entity):
 
         self.spells.update()
 
-    def shoot(self, player, all_sprites):
+    def shoot(self, player):
         if not self.alive:
             return
         enemies_group = self.groups()[-1]
@@ -283,7 +295,7 @@ class ShootingMonster(Entity):
             if assistant in enemies_group:
                 enemies_group.remove(assistant)
         args = (*self.rect.center, *player.rect.center, self.extra_damage,
-                list(enemies_group) + [player] + list(player.assistants), self.spells, all_sprites)
+                list(enemies_group) + [player] + list(player.assistants), self.spells, Entity.all_sprites)
         for assistant in self.assistants:
             enemies_group.add(assistant)
         enemies_group.add(self)
@@ -294,7 +306,7 @@ class ShootingMonster(Entity):
         elif isinstance(self, VoidWizard):
             if len(self.assistants) < 7 and true_with_chance(15):
                 spell = CallZombiesSpell
-                args = (self.level, all_sprites, self.assistants, enemies_group)
+                args = (self.level, [], Entity.all_sprites, self.assistants, enemies_group)
                 for m in [(-1, 0), (0, -1), (1, 0), (0, 1)]:
                     i, j = m
                     if true_with_chance(75):
@@ -320,17 +332,6 @@ class ShootingMonster(Entity):
             spell.CAST_SOUND = player.NO_MANA_SOUND
 
         self.sounds_channel.play(spell.CAST_SOUND)
-
-    def death(self):
-        if not self.alive:
-            return
-
-        if true_with_chance(50):
-            spawn_item(*self.rect.center, k=randint(2, 3))
-
-        self.alive = False
-        self.cur_frame = 0
-        self.speed = 1
 
 
 class Demon(WalkingMonster):
@@ -627,16 +628,13 @@ class VoidWizard(ShootingMonster):
         self.reload_time = self.reload_time * 4 / 3
 
 
-def random_monster(x, y, level, all_sprites, enemies_group, seed, user_seed=None):
+def random_monster(x, y, level, all_sprites, enemies_group, seed, user_seed):
     if user_seed:
-        n = int(user_seed[0])
-        del user_seed[0]
+        n = int(user_seed.pop(0))
     else:
-        n = randint(1, 15)
-    # Запишем получившееся значение в сид
-    seed.append(str(n))
-    args = (x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5, level - 1,
-            all_sprites, enemies_group)
+        n = randint(1, max(10, round(25 - level * 1.5)))
+    args = (x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5,
+            level - 1, seed, all_sprites, enemies_group)
 
     if n in (1, 2):
         monster = Demon(*args)
@@ -652,8 +650,12 @@ def random_monster(x, y, level, all_sprites, enemies_group, seed, user_seed=None
         monster = VoidWizard(*args)
     else:
         # Специально, чтоб монстры спавнились в этом месте не со 100% шансом
+        seed.append('-1')
         return None
+
+    # Запишем получившееся значение в сид
+    seed.append(str(n))
     monster.index_in_seed = len(seed) - 1
     # Возвращаем монстра, записав ему параметр Индекс в сиде,
-    # Чтоб после его смерти удалить его из data
+    # Чтоб после его смерти удалить его из save.txt
     return monster

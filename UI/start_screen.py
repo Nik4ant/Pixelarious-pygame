@@ -84,7 +84,7 @@ def execute(screen: pygame.surface.Surface) -> int:
     cursor_image = load_image("cursor.png", "assets\\UI\\icons")
     # координаты курсора
     cursor_x, cursor_y = screen_center, screen.get_height() * 0.1
-    cursor_speed = 30  # скорость курсора (нужно если используется джойстик)
+    cursor_speed = 10  # скорость курсора (нужно если используется джойстик)
 
     # Фоновая музыка
     pygame.mixer.music.load(concat_two_file_paths("assets\\audio", "main_menu.ogg"))

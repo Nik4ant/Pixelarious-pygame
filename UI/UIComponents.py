@@ -138,13 +138,14 @@ class SpellContainer:
     delay_time = 50
 
     # Иконки кнопок джойстика, чтобы отображать кнопки для переключения заклиананий
-    size = (13, 13)
+    size = (39, 39)
     JOYSTICK_ICONS = {
         "o": pygame.transform.scale(load_image("joystick_o.png", "assets\\UI\\icons"), size),
         "x": pygame.transform.scale(load_image("joystick_x.png", "assets\\UI\\icons"), size),
         "triangle": pygame.transform.scale(load_image("joystick_triangle.png", "assets\\UI\\icons"), size),
         "square": pygame.transform.scale(load_image("joystick_square.png", "assets\\UI\\icons"), size),
         "L1": pygame.transform.scale(load_image("joystick_L1.png", "assets\\UI\\icons"), size),
+        "L2": pygame.transform.scale(load_image("joystick_L2.png", "assets\\UI\\icons"), size),
     }
     LOCKED = load_image('transparent_grey.png', 'assets\\UI\\icons')
     FRAME = load_image('spell_icon_frame.png', 'assets\\UI\\icons')
@@ -184,7 +185,7 @@ class SpellContainer:
         screen.blit(self.FRAME, position)
         # Смещение между иконкой заклинания и кнопкой для переключения
 
-        pos = (x1 + 10, y1 + 14)
+        pos = (x1 - 15, y1 + 14)
         # Если подключён джойстик, то рисуется специальная иконка
         if is_joystick:
             screen.blit(SpellContainer.JOYSTICK_ICONS[spell_key], pos)
@@ -257,7 +258,7 @@ class PlayerIcon:
                                                    int(self.FRAME.get_height() * size_coefficient))), position)
 
         if self.player.__class__.__name__ == 'Player':
-            screen.blit(self.font.render(f'{round(self.player.money_count)}', True, (255, 255, 30)),
+            screen.blit(self.font.render(f'{round(self.player.money)}', True, (255, 255, 30)),
                         (self.FRAME.get_width() + 20, 20))
 
 
@@ -318,3 +319,35 @@ class AnimatedBackground(pygame.sprite.Sprite):
                                     path_to_folder=self.path_to_folder)
             self.image = pygame.transform.scale(self.image, self.screen_size)
             self.last_update_time = pygame.time.get_ticks()
+
+
+class Message(pygame.sprite.Sprite):
+    font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 32)
+    # Время отрисовки на экране
+    DRAWING_TIME = 1000
+    # Время угасания, заимствующееся из времени отрисовки
+    # (равное количество ставить не стоит)
+    FADING_TIME = 500
+
+    def __init__(self, screen, text, height):
+        super().__init__()
+        self.image = self.font.render(text, True, (255, 244, 79)).convert_alpha()
+        self.rect = self.image.get_rect()
+        self.last_collide_time = -self.DRAWING_TIME
+
+        screen: pygame.surface.Surface
+        self.rect.center = screen.get_width() // 2, int(height)
+
+    def draw(self, screen):
+        # Время, прошедшее с последнего вызова
+        past_time = pygame.time.get_ticks() - self.last_collide_time
+        if past_time <= self.DRAWING_TIME:
+            if past_time >= self.DRAWING_TIME - self.FADING_TIME:
+                # Коэффицент прозрачности, магическим образом вычисляющийся
+                # из времени, прошедшего с последнего вызова, и времени угасания
+                k = (past_time - self.DRAWING_TIME + self.FADING_TIME) / self.FADING_TIME
+                self.image.set_alpha(255 - round(255 * k))
+            else:
+                self.image.set_alpha(255)
+
+            screen.blit(self.image, self.rect.topleft)
