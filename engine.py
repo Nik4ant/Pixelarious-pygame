@@ -128,7 +128,7 @@ def scale_frame(image: pygame.surface.Surface, size: (int, int), k: int = 40):
 
 
 # Функция, возвращающая случайное булевое значение с вводящимся шансом
-def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: list = None) -> bool:
+def true_with_chance(percentage_chance: float = 50.0, seed: list = None, user_seed: list = None) -> bool:
     """
     Функция принимает целое число и переводит в коэффицент, 0 <= k <= 1.
     Затем генерирует случайное число с помощью функции рандом.
@@ -145,7 +145,7 @@ def true_with_chance(percentage_chance: int = 50, seed: list = None, user_seed: 
         seed.append(user_seed[0])
         del user_seed[0]
     else:
-        is_true = [0, 1][round(random() * 100) <= percentage_chance]
+        is_true = [0, 1][random() * 100 <= percentage_chance]
         if seed:
             seed.append(str(is_true))
     return bool(is_true)

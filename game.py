@@ -257,7 +257,9 @@ def play(screen: pygame.surface.Surface,
             if keys[CONTROLS['KEYBOARD_USE']] or keys[CONTROLS['JOYSTICK_USE']]:
                 pygame.sprite.spritecollide(player, Chest.chest_group, False)[0].open()
 
+        ticks = pygame.time.get_ticks()
         enemies_group.update(player)
+        print(pygame.time.get_ticks() - ticks)
         torches_group.update(player)
         doors_group.update(player, enemies_group, [player] + list(player.assistants))
         Chest.chest_group.update()
@@ -360,6 +362,7 @@ def play(screen: pygame.surface.Surface,
                     doors_group.empty()
                     torches_group.empty()
                     end_of_level.empty()
+                    Chest.chest_group.empty()
                     GroundItem.item_group.empty()
                     Entity.damages.empty()
 

@@ -195,9 +195,8 @@ class Door(pygame.sprite.Sprite):
 
 
 class Chest(pygame.sprite.Sprite):
-    # TODO: Нарисовать анимацию открытия сундука
     size = (TILE_SIZE, TILE_SIZE)
-    frames = cut_sheet(load_image('CHEST.png', 'assets\\tiles'), 18, 1, size)[0]
+    frames = cut_sheet(load_image('CHEST.png', 'assets\\tiles'), 8, 1, size)[0]
     back_of_chest = load_tile('back_of_chest.png')
     chest_group: pygame.sprite.Group
     UPDATE_TIME = 40
@@ -210,6 +209,7 @@ class Chest(pygame.sprite.Sprite):
         self.opened = False
         self.last_update_time = 0
         self.current_frame = 0
+        self.update_time = self.UPDATE_TIME
 
         self.image = self.frames[self.current_frame]
         self.back_image = self.back_of_chest.copy()
@@ -229,8 +229,11 @@ class Chest(pygame.sprite.Sprite):
             return
 
         ticks = pygame.time.get_ticks()
-        if ticks - self.last_update_time > self.UPDATE_TIME:
+        if ticks - self.last_update_time > self.update_time:
             self.last_update_time = ticks
+
+            # Чтоб анимация замедлялась
+            self.update_time *= 1.2
 
             # Если первый фрейм, убираем из сида и спавним предмет
             if self.current_frame == 0:

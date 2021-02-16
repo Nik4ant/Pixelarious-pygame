@@ -20,7 +20,7 @@ class Player(Entity):
     # Переменные добавляющие эти значения к здоровью и мане каждую итерацию update()
     MANA_UP = 0.4
     HEALTH_UP = 0.01
-    MEAT_HEALTH_UP = 50
+    MEAT_HEALTH_UP = 25
     # Время неуязвимости, после атаки врагом (в миллисекундах)
     INVULNERABILITY_TIME_AFTER_HIT = 300
 
@@ -622,6 +622,7 @@ class PlayerAssistant(Player):
         self.stopping_time = pygame.time.get_ticks()
         self.target = None
         self.is_boosting_from_enemy = False
+        self.target_observed = False
 
         # Здоровье
         self.full_health = 300
@@ -690,10 +691,16 @@ class PlayerAssistant(Player):
 
         self.move(self.dx, self.dy)
 
+        if pygame.sprite.spritecollideany(self, Entity.collisions_group):
+            self.point = None
+
         nearest_enemy = self.update_target(enemies_group)
 
         if nearest_enemy:
             self.shoot(nearest_enemy, enemies_group)
+            self.target_observed = True
+        else:
+            self.target_observed = False
 
         if self.dx or self.dy:
             # Определяем направление взгляда

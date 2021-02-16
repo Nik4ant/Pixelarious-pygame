@@ -179,7 +179,7 @@ class FireSpell(Spell):
 
     size = (TILE_SIZE // 4 * 3,) * 2
     frames = cut_sheet(load_image('fire_laser.png', 'assets\\spells'), 6, 1, size)
-    frames += cut_sheet(load_image('fire_explosion.png', 'assets\\spells'), 7, 8, size)
+    frames += cut_sheet(load_image('fire_explosion.png', 'assets\\spells'), 7, 9, size)
 
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(3)

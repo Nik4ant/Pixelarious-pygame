@@ -12,7 +12,7 @@ from engine import true_with_chance
 SHORT_BLOCK_CHANCE = 45
 LONG_BLOCK_CHANCE = 35
 
-CRACKED_FLOOR_CHANCE = 15
+CRACKED_FLOOR_CHANCE = 0
 
 
 # "0-9" + "-=" - Walls
@@ -1427,5 +1427,7 @@ def initialise_level(level_map, level, all_sprites, tiles_group, furniture_group
                 Tile('E', x, y, all_sprites, tiles_group, end_of_level)
             elif level_map[y][x] != ' ':
                 Tile(level_map[y][x], x, y, all_sprites, tiles_group)
+
+    print(level, len(enemies_group))
     # вернем игрока и сид монстров
     return player, new_monster_seed, new_boxes_seed

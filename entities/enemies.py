@@ -22,8 +22,10 @@ class Monster(Entity):
         if not self.alive:
             return
 
-        if true_with_chance(30):
-            spawn_item(*self.rect.center, all_sprites=Entity.all_sprites,
+        if true_with_chance(33.33):
+            pos = (self.rect.centerx + randint(-20, 20),
+                   self.rect.centery + randint(-20, 20))
+            spawn_item(*pos, all_sprites=Entity.all_sprites,
                        k=randint(1, [2, 3][isinstance(self, ShootingMonster)]))
 
         if self.seed:
@@ -43,7 +45,7 @@ class WalkingMonster(Monster):
     def __init__(self, x: float, y: float, level: int, seed, *args):
         super().__init__(x, y, level, seed, *args)
 
-        self.player_observed = False
+        self.target_observed = False
         # Значения по-умолчанию
         self.stun_time = 0
         self.visibility_range = TILE_SIZE * 6
@@ -58,6 +60,9 @@ class WalkingMonster(Monster):
 
         if not self.alive:
             super().update_frame_state()
+            return
+
+        if hypot(self.rect.center, player.rect.center) > TILE_SIZE * 25:
             return
 
         target = player
@@ -98,13 +103,13 @@ class WalkingMonster(Monster):
             if line > 1.5 * TILE_SIZE:
                 self.dx *= 3
                 self.dy *= 3
-            self.player_observed = False
+            self.target_observed = False
 
         else:
             part_move = max(line / self.speed, 1)
             self.dx = (point_x - self_x) * 4 / part_move
             self.dy = (point_y - self_y) * 4 / part_move
-            self.player_observed = True
+            self.target_observed = True
 
         if pygame.time.get_ticks() - self.stun_time > 300:
             self.move(self.dx, self.dy)
@@ -170,7 +175,7 @@ class ShootingMonster(Monster):
         # Значения по-умолчанию
         self.visibility_range = TILE_SIZE * 13
         self.distance_to_player = 100
-        self.player_observed = False
+        self.target_observed = False
 
         self.collider = Collider(*self.rect.center, self.size)
 
@@ -184,7 +189,14 @@ class ShootingMonster(Monster):
 
     def update(self, *args):
         player = args[0]
+
+        if not self.alive:
+            super().update_frame_state()
+            return
+
         super().update()
+        if hypot(self.rect.center, player.rect.center) > TILE_SIZE * 25:
+            return
 
         self_x, self_y = self.rect.center
         delta = 0
@@ -219,38 +231,38 @@ class ShootingMonster(Monster):
             if line > 1.5 * TILE_SIZE:
                 self.dx *= 3
                 self.dy *= 3
-            self.player_observed = False
+            self.target_observed = False
 
         # Если игрок слишком близко, отходим, мы же дальний бой
         elif line <= self.visibility_range * 0.4:
             for assistant in self.assistants:
                 assistant.point = target.rect.center
-                assistant.player_observed = True
+                assistant.target_observed = True
 
             part_move = max(line / self.speed, 1)
             self.dx = -(point_x - self_x) * 4 / part_move
             self.dy = -(point_y - self_y) * 4 / part_move
-            self.player_observed = True
+            self.target_observed = True
 
         # Если игрок пытается уйти из радиуса нашего поражения, догоняем
         elif line >= self.visibility_range * 0.6:
             for assistant in self.assistants:
                 assistant.point = target.rect.center
-                assistant.player_observed = True
+                assistant.target_observed = True
 
             part_move = max(line / self.speed, 1)
             self.dx = (point_x - self_x) * 4 / part_move
             self.dy = (point_y - self_y) * 4 / part_move
-            self.player_observed = True
+            self.target_observed = True
 
         # Иначе стоим и постреливаем (чуть дальше)
         else:
             for assistant in self.assistants:
                 assistant.point = target.rect.center
-                assistant.player_observed = True
+                assistant.target_observed = True
 
             self.dx = self.dy = 0
-            self.player_observed = True
+            self.target_observed = True
 
         self.move(self.dx, self.dy)
         # Если не сдвинулись с места
@@ -425,7 +437,7 @@ class GreenSlime(WalkingMonster):
     def __init__(self, x, y, level, *args):
         super().__init__(x, y, level, *args)
         self.alive = True
-        self.visibility_range = TILE_SIZE * 6
+        self.visibility_range = TILE_SIZE * 7
 
         self.health = round(100 * (1 + 0.05 * level))
         self.health += randint(-round(self.health * 0.2), round(self.health * 0.2))
@@ -444,7 +456,7 @@ class DirtySlime(WalkingMonster):
     Слабость к пустоте
     """
     name = 'Грязный слизень'
-    damage = 70
+    damage = 90
     frames = cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2)
     frames += cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2)
 
@@ -475,7 +487,7 @@ class DirtySlime(WalkingMonster):
         self.alive = True
         self.visibility_range = TILE_SIZE * 8
 
-        self.health = round(130 * (1 + 0.05 * level))
+        self.health = round(200 * (1 + 0.1 * level))
         self.health += randint(-round(self.health * 0.2), round(self.health * 0.2))
         self.full_health = self.health
 
@@ -572,7 +584,7 @@ class FireWizard(ShootingMonster):
         self.visibility_range = TILE_SIZE * 9
 
         self.extra_damage = 1 + 0.05 * level
-        self.health = round(50 * (1 + 0.05 * level))
+        self.health = round(80 * (1 + 0.05 * level))
         self.health += randint(-round(self.health * 0.2), round(self.health * 0.2))
         self.full_health = self.health
 
@@ -620,8 +632,8 @@ class VoidWizard(ShootingMonster):
 
         self.visibility_range = TILE_SIZE * 13
 
-        self.extra_damage = 1 + 0.05 * level
-        self.health = round(100 * (1 + 0.1 * level))
+        self.extra_damage = 1.25 + 0.07 * level
+        self.health = round(130 * (1 + 0.1 * level))
         self.health += randint(-round(self.health * 0.2), round(self.health * 0.2))
         self.full_health = self.health
 
@@ -632,7 +644,7 @@ def random_monster(x, y, level, all_sprites, enemies_group, seed, user_seed):
     if user_seed:
         n = int(user_seed.pop(0))
     else:
-        n = randint(1, max(10, round(25 - level * 1.5)))
+        n = randint(1, round(25 - level * 1.5))
     args = (x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5,
             level - 1, seed, all_sprites, enemies_group)
 

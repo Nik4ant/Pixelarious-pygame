@@ -22,6 +22,8 @@ class Entity(pygame.sprite.Sprite):
     damages = pygame.sprite.Group()
     spells_group = pygame.sprite.Group()
 
+    default_speed = TILE_SIZE * 0.2
+
     WAITING_TIME = 2000
     UPDATE_TIME = 120
     HEALTH_LINE_WIDTH = 10
@@ -40,6 +42,7 @@ class Entity(pygame.sprite.Sprite):
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
         super().__init__(*((Entity.entities_group,) + args))
+        self.alive = True
 
         # Изображение
         self.cur_frame = 0
@@ -58,6 +61,7 @@ class Entity(pygame.sprite.Sprite):
 
         self.start_position = x, y
         self.point = None
+        self.speed = 0.0001
 
         self.rect = self.image.get_rect()
         self.rect.center = x, y
@@ -198,7 +202,7 @@ class Entity(pygame.sprite.Sprite):
                 self.cur_poison_frame = (self.cur_poison_frame + 1) % len(Entity.poison_frames)
             screen.blit(Entity.poison_frames[self.cur_poison_frame], (self.rect.x, self.rect.y))
 
-        if self.__class__.__name__ not in ('Player', 'PlayerAssistant') and not self.player_observed:
+        if self.__class__.__name__ not in ('Player',) and not self.target_observed:
             if not self.sleeping_time or ticks - self.sleeping_time >= 250:
                 self.cur_sleeping_frame = (self.cur_sleeping_frame + 1) % len(self.sleeping_frames[0])
                 self.sleeping_time = ticks
@@ -224,7 +228,7 @@ class Entity(pygame.sprite.Sprite):
         if damage >= 0:
             look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
             self.image = self.get_damage_frames[look]
-            self.last_update = pygame.time.get_ticks() + 50
+            self.last_update = pygame.time.get_ticks() + 75
             self.last_damage_time = pygame.time.get_ticks()
 
         if (self.__class__.__name__ == 'Demon' and spell_type == 'ice' or
@@ -248,10 +252,14 @@ class Entity(pygame.sprite.Sprite):
         damage /= 1000
 
         x, y = self.rect.midtop
-        if spell_type == 'poison':
-            ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages, color=(100, 230, 125))
-        else:
-            ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages)
+        colors = {
+            'poison': (100, 230, 125),
+            'ice':    (66, 170, 255),
+            'void':   (148, 0, 211),
+            'flash':  (255, 255, 0),
+            'fire':   (226, 88, 34),
+        }
+        ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages, color=colors[spell_type])
 
         self.health = min(self.health - damage, self.full_health)
         if self.health <= 0:
@@ -264,9 +272,13 @@ class Entity(pygame.sprite.Sprite):
 
         :return: None
         """
-        look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
-        self.cur_frame = 0
-        self.image = self.__class__.frames[look][self.cur_frame]
+        tick = pygame.time.get_ticks()
+        if tick - self.last_update > self.UPDATE_TIME:
+            self.last_update = tick
+
+            look = self.__class__.look_directions[self.look_direction_x, self.look_direction_y]
+            self.cur_frame = 0
+            self.image = self.__class__.frames[look][self.cur_frame]
 
     @staticmethod
     def set_global_groups(collisions_group: pygame.sprite.Group, all_sprites: pygame.sprite.Group):
@@ -302,27 +314,23 @@ class Collider(pygame.sprite.Sprite):
 class ReceivingDamage(pygame.sprite.Sprite):
     update_time = 40
     delta_up = 1
-    delta_transparent = -2
+    delta_transparent = -5
 
-    def __init__(self, x: float, y: float, damage: float, *groups, color=(252, 241, 139)):
+    def __init__(self, x: float, y: float, damage: float, *groups, color=(255, 255, 255)):
         super().__init__(*groups)
         self.font = pygame.font.Font("assets\\UI\\pixel_font.ttf", min(round(24 + abs(damage) / 3), 64))
         self.last_update_time = 0
 
         self.damage = abs(round(damage))
-        self.color = color + (255,)
-        self.size = self.font.render(str(self.damage), True, color).get_size()
-        self.image = pygame.surface.Surface(self.size).convert_alpha()
+        self.alpha = 500
+        self.image = self.font.render(str(self.damage), True, color).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = x + randint(-TILE_SIZE // 1.5, TILE_SIZE // 1.5), y + randint(-20, 20)
 
     def update(self):
         self.rect.y -= self.delta_up
-        self.color = self.color[:3] + (self.color[3] + self.delta_transparent,)
-        if self.color[-1] < 5:
+        self.alpha += self.delta_transparent
+        if self.alpha < 5:
             self.kill()
             return
-        self.image = pygame.surface.Surface(self.size).convert_alpha()
-        self.image.fill((0, 0, 0, 0))
-        self.image.get_rect().center = self.rect.center
-        self.image.blit(self.font.render(str(self.damage), True, self.color), (0, 0))
+        self.image.set_alpha(min(255, self.alpha))

@@ -13,6 +13,8 @@ class GroundItem(pygame.sprite.Sprite):
     money_sound = pygame.mixer.Sound("assets\\audio\\money_sound.mp3")
     money_sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
+    item_group: pygame.sprite.Group
+
     size = (int(TILE_SIZE * 0.6),) * 2
     SOUNDS = {
         'meat': meat_sound,
