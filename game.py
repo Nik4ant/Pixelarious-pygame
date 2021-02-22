@@ -25,19 +25,19 @@ class Camera:
     Класс представляющий камеру
     """
 
-    def __init__(self, screen_width, screen_height):
+    def __init__(self, screen_size, speed_coefficient=0.5):
         # инициализация начального сдвига для камеры
         self.dx = 0
         self.dy = 0
-        self.screen_width = screen_width
-        self.screen_height = screen_height
+        self.screen_width, self.screen_height = screen_size
+        self.speed_coefficient = speed_coefficient
 
     # сдвинуть объект obj на смещение камеры
-    def apply(self, obj):
-        obj.rect.x += self.dx
-        obj.rect.y += self.dy
-        if isinstance(obj, (Monster, Player)):
-            self.apply_point(obj)
+    def apply(self, sprite):
+        sprite.rect.x += self.dx
+        sprite.rect.y += self.dy
+        if isinstance(sprite, (Entity, Spell)):
+            self.apply_point(sprite)
 
     # Функция сдвигает точку спавна существа и точку, к которой он идет
     def apply_point(self, obj):
@@ -48,17 +48,8 @@ class Camera:
 
     # метод позиционирования камеры на объекте target
     def update(self, target):
-        self.dx = -(target.rect.centerx - self.screen_width * 0.5)
-        self.dy = -(target.rect.centery - self.screen_height * 0.5)
-
-    def move(self, target, group):
-        self.dx = -(target.rect.centerx - self.screen_width * 0.5)
-        self.dy = -(target.rect.centery - self.screen_height * 0.5)
-        for sprite in group:
-            sprite.rect.x = sprite.rect.x - self.dx
-            sprite.rect.y = sprite.rect.y - self.dy
-            if isinstance(sprite, (Entity,)):
-                self.apply_point(sprite)
+        self.dx = -round((target.rect.centerx - self.screen_width * 0.5) * self.speed_coefficient)
+        self.dy = -round((target.rect.centery - self.screen_height * 0.5) * self.speed_coefficient)
 
 
 def play(screen: pygame.surface.Surface,
@@ -113,7 +104,7 @@ def play(screen: pygame.surface.Surface,
     player = None
     if current_seed:
         # Создание игрока по параметрам из сида, если сид передан
-        x, y, player_level, health, mana, money = current_seed.split('\n')[3].split()[:-1]
+        _, _, player_level, health, mana, money = current_seed.split('\n')[3].split()[:-1]
         player = Player(0, 0, player_level, all_sprites, health, mana, money)
 
         data = current_seed.split('\n')
@@ -131,7 +122,8 @@ def play(screen: pygame.surface.Surface,
     if current_seed:
         # Если сид был передан, сдвигаем игрока на расстояние от начала уровня (лестницы)
         # Которое было записано в сид
-        player.rect.center = player.rect.centerx + float(x), player.rect.centery + float(y)
+        x_from_start, y_from_start = map(float, current_seed.split('\n')[3].split()[:2])
+        player.rect.center = player.rect.centerx + x_from_start, player.rect.centery + y_from_start
 
     for assistant in player.assistants:
         assistant.rect.center = player.rect.center
@@ -142,7 +134,7 @@ def play(screen: pygame.surface.Surface,
     save(current_seed)
 
     # Создаем камеру
-    camera = Camera(screen_width, screen_height)
+    camera = Camera(screen.get_size())
 
     # Инициализируем прицел игрока
     player.scope.init_scope_position((screen_width * 0.5, screen_height * 0.5))
@@ -165,6 +157,12 @@ def play(screen: pygame.surface.Surface,
         SpellContainer("teleport_spell.png", TeleportSpell, player),
     )
     player_icon = PlayerIcon(player)
+    # Определение параметров для отрисовки контейнеров с заклинаниями
+    if player.joystick:
+        spell_args = ("o", "x", "triangle", "square", "L1", "L2", "")
+    else:
+        spell_args = ("1", "2", "3", "4", "5", "Space", 'H')
+
     assistants_height = 180
     indent = 20
 
@@ -178,6 +176,7 @@ def play(screen: pygame.surface.Surface,
     while is_game_open:
         if time() - t > 1:
             t = time()
+            print(len(furniture_group), len(all_sprites), '\n')
 
         was_pause_activated = False
         keys = pygame.key.get_pressed()
@@ -186,6 +185,10 @@ def play(screen: pygame.surface.Surface,
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 is_game_open = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == CONTROLS["KEYBOARD_PAUSE"]:
+                    was_pause_activated = True
 
         # Текущий джойстик находится в игроке, поэтому кнопки проверяем по нему же
         if player.joystick:
@@ -207,9 +210,6 @@ def play(screen: pygame.surface.Surface,
                 player.shoot('teleport', tiles_group)
         # Иначе ввод с клавиатуры
         else:
-            if keys[CONTROLS["KEYBOARD_PAUSE"]]:
-                was_pause_activated = True
-
             if keys[CONTROLS["KEYBOARD_SPELL_FIRE"]] or buttons[CONTROLS["MOUSE_SPELL_FIRE"]]:
                 player.shoot('fire', enemies_group)
             if keys[CONTROLS["KEYBOARD_SPELL_ICE"]] or buttons[CONTROLS["MOUSE_SPELL_ICE"]]:
@@ -229,11 +229,29 @@ def play(screen: pygame.surface.Surface,
             pygame.mixer.music.pause()
             # Если была нажата кнопка выйти из игры, то цикл прерывается
             if game_menu.execute(screen) == -1:
-                # Сохранение данных перед выходом
+                # Ставим экран загрузки перед следующими действиями
                 loading_screen(screen)
-                current_seed = '\n'.join([' '.join(level_seed), ' '.join(monsters_seed), ' '.join(boxes_seed),
-                                          str(player), str(level_number)])
-                save(current_seed)
+
+                # Очищаем все группы со спрайтами
+                all_sprites.empty()
+                tiles_group.empty()
+                furniture_group.empty()
+                collidable_tiles_group.empty()
+                enemies_group.empty()
+                doors_group.empty()
+                torches_group.empty()
+                end_of_level.empty()
+                Chest.chest_group.empty()
+                GroundItem.item_group.empty()
+                Entity.damages_group.empty()
+
+                # Сохранение данных перед выходом
+                if player.alive:
+                    current_seed = '\n'.join([' '.join(level_seed), ' '.join(monsters_seed), ' '.join(boxes_seed),
+                                              str(player), str(level_number)])
+                    save(current_seed)
+                else:
+                    save('')
                 return -1
             pygame.mixer.unpause()
             pygame.mixer.music.unpause()
@@ -257,22 +275,18 @@ def play(screen: pygame.surface.Surface,
             if keys[CONTROLS['KEYBOARD_USE']] or keys[CONTROLS['JOYSTICK_USE']]:
                 pygame.sprite.spritecollide(player, Chest.chest_group, False)[0].open()
 
-        ticks = pygame.time.get_ticks()
         enemies_group.update(player)
-        print(pygame.time.get_ticks() - ticks)
+        player.assistants.update(enemies_group)
+        Entity.spells_group.update()
         torches_group.update(player)
         doors_group.update(player, enemies_group, [player] + list(player.assistants))
         Chest.chest_group.update()
-        Entity.damages.update()
+        Entity.damages_group.update()
 
         # Обновление объектов относительно камеры
         camera.update(player)
         for sprite in all_sprites:
             camera.apply(sprite)
-
-        for spell in player.spells:
-            camera.apply(spell)
-            camera.apply_point(spell)
 
         # Отрисовка всех спрайтов
         tiles_group.draw(screen)
@@ -286,31 +300,21 @@ def play(screen: pygame.surface.Surface,
 
         doors_group.draw(screen)
         enemies_group.draw(screen)
-        player.assistants.update(enemies_group, all_sprites)
         player.assistants.draw(screen)
         for assistant in player.assistants:
             assistant.draw_health_bar(screen)
         player.draw(screen)
+        Entity.spells_group.draw(screen)
         player.draw_health_bar(screen)
-        player.spells.update()
-        player.spells.draw(screen)
 
         # Индивидуальная обработка спрайтов врагов
         for enemy in enemies_group:
             enemy: Monster
             enemy.draw_health_bar(screen)
-            for spell in enemy.spells:
-                camera.apply_point(spell)
-            enemy.spells.draw(screen)
-        Entity.damages.draw(screen)
+        Entity.damages_group.draw(screen)
 
         chest_title.draw(screen)
 
-        # Определение параметров для отрисовки контейнеров с заклинаниями
-        if player.joystick:
-            spell_args = ("o", "x", "triangle", "square", "L1", "L2", "")
-        else:
-            spell_args = ("1", "2", "3", "4", "5", "Space", 'H')
         # Отрисовка контейнеров с заклинаниями
         for i in range(len(spells_containers) - 1, -1, -1):
             pos = (screen_width * (0.375 + 0.05 * i), screen_height * 0.9)
@@ -320,7 +324,7 @@ def play(screen: pygame.surface.Surface,
         for number_of_assistant, assistant in enumerate(player.assistants):
             if not assistant.icon:
                 assistant.icon = PlayerIcon(assistant)
-            assistant.icon.draw(screen, (indent, assistants_height + number_of_assistant * 80), 0.5)
+            assistant.icon.draw(screen, (indent + 20, assistants_height + number_of_assistant * 80), 0.5)
         player.scope.draw(screen)
 
         # Отрисовка фпс
@@ -364,17 +368,16 @@ def play(screen: pygame.surface.Surface,
                     end_of_level.empty()
                     Chest.chest_group.empty()
                     GroundItem.item_group.empty()
-                    Entity.damages.empty()
+                    Entity.damages_group.empty()
 
                     level_number += 1  # номер уровня
                     # Создаем целиком новый уровень с помощью функции из generation_map
                     level, level_seed = generate_new_level(0)
 
                     # Создаем монстров и плитки, проходя по уровню
-                    args = (level, level_number, all_sprites, tiles_group, furniture_group, collidable_tiles_group, enemies_group,
-                            doors_group, torches_group, end_of_level, current_seed.split('\n')[1].split() if current_seed else [],
-                            current_seed.split('\n')[2].split() if current_seed else [], player)
-                    player, monsters_seed, boxes_seed = initialise_level(*args)
+                    args = (level, level_number, all_sprites, tiles_group, furniture_group, collidable_tiles_group,
+                            enemies_group, doors_group, torches_group, end_of_level, [], [])
+                    player, monsters_seed, boxes_seed = initialise_level(*args, player=player)
 
                     all_sprites.add(player)
                     all_sprites.add(player.assistants)
@@ -384,8 +387,6 @@ def play(screen: pygame.surface.Surface,
                     current_seed = '\n'.join([' '.join(level_seed), ' '.join(monsters_seed), ' '.join(boxes_seed),
                                               str(player), str(level_number)])
                     save(current_seed)
-                    # Создаем камеру
-                    camera = Camera(screen_width, screen_height)
 
                     # Заного заполняем индивидуальные спрайты
                     player.scope.init_scope_position((screen_width * 0.5, screen_height * 0.5))
@@ -411,9 +412,6 @@ def play(screen: pygame.surface.Surface,
 
     # Сохранение данных
     save(current_seed)
-
-    # Очистка UI
-    del player_icon, spells_containers, player
 
     # Код возврата 0 для закрытия игры
     return 0

@@ -135,9 +135,10 @@ class SpellContainer:
     font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 32)
     mini_font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 16)
 
-    delay_time = 50
+    # Задержка курсора на иконке перед показом рамки
+    delay_time = 35
 
-    # Иконки кнопок джойстика, чтобы отображать кнопки для переключения заклиананий
+    # Иконки кнопок джойстика, чтобы отображать кнопки для вызова заклинаний
     size = (39, 39)
     JOYSTICK_ICONS = {
         "o": pygame.transform.scale(load_image("joystick_o.png", "assets\\UI\\icons"), size),
@@ -147,16 +148,21 @@ class SpellContainer:
         "L1": pygame.transform.scale(load_image("joystick_L1.png", "assets\\UI\\icons"), size),
         "L2": pygame.transform.scale(load_image("joystick_L2.png", "assets\\UI\\icons"), size),
     }
-    LOCKED = load_image('transparent_grey.png', 'assets\\UI\\icons')
+    LOCKED = pygame.surface.Surface((20, 20)).convert_alpha()
+    LOCKED.fill((0, 0, 0, 180))
     FRAME = load_image('spell_icon_frame.png', 'assets\\UI\\icons')
 
     def __init__(self, icon_filename: str, spell_class, player):
         self.spell_icon = load_image(icon_filename, "assets\\UI\\icons")
         self.rect = self.spell_icon.get_rect()
         self.w, self.h = self.spell_icon.get_size()
-        self.locked = pygame.transform.scale(SpellContainer.LOCKED, (self.w, self.h))
-        self.mana_cost = spell_class.mana_cost
+
+        # Картинка затемнения
+        self.locked = pygame.transform.scale(self.LOCKED, (self.w, self.h))
+        self.mana_cost = spell_class.mana_cost    # Стоимость заклинания для игрока
         self.player = player
+
+        # Документация, которая будет показана в рамке при наведении
         self.information = f'''{spell_class.__doc__}
 
         Урон: {spell_class.damage}{f' + {spell_class.extra_damage}' if spell_class.__name__ == 'PoisonSpell' else ''}
@@ -177,33 +183,37 @@ class SpellContainer:
         """
         # Иконка заклинания
         x1, y1 = position
-        pos = (x1 + 2, y1 + 18)
+        pos = (x1 + 2, y1 + 18)    # Отступ по размерам края рамки
         screen.blit(self.spell_icon, pos)
         self.rect.topleft = pos
-        if self.player.mana < self.mana_cost:
+
+        # Отрисовка затемнения
+        if self.player.mana < self.mana_cost or \
+                pygame.time.get_ticks() - self.player.shoot_last_time < self.player.between_shoots_range:
             screen.blit(self.locked, pos)
         screen.blit(self.FRAME, position)
-        # Смещение между иконкой заклинания и кнопкой для переключения
 
-        pos = (x1 - 15, y1 + 14)
-        # Если подключён джойстик, то рисуется специальная иконка
+        # Смещение между иконкой заклинания и кнопкой для переключения
+        pos = (x1 + 5, y1 + 14)
+        # Если подключён джойстик, то рисуется специальная иконка кнопки
         if is_joystick:
             screen.blit(SpellContainer.JOYSTICK_ICONS[spell_key], pos)
-        # Иначе просто текст
+        # Иначе просто текст кнопки клавиатуры
         else:
             button_text = SpellContainer.font.render(spell_key, True, (255, 255, 255))
             screen.blit(button_text, pos)
 
         # При наведении курсора на заклинание, рисуется табличка с информацией
         if self.rect.collidepoint(*self.player.scope.rect.center):
-            if self.hover_time >= self.delay_time:
+            if self.hover_time == self.delay_time:
                 self.massage_box.rect.bottomleft = self.player.scope.rect.center
                 self.massage_box.draw(screen)
             else:
                 self.hover_time += 1
-        else:
+        elif self.hover_time:
             self.hover_time = 0
 
+        # Отрисовка цены за заклинание в правом нижнем углу
         pos = (x1 + self.h - 6, y1 + self.w - 2)
         cost_text = SpellContainer.mini_font.render(str(self.mana_cost), True, (255, 255, 255))
         screen.blit(cost_text, pos)
@@ -217,7 +227,8 @@ class PlayerIcon:
     font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 32)
     # Иконки кнопок джойстика, чтобы отображать кнопки для переключения заклиананий
     size = (40, 40)
-    FACE = pygame.transform.scale2x(load_image('elf_face.png', 'assets\\UI\\icons'))
+    PLAYER_FACE = pygame.transform.scale2x(load_image('player_face.png', 'assets\\UI\\icons'))
+    ASSISTANT_FACE = pygame.transform.scale2x(load_image('assistant_face.png', 'assets\\UI\\icons'))
     FRAME = load_image('player_icon_frame.png', 'assets\\UI\\icons')
     POISON_ICON = pygame.transform.scale(load_image('poison_icon.png', 'assets\\UI\\icons'), size)
 
@@ -249,17 +260,19 @@ class PlayerIcon:
         image.blit(self.font.render(f'{round(self.player.mana + 0.5)}/{self.player.full_mana}',
                                     True, (255, 255, 255)), (x1 + 220, y1 + 50))
 
-        image.blit(self.FACE, (x1 + 25, y1 + 20))
+        if self.player.__class__.__name__ == 'Player':
+            screen.blit(self.font.render(f'{round(self.player.money)}', True, (255, 255, 30)),
+                        (self.FRAME.get_width() + 20, 20))
+
+            image.blit(self.PLAYER_FACE, (x1 + 25, y1 + 20))
+        else:
+            image.blit(self.ASSISTANT_FACE, (x1 + 25, y1 + 20))
         image.blit(self.FRAME, (x1, y1))
 
         text_surface = self.font.render('', True, (255, 255, 255))
         image.blit(text_surface, (x1 + 8, y1 + 14))
         screen.blit(pygame.transform.scale(image, (int(self.FRAME.get_width() * size_coefficient),
                                                    int(self.FRAME.get_height() * size_coefficient))), position)
-
-        if self.player.__class__.__name__ == 'Player':
-            screen.blit(self.font.render(f'{round(self.player.money)}', True, (255, 255, 30)),
-                        (self.FRAME.get_width() + 20, 20))
 
 
 class LogoImage(pygame.sprite.Sprite):
@@ -278,7 +291,7 @@ class LogoImage(pygame.sprite.Sprite):
 
 class AnimatedBackground(pygame.sprite.Sprite):
     def __init__(self, filename: str, frames_start: int, frames_end: int, delay: int,
-                 screen_size: tuple, path_to_folder="assets\\UI\\animated_backgrounds"):
+                 screen_size: tuple, path_to_folder="assets\\UI\\animated_backgrounds", scale_2n=False):
         """
         Инициализация
         :param filename: Имя файла в виде f строки для замены номера кадра
@@ -291,33 +304,30 @@ class AnimatedBackground(pygame.sprite.Sprite):
         """
 
         super().__init__()
-        self.current_frame_number = frames_start
-        # Номер первого и последнего кадров
-        self.frames_start = frames_start
-        self.frames_end = frames_end
-        # Пути
-        self.base_filename = filename
-        self.path_to_folder = path_to_folder
+        self.current_frame_number = 0
 
-        self.screen_size = screen_size
-        self.image = load_image(self.base_filename.format(self.current_frame_number),
-                                path_to_folder=self.path_to_folder)
-        self.image = pygame.transform.scale(self.image, self.screen_size)
+        self.frames = []
+        for frame_number in range(frames_start, frames_end + 1):
+            frame = load_image(filename.format(frame_number),
+                               path_to_folder=path_to_folder)
+            if scale_2n:
+                x, y = frame.get_size()
+                while x < screen_size[0] and y < screen_size[1]:
+                    frame = pygame.transform.scale(frame, (x * 2, y * 2))
+                    x, y = frame.get_size()
+            else:
+                frame = pygame.transform.scale(frame, screen_size)
+            self.frames.append(frame)
 
-        self.last_update_time = pygame.time.get_ticks()
+        self.last_update_time = -delay
         self.delay = delay
 
     def update(self):
         # Проверка для смены кадра
         if pygame.time.get_ticks() - self.last_update_time > self.delay:
-            self.current_frame_number += 1
-            if self.current_frame_number > self.frames_end:
-                # Переводим счётчик на начало
-                self.current_frame_number = self.frames_start
+            self.current_frame_number = (self.current_frame_number + 1) % len(self.frames)
 
-            self.image = load_image(self.base_filename.format(self.current_frame_number),
-                                    path_to_folder=self.path_to_folder)
-            self.image = pygame.transform.scale(self.image, self.screen_size)
+            self.image = self.frames[self.current_frame_number]
             self.last_update_time = pygame.time.get_ticks()
 
 

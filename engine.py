@@ -71,9 +71,7 @@ def load_image(filename: str, path_to_folder="assets", size=None, colorkey=None)
     fullname = concat_two_file_paths(path_to_folder, filename)
     # если файл не существует, то выходим
     if not os.path.isfile(fullname):
-        print(f"ОШИБКА! Не удалось загрузить изображение {filename}")
-        print(f"По пути {fullname}")
-        sys.exit(-1)
+        raise FileNotFoundError(f"""Не удалось загрузить изображение {filename} по пути {fullname}""")
     image = pygame.image.load(fullname)
 
     if colorkey is not None:

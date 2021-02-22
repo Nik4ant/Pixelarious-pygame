@@ -29,10 +29,14 @@ def execute(screen: pygame.surface.Surface, is_win=False):
         # Фоновая музыка для проигравшего
         pygame.mixer.music.load(concat_two_file_paths("assets\\audio", "fail_screen_BG.mp3"))
         pygame.mixer.music.play(-1)
-        animated_background = AnimatedBackground("fail_screen\\death_{0}.png", 1, 23, 100, screen.get_size())
+        size = screen.get_width() // 3, screen.get_height() // 3
+        animated_background = AnimatedBackground("fail_screen\\death_{0}.png", 1, 23, 140, size, scale_2n=True)
 
     # Лого игры
     logo = LogoImage((screen.get_width() * 0.5, screen.get_height() * 0.1))
+
+    # Изображение курсора
+    cursor_image = load_image("cursor.png", "assets\\UI\\icons")
 
     title_font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 64)
     # Текст для диалога
@@ -52,9 +56,11 @@ def execute(screen: pygame.surface.Surface, is_win=False):
             if event.type in (pygame.QUIT, pygame.MOUSEBUTTONUP, pygame.KEYDOWN):
                 running = False
 
+        if not is_win:
+            screen.fill((31, 30, 36))
         animated_background.update()
         # Вывод текущего кадра фонового изображения
-        screen.blit(animated_background.image, (0, 0))
+        screen.blit(animated_background.image, animated_background.image.get_rect(center=screen.get_rect().center))
 
         # Вывод текста
         margin = title_font.get_height() * 0.9
@@ -76,5 +82,7 @@ def execute(screen: pygame.surface.Surface, is_win=False):
                 next_y += margin
 
         screen.blit(logo.image, logo.rect.topleft)
+
+        screen.blit(cursor_image, pygame.mouse.get_pos())
 
         pygame.display.flip()

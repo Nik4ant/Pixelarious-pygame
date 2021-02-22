@@ -116,7 +116,6 @@ class Player(Entity):
         self.assistants = pygame.sprite.Group()
 
         # Группа со спрайтами заклинаний
-        self.spells = pygame.sprite.Group()
         self.shoot_last_time = pygame.time.get_ticks()
         self.last_hit_time = 0
 
@@ -370,7 +369,7 @@ class Player(Entity):
         # Получение угла относительно прицела и оружия
         dx, dy = self.rect.centerx - self.scope.rect.centerx, self.rect.centery - self.scope.rect.centery
         angle = (degrees(atan2(dx, 0.00001 if not dy else dy)) + 360) % 360
-        args = (*self.rect.center, *self.scope.rect.center, self.extra_damage, group)
+        args = (*self.rect.center, *self.scope.rect.center, self.extra_damage, group, Entity.all_sprites)
 
         if spell_type == Spell.FIRE:
             spell = FireSpell
@@ -384,7 +383,7 @@ class Player(Entity):
             spell = VoidSpell
         elif spell_type == Spell.TELEPORT:
             spell = TeleportSpell
-            args = (args[:-1] + ([self],))
+            args = (*self.rect.center, *self.scope.rect.center, self.extra_damage, [self], Entity.all_sprites)
         else:
             return
 
@@ -398,9 +397,9 @@ class Player(Entity):
 
             self.mana -= spell.mana_cost
             spell = spell(*args)
-            self.spells.add(spell)
+            self.spells_group.add(spell)
             if spell_type == Spell.TELEPORT:
-                self.spells.add(spell.start_sprite)
+                self.spells_group.add(spell.start_sprite)
             self.sounds_channel.play(spell.CAST_SOUND)
 
             number_of_frame = (round((angle - 0) / 18) + 47) % 20
@@ -444,11 +443,11 @@ class Player(Entity):
 
         x, y = self.rect.midtop
         if damage >= 0:
-            ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages, color=(255, 30, 30))
+            ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages_group, color=(255, 30, 30))
         elif spell_type == 'poison':
-            ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages, color=(100, 35, 35))
+            ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages_group, color=(100, 35, 35))
         else:
-            ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages, color=(30, 255, 30))
+            ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages_group, color=(30, 255, 30))
 
         self.health = min(self.health - damage, self.full_health)
         if self.health <= 0:
@@ -529,7 +528,7 @@ class PlayerAssistant(Player):
     MANA_UP = 0.4
     HEALTH_UP = 0.1
     # Время неуязвимости, после атаки врагом (в миллисекундах)
-    INVULNERABILITY_TIME_AFTER_HIT = 300
+    INVULNERABILITY_TIME_AFTER_HIT = 500
 
     WAITING_TIME = 1000
     TARGET_UPDATE_TIME = 300
@@ -623,6 +622,7 @@ class PlayerAssistant(Player):
         self.target = None
         self.is_boosting_from_enemy = False
         self.target_observed = False
+        self.nearest_enemy = None
 
         # Здоровье
         self.full_health = 300
@@ -654,6 +654,9 @@ class PlayerAssistant(Player):
         else:
             super(Player, self).update_frame_state()
             return
+
+        # Обновляем
+        super(Player, self).update()
 
         player = self.player
         enemies_group = args[0]
@@ -691,13 +694,14 @@ class PlayerAssistant(Player):
 
         self.move(self.dx, self.dy)
 
-        if pygame.sprite.spritecollideany(self, Entity.collisions_group):
-            self.point = None
+        ticks = pygame.time.get_ticks()
+        if ticks - self.last_target_update > 50:
+            self.nearest_enemy = self.update_target(enemies_group)
+        if pygame.time.get_ticks() - ticks > 3:
+            print(pygame.time.get_ticks() - ticks)
 
-        nearest_enemy = self.update_target(enemies_group)
-
-        if nearest_enemy:
-            self.shoot(nearest_enemy, enemies_group)
+        if self.nearest_enemy:
+            self.shoot(self.nearest_enemy, enemies_group)
             self.target_observed = True
         else:
             self.target_observed = False
@@ -730,9 +734,6 @@ class PlayerAssistant(Player):
             self.sounds_channel.play(item.sound)
             item.kill()
 
-        # Обновляем спрайт
-        super(Player, self).update()
-
     def shoot(self, target, enemies_group=None):
         if not self.alive or not target or not target.alive:
             return
@@ -741,12 +742,12 @@ class PlayerAssistant(Player):
         # Если не прошло время перезарядки, то заклинания не создаются
         if current_ticks - self.between_shoots_range < self.shoot_last_time:
             return
-        self.shoot_last_time = current_ticks
+        self.shoot_last_time = current_ticks + randint(-50, 50)
 
         if isinstance(target, Player):
             spell = TeleportSpell
             poses = *self.rect.center, *target.rect.center
-            args = *poses, 0.5 + 0.05 * self.level, [self], self.player.spells
+            args = *poses, 0.5 + 0.05 * self.level, [self], Entity.spells_group, Entity.all_sprites
         else:
             if isinstance(target, Demon):
                 spell = IceSpell
@@ -769,7 +770,7 @@ class PlayerAssistant(Player):
             else:
                 return
             poses = *self.rect.center, *target.rect.center
-            args = *poses, 0.5 + 0.05 * self.level, enemies_group, self.player.spells
+            args = *poses, 0.5 + 0.05 * self.level, enemies_group, Entity.spells_group, Entity.all_sprites
 
         if self.mana >= spell.mana_cost:
             self.mana -= spell.mana_cost
@@ -785,7 +786,7 @@ class PlayerAssistant(Player):
             self.last_update = pygame.time.get_ticks() + 300
 
     def update_target(self, enemies_group) -> Monster:
-        self.last_target_update = pygame.time.get_ticks()
+        self.last_target_update = pygame.time.get_ticks() + randint(-10, 10)
 
         min_dist_to_enemy = self.visible_range + 1
         nearest_enemy = None

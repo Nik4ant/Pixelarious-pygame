@@ -15,7 +15,8 @@ if __name__ == '__main__':
     pygame.mixer.init(44100, -16, 12, 64)
 
     # Экран (он же будет использован везде)
-    screen = pygame.display.set_mode(flags=pygame.FULLSCREEN |pygame.HWSURFACE | pygame.DOUBLEBUF, vsync=True)
+    screen = pygame.display.set_mode(flags=pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF, vsync=True)
+    # (1600, 1360),
     # (1920, 1080),
     # pygame.FULLSCREEN |
     # эти модули нужно импортировать именно тут,

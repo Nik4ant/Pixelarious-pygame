@@ -19,7 +19,7 @@ class Entity(pygame.sprite.Sprite):
     # Группа со всеми сущностями (экземплярами этого класса)
     # Нужна в основном для коллизий между существами
     entities_group = pygame.sprite.Group()
-    damages = pygame.sprite.Group()
+    damages_group = pygame.sprite.Group()
     spells_group = pygame.sprite.Group()
 
     default_speed = TILE_SIZE * 0.2
@@ -77,7 +77,7 @@ class Entity(pygame.sprite.Sprite):
     def update(self) -> None:
         if self.ice_buff:
             self.ice_buff -= 1
-            self.speed = self.__class__.default_speed * 0.3
+            self.speed = self.__class__.default_speed * 0.2
         else:
             self.speed = self.__class__.default_speed
 
@@ -108,11 +108,11 @@ class Entity(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self.collider, Entity.collisions_group, False):
             self.rect.x = pos[0]
             self.dx = 0
-            if self.__class__.__name__.lower() == "player":
+            if self.__class__.__name__ == 'Player':
                 self.dash_force_x *= 0.8
                 self.dash_direction_x = self.look_direction_x
-                self.dash_force_y *= 0.8
-                self.dash_direction_y = self.look_direction_y
+            elif self.__class__.__name__ == 'PlayerAssistant':
+                self.point = None
 
         self.rect.y = round(self.rect.y + dy)
         self.collider.update(*self.rect.center)
@@ -121,11 +121,11 @@ class Entity(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self.collider, Entity.collisions_group, False):
             self.rect.y = pos[1]
             self.dy = 0
-            if self.__class__.__name__.lower() == "player":
-                self.dash_force_x *= 0.8
-                self.dash_direction_x = self.look_direction_x
+            if self.__class__.__name__ == 'Player':
                 self.dash_force_y *= 0.8
                 self.dash_direction_y = self.look_direction_y
+            elif self.__class__.__name__ == 'PlayerAssistant':
+                self.point = None
 
     def update_frame_state(self, n=0):
         """
@@ -248,7 +248,7 @@ class Entity(pygame.sprite.Sprite):
             damage *= 0.25
 
         damage *= 1000
-        damage += randint(-abs(round(-damage * 0.4)), abs(round(damage * 0.4)))
+        damage += randint(-abs(round(-damage * 0.2)), abs(round(damage * 0.2)))
         damage /= 1000
 
         x, y = self.rect.midtop
@@ -259,7 +259,7 @@ class Entity(pygame.sprite.Sprite):
             'flash':  (255, 255, 0),
             'fire':   (226, 88, 34),
         }
-        ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages, color=colors[spell_type])
+        ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages_group, color=colors[spell_type])
 
         self.health = min(self.health - damage, self.full_health)
         if self.health <= 0:

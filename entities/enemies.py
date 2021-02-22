@@ -26,7 +26,7 @@ class Monster(Entity):
             pos = (self.rect.centerx + randint(-20, 20),
                    self.rect.centery + randint(-20, 20))
             spawn_item(*pos, all_sprites=Entity.all_sprites,
-                       k=randint(1, [2, 3][isinstance(self, ShootingMonster)]))
+                       k=randint(1, [2, 3][isinstance(self, (VoidWizard, DirtySlime))]))
 
         if self.seed:
             self.seed[self.index_in_seed] = '0'
@@ -52,8 +52,6 @@ class WalkingMonster(Monster):
         self.stopping_time = pygame.time.get_ticks() + randint(-750, 750)
         self.distance_to_player = 100
         self.speed = 1
-
-        self.spells = pygame.sprite.Group()
 
     def update(self, *args):
         player = args[0]
@@ -124,7 +122,7 @@ class WalkingMonster(Monster):
                 boost_dx = (self.dx + player.max_delta_movements) * 2.17
                 boost_dy = (self.dy + player.max_delta_movements) * 2.17
                 # Чтобы игрок не умирал мгновенно, не понимая, что случилось
-                if ticks - target.last_hit_time > player.INVULNERABILITY_TIME_AFTER_HIT:
+                if ticks - target.last_hit_time > target.INVULNERABILITY_TIME_AFTER_HIT:
                     target.get_damage(self.damage)
                 target.boost_from_enemy(boost_dx, boost_dy)
 
@@ -179,8 +177,6 @@ class ShootingMonster(Monster):
 
         self.collider = Collider(*self.rect.center, self.size)
 
-        self.spells = pygame.sprite.Group()
-
         self.last_shot_time = pygame.time.get_ticks()
         self.reload_time = 1500
         self.assistants = pygame.sprite.Group()
@@ -216,7 +212,6 @@ class ShootingMonster(Monster):
         if line >= self.visibility_range or not target.alive:
             if pygame.time.get_ticks() - self.stopping_time < Entity.WAITING_TIME:
                 super().update_frame_state(2)
-                self.spells.update()
                 return
             if not self.point or self.point == self.rect.center:
                 self.stopping_time = pygame.time.get_ticks() + randint(-500, 500)
@@ -296,8 +291,6 @@ class ShootingMonster(Monster):
         # Обновление спрайта
         super().update_frame_state(delta)
 
-        self.spells.update()
-
     def shoot(self, player):
         if not self.alive:
             return
@@ -307,7 +300,7 @@ class ShootingMonster(Monster):
             if assistant in enemies_group:
                 enemies_group.remove(assistant)
         args = (*self.rect.center, *player.rect.center, self.extra_damage,
-                list(enemies_group) + [player] + list(player.assistants), self.spells, Entity.all_sprites)
+                list(enemies_group) + [player] + list(player.assistants), self.spells_group, Entity.all_sprites)
         for assistant in self.assistants:
             enemies_group.add(assistant)
         enemies_group.add(self)
@@ -644,7 +637,7 @@ def random_monster(x, y, level, all_sprites, enemies_group, seed, user_seed):
     if user_seed:
         n = int(user_seed.pop(0))
     else:
-        n = randint(1, round(25 - level * 1.5))
+        n = randint(1, round(35 - level * 2))
     args = (x * TILE_SIZE + TILE_SIZE * 0.5, y * TILE_SIZE + TILE_SIZE * 0.5,
             level - 1, seed, all_sprites, enemies_group)
 
@@ -662,7 +655,7 @@ def random_monster(x, y, level, all_sprites, enemies_group, seed, user_seed):
         monster = VoidWizard(*args)
     else:
         # Специально, чтоб монстры спавнились в этом месте не со 100% шансом
-        seed.append('-1')
+        seed.append('0')
         return None
 
     # Запишем получившееся значение в сид

@@ -20,15 +20,18 @@ class Spell(pygame.sprite.Sprite):
     VOID = 'void'
     TELEPORT = 'teleport'
 
+    # Номер кадра анимации, на котором происходит действие (телепортация, урон, хил)
     damage_frame = 0
 
     start_position = None
 
     def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
-                 object_group, *groups):
-        super().__init__(*groups)
+                 object_group, all_spites, *groups):
+        super().__init__(all_spites, *groups)
         dx = object_x - subject_x
         dy = object_y - subject_y
+        # Увеличиваем расстояние пропорционально
+        # Чтобы заклинание летело далеко за пределы экрана, а не просто к курсору
         while (abs(dx) < 5000 and abs(dy) < 5000) and (self.spell_type != Spell.FLASH and
                                                        self.spell_type != Spell.TELEPORT):
             dx *= 2
@@ -36,9 +39,14 @@ class Spell(pygame.sprite.Sprite):
             dy += 1
         self.point = (subject_x + dx, subject_y + dy)
 
+        # Увеличения урона/времени действия в зависимости от уровня существа
         if self.spell_type != Spell.TELEPORT:
             self.damage = self.__class__.damage * extra_damage
 
+        if self.spell_type in (self.ICE, self.POISON):
+            self.action_time = self.__class__.action_time * extra_damage
+
+        # Угол, под которым пущено заклинание (для поворота картинки)
         if dx >= 0:
             self.angle = -degrees(atan(dy / max(dx, 0.00001)))
         else:
@@ -49,8 +57,9 @@ class Spell(pygame.sprite.Sprite):
         self.cur_list = 0
         self.last_update_time = pygame.time.get_ticks()
 
+        # Поворачиваем картинку
         self.frames = [[pygame.transform.rotate(i, self.angle) for i in self.__class__.frames[0]],
-                       self.__class__.frames[1]]
+                       self.__class__.frames[1:]]
 
         self.image = self.frames[0][0]
         self.rect = self.image.get_rect()
@@ -62,41 +71,60 @@ class Spell(pygame.sprite.Sprite):
 
     def update(self) -> None:
         if self.rect.center == self.point:
+            # Значит заклинание достигло цели (либо врезалось)
+            # Теперь оно должно нанести урон и уничтожиться после показа анимации
             ticks = pygame.time.get_ticks()
             if ticks - self.last_update_time < self.UPDATE_TIME:
                 return
             self.last_update_time = ticks
+
             if self.cur_frame == self.damage_frame:
+                # Производим действие
                 if isinstance(self, TeleportSpell):
                     self.object_group[0].rect.center = self.rect.center
                 else:
                     if isinstance(self, VoidSpell):
+                        # Сделаем, чтоб коллайдер был ровно по границы анимации
+                        # Чтоб не было расхождения и не вводить в ступор игрока
                         size = (round((self.rect.w / 3)),) * 2
                         self.collider.update(*self.rect.center, size)
                     else:
                         size = (round((self.rect.w / 2)),) * 2
                         self.collider.update(*self.rect.center, size)
+
+                    # Убиваем все заклинание-ломаемые вещи, которые задеваем
                     pygame.sprite.spritecollide(self.collider, Spell.furniture_group, True)
                     pygame.sprite.spritecollide(self.collider, Spell.doors_group, True)
+
+                    # Наносим урон группе объектов, на которых направлено заклинание
                     for obj in self.object_group:
                         if pygame.sprite.collide_circle(self.collider, obj):
                             obj.get_damage(self.damage, self.spell_type, self.action_time)
+
+            # Меняем номер кадра анимации
             self.cur_frame += 1
             if self.cur_frame == len(self.__class__.frames[self.cur_list]):
+                # Если кадр последний, убиваем заклинание
                 self.kill()
                 if isinstance(self, TeleportSpell):
+                    # Подчищаем
                     self.start_sprite.kill()
                 return
+
+            # Меняем кадр анимации
             self.image = self.__class__.frames[self.cur_list][self.cur_frame]
+            # Выравниваем центр изображения
             pos = self.rect.center
             self.rect = self.image.get_rect()
             self.rect.center = pos
             if isinstance(self, TeleportSpell):
-                self.start_sprite.image = self.__class__.frames[self.cur_list][self.cur_frame]
+                self.start_sprite.image = self.image
 
         else:
+            # Иначе ещё летим
             self.cur_frame = (self.cur_frame + 1) % len(self.__class__.frames[0])
 
+            # Вычисляем перемещение
             self_x, self_y = self.rect.center
             point_x, point_y = self.point
             distance_to_object = max(((point_x - self_x) ** 2 + (point_y - self_y) ** 2) ** 0.5, self.speed)
@@ -106,8 +134,10 @@ class Spell(pygame.sprite.Sprite):
             self.rect.x = self.rect.x + dx
             self.rect.y = self.rect.y + dy
 
+            # Обновляем позицию коллайдера
             self.collider.update(*self.rect.center)
             do_kill = False
+            # Проверяем на всевозможные соприкосновения, от которых заклинание может умереть
             for obj in pygame.sprite.spritecollide(self.collider, self.object_group, False):
                 if obj.alive:
                     do_kill = True
@@ -128,19 +158,25 @@ class Spell(pygame.sprite.Sprite):
             if do_kill and self.spell_type != Spell.FLASH and self.spell_type != Spell.TELEPORT:
                 self.point = self.rect.center
 
+            # Проверяем, достигли ли объекта
             if self.rect.center == self.point:
                 self.cur_frame = 0
                 self.cur_list = randint(1, len(self.__class__.frames) - 1)
                 if not isinstance(self, TeleportSpell):
-                    self.sounds_channel.play(choice(self.SPELL_SOUNDS))
+                    pass
+                    # Чтоб не задваивался звук
+                    # Ибо воспроизводится и в месте каста, и в месте попадания
+                    # Хотя может сделать это фичей
+                self.sounds_channel.play(choice(self.SPELL_SOUNDS))
 
             ticks = pygame.time.get_ticks()
             if ticks - self.last_update_time < self.UPDATE_TIME:
                 return
+            # Обновляем кадр анимации
             self.last_update_time = ticks
             self.image = self.frames[0][self.cur_frame]
             if isinstance(self, TeleportSpell):
-                self.start_sprite.image = self.frames[0][self.cur_frame]
+                self.start_sprite.image = self.image
 
     @staticmethod
     def set_global_collisions_group(barrier_group: pygame.sprite.Group):
@@ -151,12 +187,17 @@ class Spell(pygame.sprite.Sprite):
         например у врагов будет отдельное взаимодействие с игроком).
         Метод нужен при инициализации
         :param barrier_group: Новая группа
-        :param doors_group: Новая группа
         """
         Spell.barrier_group = barrier_group
 
     @staticmethod
     def set_global_breaking_group(doors_group, furniture_group):
+        """
+        Метод устанавливает группы со спрайтами, которые ломаются от соприкосновений с заклинанием
+        :param doors_group: Группа дверей
+        :param furniture_group: Группа ящиков и бочек
+        :return: None
+        """
         Spell.doors_group = doors_group
         Spell.furniture_group = furniture_group
 
@@ -166,7 +207,7 @@ class FireSpell(Spell):
 
     Обычное
     Эффективно против:
-    Зомби, Пустотных магов
+    Зомби, Древних магов
     Неэффективно против:
     Демонов, Огненных магов"""
     damage = 50
@@ -293,7 +334,7 @@ class VoidSpell(Spell):
     Эффективно против:
     Грязных слизеней
     Неэффективно против:
-    Пустотных магов"""
+    Древних магов"""
     damage = 60
     spell_type = Spell.VOID
     mana_cost = 100
@@ -457,6 +498,13 @@ class HealingSpell(Spell):
 
 
 class CallZombiesSpell(Spell):
+    """
+    Класс по сути сделан для красивого использования его звуков
+
+    При его вызове появляются монстры (2-4)
+
+    Используется только Древним магом, так что красивой документации не будет
+    """
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(3)
 

@@ -19,13 +19,15 @@ def execute(screen: pygame.surface.Surface):
     # Смещение между UI элементами
     margin = 20
     # Фоновое изображение для всего экрана
-    background_image = load_image("pause_menu_BG.png", "assets\\UI")
-    background_image = pygame.transform.scale(background_image, screen.get_size())
+    background_image = load_image("pause_menu_BG.png", "assets\\UI\\backgrounds")
+    x, y = background_image.get_size()
+    coefficient = max(round(screen.get_size()[0] / x + 0.49), round(screen.get_size()[1] / y + 0.49))
+    background_image = pygame.transform.scale(background_image, (x * coefficient, y * coefficient))
 
-    menu_width = 300
+    menu_width, menu_height = 280, 360
     # Фоновое игображение
     background_menu_image = scale_frame(load_image("pause_menu_UI_BG.png", "assets\\UI"),
-                                        (menu_width, int(screen.get_height() * 0.25)))
+                                        (menu_width, menu_height))
 
     # Центральная координата всего меню на экране
     menu_top_left = (screen.get_width() * 0.5 - menu_width * 0.5,
@@ -65,6 +67,12 @@ def execute(screen: pygame.surface.Surface):
             if event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
                     was_click = True
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == CONTROLS["KEYBOARD_PAUSE"]:
+                    is_open = False
+                    UI_sprites.empty()  # удаление всех спрайтов в группе
+                    break
 
             if event.type == Button.PRESS_TYPE:
                 # Текст нажатой кнопки

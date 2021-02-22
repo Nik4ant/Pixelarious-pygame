@@ -74,10 +74,9 @@ def execute(screen: pygame.surface.Surface) -> int:
     authors_message_box = MessageBox(AUTHORS, 32, (screen_center, screen.get_height() * 0.5))
 
     # Фоновое изоюражение
-    background_image = load_image("main_menu_BG.png", "assets\\UI")
+    background_image = load_image("main_menu_BG.png", "assets\\UI\\backgrounds")
     # Меняем размер картинки в зависимости от размера экрана
-    background_image = pygame.transform.scale(background_image,
-                                              (screen.get_width(), screen.get_height()))
+    background_image = pygame.transform.scale(background_image, screen.get_size())
 
     # Делаем курсор мыши невидимым и загружаем вместо него своё изображение
     pygame.mouse.set_visible(False)
@@ -107,6 +106,17 @@ def execute(screen: pygame.surface.Surface) -> int:
             if event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
                     was_click = True
+
+            if event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_KP_ENTER, pygame.K_SPACE, pygame.K_RETURN):
+                    # Музыка затухает (1 секунду), т.к. главный экран закроется
+                    pygame.mixer.music.fadeout(1000)
+                    return 1
+
+                if event.key == CONTROLS["KEYBOARD_PAUSE"]:
+                    # Музыка затухает (1 секунду), т.к. главный экран закроется
+                    pygame.mixer.music.fadeout(1000)
+                    return 0
 
             if event.type == Button.PRESS_TYPE:
                 # Текст нажатой кнопки
