@@ -1,10 +1,8 @@
-import sys
-
 import pygame
 
 from UI.UIComponents import Button
 from config import FPS, CONTROLS, JOYSTICK_SENSITIVITY
-from engine import load_image, check_any_joystick, get_joystick
+from engine import load_image, check_any_joystick, get_joystick, scale_frame
 
 
 def execute(screen: pygame.surface.Surface):
@@ -19,39 +17,40 @@ def execute(screen: pygame.surface.Surface):
     joystick = get_joystick() if check_any_joystick() else None
 
     # Смещение между UI элементами
-    UI_MARGIN = 20
+    margin = 20
     # Фоновое изображение для всего экрана
-    background_image = load_image("pause_menu_BG.png", "assets/UI")
-    background_image = pygame.transform.scale(background_image, screen.get_size())
+    background_image = load_image("pause_menu_BG.png", "assets\\UI\\backgrounds")
+    x, y = background_image.get_size()
+    coefficient = max(round(screen.get_size()[0] / x + 0.49), round(screen.get_size()[1] / y + 0.49))
+    background_image = pygame.transform.scale(background_image, (x * coefficient, y * coefficient))
+
+    menu_width, menu_height = 280, 360
     # Фоновое игображение
-    ui_background_image = load_image("pause_menu_UI_BG.png", "assets/UI")
+    background_menu_image = scale_frame(load_image("pause_menu_UI_BG.png", "assets\\UI"),
+                                        (menu_width, menu_height))
+
     # Центральная координата всего меню на экране
-    menu_top_left = (screen.get_width() * 0.5 - ui_background_image.get_width() * 0.5,
-                     screen.get_height() * 0.5 - ui_background_image.get_height() * 0.5)
+    menu_top_left = (screen.get_width() * 0.5 - menu_width * 0.5,
+                     screen.get_height() * 0.25)
 
-    # Создание UI элементов
-    next_y = menu_top_left[1] + ui_background_image.get_width() * 0.5 - UI_MARGIN * 2.5
-    button_continue = Button((screen.get_width() // 2, next_y),
-                             "Продолжить", 32,
-                             base_button_filename="button_1.png",
-                             hover_button_filename="button_1_hover.png")
-
-    next_y += button_continue.rect.width * 0.5 + UI_MARGIN
-    button_exit = Button((screen.get_width() // 2, next_y),
-                         "Выйти в меню", 32,
-                         base_button_filename="button_1.png",
-                         hover_button_filename="button_1_hover.png")
-
-    # Добавление в группу
     UI_sprites = pygame.sprite.Group()
-    UI_sprites.add(button_continue)
-    UI_sprites.add(button_exit)
+    # Создание UI элементов
+    next_y = menu_top_left[1] + margin * 3.5
+    titles = ("Продолжить", "Начать заново", "Настройки", "Выйти в меню")
+    for number in range(len(titles)):
+        button = Button((screen.get_width() // 2, next_y), titles[number], 32,
+                        base_button_filename="button_1.png",
+                        hover_button_filename="button_1_hover.png")
+
+        next_y += button.rect.height + margin
+        # Добавление в группу
+        UI_sprites.add(button)
 
     # Изображение для курсора
-    cursor_image = load_image("cursor.png", "assets/UI/icons")
+    cursor_image = load_image("cursor.png", "assets\\UI\\icons")
     # координаты курсора
     cursor_x, cursor_y = screen.get_rect().center
-    cursor_speed = 25  # скорость курсора (нужно если используется джойстик)
+    cursor_speed = 10  # скорость курсора (нужно если используется джойстик)
 
     # Цикл меню
     while is_open:
@@ -69,19 +68,25 @@ def execute(screen: pygame.surface.Surface):
                 if event.button == 1:
                     was_click = True
 
+            if event.type == pygame.KEYDOWN:
+                if event.key == CONTROLS["KEYBOARD_PAUSE"]:
+                    is_open = False
+                    UI_sprites.empty()  # удаление всех спрайтов в группе
+                    break
+
             if event.type == Button.PRESS_TYPE:
                 # Текст нажатой кнопки
                 # (гарантированно есть, т.к. устанавливается при инициализации)
                 sender_text = event.dict["sender_text"]
 
                 # Продолжить
-                if sender_text == button_continue.text:
+                if sender_text == titles[0]:
                     is_open = False
                     UI_sprites.empty()  # удаление всех спрайтов в группе
                     break
 
                 # Выход
-                if sender_text == button_exit.text:
+                if sender_text == titles[-1]:
                     return -1
 
         # Определение местоположения для курсора
@@ -104,7 +109,7 @@ def execute(screen: pygame.surface.Surface):
         # Фоновое изображение окна
         screen.blit(background_image, (0, 0))
         # Фоновое изобраджение UI
-        screen.blit(ui_background_image, menu_top_left)
+        screen.blit(background_menu_image, menu_top_left)
         # Рисуем весь UI
         UI_sprites.draw(screen)
 
