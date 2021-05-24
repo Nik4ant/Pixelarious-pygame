@@ -3,9 +3,12 @@ import sys
 
 import pygame
 
+
+# TODO: remove this and change path to icon + try to insert datq folder as data
 # pyinstaller --onefile --noconsole --icon=assets\UI\icons\icon.ico main.py
 
 
+# TODO: refactor comments
 if __name__ == '__main__':
     sys.path.append(os.curdir)
 
@@ -15,10 +18,7 @@ if __name__ == '__main__':
     pygame.mixer.init(44100, -16, 12, 64)
 
     # Экран (он же будет использован везде)
-    screen = pygame.display.set_mode(flags=pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF, vsync=True)
-    # (1600, 1360),
-    # (1920, 1080),
-    # pygame.FULLSCREEN |
+    screen = pygame.display.set_mode(flags=pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
     # эти модули нужно импортировать именно тут,
     # т.к. в них происходит загрузка картинок, а в UI ещё и звуков.
     # (А это можно сделать только после инициализации pygame.mixer и экрана)
@@ -29,17 +29,16 @@ if __name__ == '__main__':
     code = -1
     while code != 0:
         # Вызов начального экрана
-        code = start_screen.execute(screen)
-
+        if code != 2:
+            code = start_screen.execute(screen)
         # Выполнение действия по коду
         if code != 0:
             # Сид сохранения, который будет считан при запуске игры
             seed = None
             # Номер уровня с которого начнётся игра
             level_number = 1
-
             # Читаем файл сохранения, если он существует
-            if os.path.isfile("data\\save.txt"):
+            if os.path.isfile("data\\save.txt") and code != 2:
                 with open('data\\save.txt', 'r', encoding="utf-8") as file:
                     seed = file.read()
 

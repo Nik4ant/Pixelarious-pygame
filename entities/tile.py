@@ -2,10 +2,22 @@ from random import randint
 
 import pygame
 
-from engine import load_tile, cut_sheet, load_image, concat_two_file_paths, true_with_chance
+from engine import cut_sheet, load_image, load_sound, true_with_chance
 from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
-from entities.base_entity import Entity, Collider
+from entities.base_entities import Entity, Collider
 from entities.items import spawn_item
+
+
+def load_tile(filename: str) -> pygame.surface.Surface:
+    """
+    Функция нужна для загрузки тайлов и их расширения до TILE_SIZE.
+    (нужно, т.к. при использовании load_image код выглядит менее красивым)
+    :param filename: Имя файла с тайлом
+    :return: Поверхность, растянутого изображение
+    """
+    image = load_image(f'assets/sprites/tiles/{filename}')
+    image = pygame.transform.scale(image, (TILE_SIZE, TILE_SIZE))
+    return image
 
 
 class Tile(pygame.sprite.Sprite):
@@ -91,7 +103,7 @@ class Furniture(pygame.sprite.Sprite):
 
 
 class Torch(pygame.sprite.Sprite):
-    frames = cut_sheet(load_image('TORCH.png', 'assets\\tiles'), 8, 1, (round(TILE_SIZE / 4 * 3),) * 2)[0]
+    frames = cut_sheet(load_image("assets/sprites/tiles/TORCH.png"), 8, 1, (round(TILE_SIZE / 4 * 3),) * 2)[0]
 
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(0)
@@ -99,7 +111,7 @@ class Torch(pygame.sprite.Sprite):
     update_sounds_channel = 0
 
     # Звуки
-    BURNING_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "torch_sound.mp3"))
+    BURNING_SOUND = load_sound("assets/audio/sfx/world/torch_sound.mp3")
     BURNING_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
 
     def __init__(self, x: float, y: float, *groups):
@@ -144,10 +156,8 @@ class Door(pygame.sprite.Sprite):
     update_sounds_channel = 0
 
     # Звуки
-    OPEN_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "door_open.mp3"))
-    OPEN_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
-    CLOSE_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "door_close.mp3"))
-    CLOSE_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+    OPEN_SOUND = load_sound("assets/audio/sfx/world/door_open.mp3")
+    CLOSE_SOUND = load_sound("assets/audio/sfx/world/door_close.mp3")
 
     def __init__(self, x: float, y: float, *groups):
         super().__init__(*groups)
@@ -196,7 +206,7 @@ class Door(pygame.sprite.Sprite):
 
 class Chest(pygame.sprite.Sprite):
     size = (TILE_SIZE, TILE_SIZE)
-    frames = cut_sheet(load_image('CHEST.png', 'assets\\tiles'), 8, 1, size)[0]
+    frames = cut_sheet(load_image("assets/sprites/tiles/CHEST.png"), 8, 1, size)[0]
     back_of_chest = load_tile('back_of_chest.png')
     chest_group: pygame.sprite.Group
     UPDATE_TIME = 40

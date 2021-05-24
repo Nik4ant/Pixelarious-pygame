@@ -1,6 +1,7 @@
+from math import dist
 from random import choice
 
-from entities.base_entity import Entity
+from entities.base_entities import Entity
 from entities.items import *
 from entities.spells import *
 from engine import *
@@ -60,13 +61,13 @@ class WalkingMonster(Monster):
             super().update_frame_state()
             return
 
-        if hypot(self.rect.center, player.rect.center) > TILE_SIZE * 25:
+        if dist(self.rect.center, player.rect.center) > TILE_SIZE * 25:
             return
 
         target = player
-        min_dist = hypot(self.rect.center, player.rect.center)
+        min_dist = dist(self.rect.center, player.rect.center)
         for assistant in player.assistants:
-            if hypot(self.rect.center, assistant.rect.center) < min_dist and assistant.alive:
+            if dist(self.rect.center, assistant.rect.center) < min_dist and assistant.alive:
                 target = assistant
 
         # Сокращаем написание координат объекта
@@ -191,16 +192,16 @@ class ShootingMonster(Monster):
             return
 
         super().update()
-        if hypot(self.rect.center, player.rect.center) > TILE_SIZE * 25:
+        if dist(self.rect.center, player.rect.center) > TILE_SIZE * 25:
             return
 
         self_x, self_y = self.rect.center
         delta = 0
 
         target = player
-        min_dist = hypot(self.rect.center, player.rect.center)
+        min_dist = dist(self.rect.center, player.rect.center)
         for assistant in player.assistants:
-            if hypot(self.rect.center, assistant.rect.center) < min_dist and assistant.alive:
+            if dist(self.rect.center, assistant.rect.center) < min_dist and assistant.alive:
                 target = assistant
 
         point_x, point_y = target.rect.centerx, target.rect.centery
@@ -349,14 +350,14 @@ class Demon(WalkingMonster):
     Устойчивойть к огню
     Слабость к льду
     """
-    name = 'Демон'
+    name = "Демон"
     damage = 50
     size = (int(TILE_SIZE // 8 * 5),) * 2
-    frames = cut_sheet(load_image('demon_run.png', 'assets\\enemies'), 4, 2, size)
-    frames += cut_sheet(load_image('demon_idle.png', 'assets\\enemies'), 4, 2, size)
+    frames = cut_sheet(load_image("assets/sprites/enemies/demon_run.png"), 4, 2, size)
+    frames += cut_sheet(load_image("assets/sprites/enemies/demon_idle.png"), 4, 2, size)
 
-    get_damage_frames = cut_sheet(load_image('demon_get_damage.png', 'assets\\enemies'), 2, 1, size)[0]
-    death_frames = cut_sheet(load_image('demon_dying.png', 'assets\\enemies'), 16, 1, size)[0]
+    get_damage_frames = cut_sheet(load_image("assets/sprites/enemies/demon_get_damage.png"), 2, 1, size)[0]
+    death_frames = cut_sheet(load_image("assets/sprites/enemies/demon_dying.png"), 16, 1, size)[0]
 
     UPDATE_TIME = 60
     default_speed = TILE_SIZE * 0.03
@@ -376,8 +377,7 @@ class Demon(WalkingMonster):
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "little_steps.mp3"))
-    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+    FOOTSTEP_SOUND = load_sound("assets/audio/sfx/enemies/little_steps.mp3")
 
     def __init__(self, x, y, level, *args):
         super().__init__(x, y, level, *args)
@@ -400,13 +400,13 @@ class GreenSlime(WalkingMonster):
     (я сам отравление)
     Слабость к молниям
     """
-    name = 'Слизень'
+    name = "Слизень"
     damage = 60
-    frames = cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2)
-    frames += cut_sheet(load_image('green_slime_any.png', 'assets\\enemies'), 4, 2)
+    frames = cut_sheet(load_image("assets/sprites/enemies/green_slime_any.png"), 4, 2)
+    frames += cut_sheet(load_image("assets/sprites/enemies/green_slime_any.png"), 4, 2)
 
-    get_damage_frames = cut_sheet(load_image('green_slime_get_damage.png', 'assets\\enemies'), 2, 1)[0]
-    death_frames = cut_sheet(load_image('green_slime_dying.png', 'assets\\enemies'), 16, 1)[0]
+    get_damage_frames = cut_sheet(load_image("assets/sprites/enemies/green_slime_get_damage.png"), 2, 1)[0]
+    death_frames = cut_sheet(load_image("assets/sprites/enemies/green_slime_dying.png"), 16, 1)[0]
 
     default_speed = TILE_SIZE * 0.015
     look_directions = {
@@ -424,8 +424,7 @@ class GreenSlime(WalkingMonster):
     sounds_channel = pygame.mixer.Channel(4)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "slime_sound.mp3"))
-    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+    FOOTSTEP_SOUND = load_sound("assets/audio/sfx/enemies/slime_sound.mp3")
 
     def __init__(self, x, y, level, *args):
         super().__init__(x, y, level, *args)
@@ -448,13 +447,13 @@ class DirtySlime(WalkingMonster):
     Устойчивость к льду
     Слабость к пустоте
     """
-    name = 'Грязный слизень'
+    name = "Грязный слизень"
     damage = 90
-    frames = cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2)
-    frames += cut_sheet(load_image('dirty_slime_any.png', 'assets\\enemies'), 4, 2)
+    frames = cut_sheet(load_image("assets/sprites/enemies/dirty_slime_any.png"), 4, 2)
+    frames += cut_sheet(load_image("assets/sprites/enemies/dirty_slime_any.png"), 4, 2)
 
-    get_damage_frames = cut_sheet(load_image('dirty_slime_get_damage.png', 'assets\\enemies'), 2, 1)[0]
-    death_frames = cut_sheet(load_image('dirty_slime_dying.png', 'assets\\enemies'), 16, 1)[0]
+    get_damage_frames = cut_sheet(load_image("assets/sprites/enemies/dirty_slime_get_damage.png"), 2, 1)[0]
+    death_frames = cut_sheet(load_image("assets/sprites/enemies/dirty_slime_dying.png"), 16, 1)[0]
 
     default_speed = TILE_SIZE * 0.02
     look_directions = {
@@ -470,10 +469,8 @@ class DirtySlime(WalkingMonster):
     }
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(4)
-
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "slime_sound_1.ogg"))
-    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+    FOOTSTEP_SOUND = load_sound("assets/audio/sfx/enemies/slime_sound_1.ogg")
 
     def __init__(self, x, y, level, *args):
         super().__init__(x, y, level, *args)
@@ -497,13 +494,13 @@ class Zombie(WalkingMonster):
     Слабость - огонь
     (земля пухом учёным)
     """
-    name = 'Зомби'
+    name = "Зомби"
     damage = 30
-    frames = cut_sheet(load_image('zombie_run.png', 'assets\\enemies'), 4, 2)
-    frames += cut_sheet(load_image('zombie_idle.png', 'assets\\enemies'), 4, 2)
+    frames = cut_sheet(load_image("assets/sprites/enemies/zombie_run.png"), 4, 2)
+    frames += cut_sheet(load_image("assets/sprites/enemies/zombie_idle.png"), 4, 2)
 
-    get_damage_frames = cut_sheet(load_image('zombie_get_damage.png', 'assets\\enemies'), 2, 1)[0]
-    death_frames = cut_sheet(load_image('zombie_dying.png', 'assets\\enemies'), 16, 1)[0]
+    get_damage_frames = cut_sheet(load_image("assets/sprites/enemies/zombie_get_damage.png"), 2, 1)[0]
+    death_frames = cut_sheet(load_image("assets/sprites/enemies/zombie_dying.png"), 16, 1)[0]
 
     default_speed = TILE_SIZE * 0.02
     look_directions = {
@@ -521,8 +518,7 @@ class Zombie(WalkingMonster):
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "stone_steps_1.mp3"))
-    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+    FOOTSTEP_SOUND = load_sound("assets/audio/sfx/enemies/stone_steps_1.mp3")
 
     def __init__(self, x, y, level, *args):
         super().__init__(x, y, level, *args)
@@ -544,13 +540,13 @@ class FireWizard(ShootingMonster):
     Устойчивость к молниям
     Слабость к льду
     """
-    name = 'Маг огня'
+    name = "Маг огня"
     size = (TILE_SIZE // 8 * 7,) * 2
-    frames = cut_sheet(load_image('wizard_run.png', 'assets\\enemies'), 4, 2, size)
-    frames += cut_sheet(load_image('wizard_idle.png', 'assets\\enemies'), 4, 2, size)
+    frames = cut_sheet(load_image("assets/sprites/enemies/wizard_run.png"), 4, 2, size)
+    frames += cut_sheet(load_image("assets/sprites/enemies/wizard_idle.png"), 4, 2, size)
 
-    get_damage_frames = cut_sheet(load_image('wizard_get_damage.png', 'assets\\enemies'), 2, 1, size)[0]
-    death_frames = cut_sheet(load_image('wizard_dying.png', 'assets\\enemies'), 16, 1, size)[0]
+    get_damage_frames = cut_sheet(load_image("assets/sprites/enemies/wizard_get_damage.png"), 2, 1, size)[0]
+    death_frames = cut_sheet(load_image("assets/sprites/enemies/wizard_dying.png"), 16, 1, size)[0]
 
     default_speed = TILE_SIZE * 0.012
     look_directions = {
@@ -568,8 +564,7 @@ class FireWizard(ShootingMonster):
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "wizard_rustle.mp3"))
-    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+    FOOTSTEP_SOUND = load_sound("assets/audio/sfx/enemies/wizard_rustle.mp3")
 
     def __init__(self, x, y, level, *args):
         super().__init__(x, y, level, *args)
@@ -593,13 +588,13 @@ class VoidWizard(ShootingMonster):
     Слабость к огню
     (МОЙ ПЛАЩ ГОРИТ)
     """
-    name = 'Древний маг'
+    name = "Древний маг"
     damage = 20
-    frames = cut_sheet(load_image('long_wizard_run.png', 'assets\\enemies'), 4, 2)
-    frames += cut_sheet(load_image('long_wizard_idle.png', 'assets\\enemies'), 4, 2)
+    frames = cut_sheet(load_image("assets/sprites/enemies/long_wizard_run.png"), 4, 2)
+    frames += cut_sheet(load_image("assets/sprites/enemies/long_wizard_idle.png"), 4, 2)
 
-    get_damage_frames = cut_sheet(load_image('long_wizard_get_damage.png', 'assets\\enemies'), 2, 1)[0]
-    death_frames = cut_sheet(load_image('long_wizard_dying.png', 'assets\\enemies'), 16, 1)[0]
+    get_damage_frames = cut_sheet(load_image("assets/sprites/enemies/long_wizard_get_damage.png"), 2, 1)[0]
+    death_frames = cut_sheet(load_image("assets/sprites/enemies/long_wizard_dying.png"), 16, 1)[0]
 
     default_speed = TILE_SIZE * 0.01
     look_directions = {
@@ -617,8 +612,7 @@ class VoidWizard(ShootingMonster):
     sounds_channel = pygame.mixer.Channel(2)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\enemies\\audio", "wizard_rustle.mp3"))
-    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+    FOOTSTEP_SOUND = load_sound("assets/audio/sfx/enemies/wizard_rustle.mp3")
 
     def __init__(self, x, y, level, *args):
         super().__init__(x, y, level, *args)

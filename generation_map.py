@@ -1,6 +1,6 @@
 from random import choice
 
-from entities.base_entity import Entity
+from entities.base_entities import Entity
 from entities.tile import *
 from entities.player import Player, PlayerAssistant
 from entities.enemies import random_monster

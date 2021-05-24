@@ -3,22 +3,22 @@ from random import randint, choice
 
 import pygame
 
-from engine import load_image, cut_sheet, concat_two_file_paths
+from engine import load_image, load_sound, cut_sheet
 from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
 
-from entities.base_entity import Collider, Entity
+from entities.base_entities import Collider, Entity
 
 
 class Spell(pygame.sprite.Sprite):
     """
     Класс, отвечающий за предстовление базового заклинания в игре
     """
-    FIRE = 'fire'
-    FLASH = 'flash'
-    ICE = 'ice'
-    POISON = 'poison'
-    VOID = 'void'
-    TELEPORT = 'teleport'
+    FIRE = "fire"
+    FLASH = "flash"
+    ICE = "ice"
+    POISON = "poison"
+    VOID = "void"
+    TELEPORT = "teleport"
 
     # Номер кадра анимации, на котором происходит действие (телепортация, урон, хил)
     damage_frame = 0
@@ -162,11 +162,10 @@ class Spell(pygame.sprite.Sprite):
             if self.rect.center == self.point:
                 self.cur_frame = 0
                 self.cur_list = randint(1, len(self.__class__.frames) - 1)
+                # Нужно, чтоб не задваивался звук
+                # Т.к. воспроизводится и в месте каста, и в месте попадания
                 if not isinstance(self, TeleportSpell):
                     pass
-                    # Чтоб не задваивался звук
-                    # Ибо воспроизводится и в месте каста, и в месте попадания
-                    # Хотя может сделать это фичей
                 self.sounds_channel.play(choice(self.SPELL_SOUNDS))
 
             ticks = pygame.time.get_ticks()
@@ -219,26 +218,22 @@ class FireSpell(Spell):
     action_time = 0
 
     size = (TILE_SIZE // 4 * 3,) * 2
-    frames = cut_sheet(load_image('fire_laser.png', 'assets\\spells'), 6, 1, size)
-    frames += cut_sheet(load_image('fire_explosion.png', 'assets\\spells'), 7, 9, size)
+    frames = cut_sheet(load_image("assets/sprites/spells/fire_laser.png"), 6, 1, size)
+    frames += cut_sheet(load_image("assets/sprites/spells/fire_explosion.png"), 7, 9, size)
 
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "cast_sound_2.ogg"))
-    CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
-
+    CAST_SOUND = load_sound("assets/audio/sfx/spells/cast_sound_2.ogg")
     SPELL_SOUNDS = (
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_1.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_3.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_4.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_5.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_14.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_24.ogg")),
+        load_sound("assets/audio/sfx/spells/spell_sound_1.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_3.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_4.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_5.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_14.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_24.ogg"),
     )
-    for sound in SPELL_SOUNDS:
-        sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
 
 class IceSpell(Spell):
@@ -259,28 +254,23 @@ class IceSpell(Spell):
     action_time = 500
 
     size = (TILE_SIZE // 4 * 3,) * 2
-    frames = cut_sheet(load_image('ice_laser.png', 'assets\\spells'), 30, 1, size)
-    frames += cut_sheet(load_image('ice_explosion.png', 'assets\\spells'), 28, 1, size)
+    frames = cut_sheet(load_image("assets/sprites/spells/ice_laser.png"), 30, 1, size)
+    frames += cut_sheet(load_image("assets/sprites/spells/ice_explosion.png"), 28, 1, size)
 
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(3)
-
     # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "cast_sound_1.ogg"))
-    CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
-
+    CAST_SOUND = load_sound("assets/audio/sfx/spells/cast_sound_1.ogg")
     SPELL_SOUNDS = (
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_2.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_12.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_18.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_19.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_20.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_21.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_22.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_26.ogg")),
+        load_sound("assets/audio/sfx/spells/spell_sound_2.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_12.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_18.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_19.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_20.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_21.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_22.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_26.ogg"),
     )
-    for sound in SPELL_SOUNDS:
-        sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
 
 class PoisonSpell(Spell):
@@ -302,29 +292,25 @@ class PoisonSpell(Spell):
     acceleration = 0.5
 
     size = (TILE_SIZE // 4 * 3,) * 2
-    frames = cut_sheet(load_image('poison_laser.png', 'assets\\spells'), 7, 1, size)
-    frames += cut_sheet(load_image('poison_explosion.png', 'assets\\spells'), 11, 1, size)
-    frames += cut_sheet(load_image('poison_explosion_1.png', 'assets\\spells'), 25, 1, size)
+    frames = cut_sheet(load_image("assets/sprites/spells/poison_laser.png"), 7, 1, size)
+    frames += cut_sheet(load_image("assets/sprites/spells/poison_explosion.png"), 11, 1, size)
+    frames += cut_sheet(load_image("assets/sprites/spells/poison_explosion_1.png"), 25, 1, size)
 
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "cast_sound_3.ogg"))
-    CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
-
+    CAST_SOUND = load_sound("assets/audio/sfx/spells/cast_sound_3.ogg")
     SPELL_SOUNDS = (
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_1.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_12.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_13.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_17.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_23.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_24.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_26.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_27.ogg")),
+        load_sound("assets/audio/sfx/spells/spell_sound_1.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_12.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_13.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_17.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_23.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_24.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_26.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_27.ogg"),
     )
-    for sound in SPELL_SOUNDS:
-        sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
 
 class VoidSpell(Spell):
@@ -345,29 +331,25 @@ class VoidSpell(Spell):
     action_time = 0
 
     size = (TILE_SIZE * 3,) * 2
-    frames = cut_sheet(load_image('void_laser.png', 'assets\\spells'), 10, 1)
-    frames += cut_sheet(load_image('void_explosion.png', 'assets\\spells'), 12, 2, size)
-    frames += cut_sheet(load_image('void_explosions.png', 'assets\\spells'), 10, 5, size)
+    frames = cut_sheet(load_image("assets/sprites/spells/void_laser.png"), 10, 1)
+    frames += cut_sheet(load_image("assets/sprites/spells/void_explosion.png"), 12, 2, size)
+    frames += cut_sheet(load_image("assets/sprites/spells/void_explosions.png"), 10, 5, size)
 
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "cast_sound_5.ogg"))
-    CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
-
+    CAST_SOUND = load_sound("assets/audio/sfx/spells/cast_sound_5.ogg")
     SPELL_SOUNDS = (
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_2.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_5.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_14.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_15.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_16.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_17.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_18.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_25.ogg")),
+        load_sound("assets/audio/sfx/spells/spell_sound_2.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_5.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_14.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_15.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_16.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_17.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_18.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_25.ogg"),
     )
-    for sound in SPELL_SOUNDS:
-        sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
 
 class FlashSpell(Spell):
@@ -388,31 +370,28 @@ class FlashSpell(Spell):
     action_time = 0
 
     size = (TILE_SIZE // 2 * 2, TILE_SIZE // 2 * 5)
-    frames = cut_sheet(load_image('EMPTY.png', 'assets\\tiles'), 1, 1, size)
-    frames += cut_sheet(load_image('light.png', 'assets\\spells'), 15, 1, size)
+    # TODO: протестировать загрузку изображения просто, установив размер в load_image
+    frames = cut_sheet(load_image("assets/sprites/tiles/EMPTY.png"), 1, 1, size)
+    frames += cut_sheet(load_image("assets/sprites/spells/light.png"), 15, 1, size)
 
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "cast_sound_4.ogg"))
-    CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
-
+    CAST_SOUND = load_sound("assets/audio/sfx/spells/cast_sound_4.ogg")
     SPELL_SOUNDS = (
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_3.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_4.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_5.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_6.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_7.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_8.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_9.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_10.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_11.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_14.ogg")),
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "spell_sound_26.ogg")),
+        load_sound("assets/audio/sfx/spells/spell_sound_3.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_4.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_5.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_6.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_7.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_8.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_9.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_10.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_11.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_14.ogg"),
+        load_sound("assets/audio/sfx/spells/spell_sound_26.ogg"),
     )
-    for sound in SPELL_SOUNDS:
-        sound.set_volume(DEFAULT_SOUNDS_VOLUME)
 
 
 class TeleportSpell(Spell):
@@ -420,7 +399,7 @@ class TeleportSpell(Spell):
 
     Переносит игрока в позицию прицела"""
     spell_type = Spell.TELEPORT
-    damage = '---'
+    damage = "---"
     mana_cost = 250
     UPDATE_TIME = 40
     speed = TILE_SIZE * 3
@@ -429,61 +408,16 @@ class TeleportSpell(Spell):
     action_time = 0
 
     size = (TILE_SIZE // 4 * 7,) * 2
-    frames = cut_sheet(load_image('EMPTY.png', 'assets\\tiles'), 1, 1, size)
-    frames += cut_sheet(load_image('teleport_puf.png', 'assets\\spells'), 8, 1, size)
+    # TODO: протестировать загрузку изображения просто, установив размер в load_image
+    frames = cut_sheet(load_image("assets/sprites/tiles/EMPTY.png"), 1, 1, size)
+    frames += cut_sheet(load_image("assets/sprites/spells/teleport_puf.png"), 8, 1, size)
 
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(3)
 
     # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "teleport_sound.ogg"))
-    CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
-
-    SPELL_SOUNDS = (
-        pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "teleport_sound.ogg")),
-    )
-    for sound in SPELL_SOUNDS:
-        sound.set_volume(DEFAULT_SOUNDS_VOLUME)
-
-    def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
-                 object_group, *groups):
-        super().__init__(subject_x, subject_y, object_x, object_y, extra_damage, object_group, *groups)
-
-        self.start_sprite = pygame.sprite.Sprite()
-        self.start_sprite.start_position = None
-        self.start_sprite.point = None
-        self.start_sprite.image = TeleportSpell.frames[0][0]
-        self.start_sprite.rect = self.start_sprite.image.get_rect()
-        self.start_sprite.rect.center = object_group[0].rect.center
-
-
-class HealingSpell(Spell):
-    """Заклинание восстановления
-
-    ЕГО ЕЩЕ НЕТ
-    РАЗРАБАТЫВАЕТСЯ
-    (если будет вообще)
-
-    Увеличивает количество жизней, забирая ману"""
-    spell_type = Spell.TELEPORT
-    damage = '---'
-    mana_cost = 1
-    UPDATE_TIME = 40
-    speed = 1
-    acceleration = 0
-    damage_frame = 0
-    action_time = 0
-
-    size = (TILE_SIZE // 4 * 7,) * 2
-    frames = cut_sheet(load_image('EMPTY.png', 'assets\\tiles'), 1, 1, size)
-    frames += cut_sheet(load_image('healing.png', 'assets\\spells'), 20, 1, size)
-
-    # Канал для звуков
-    sounds_channel = pygame.mixer.Channel(3)
-
-    # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "call_zombies.ogg"))
-    CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+    CAST_SOUND = load_sound("assets/audio/sfx/spells/teleport_sound.ogg")
+    SPELL_SOUNDS = (load_sound("assets/audio/sfx/spells/teleport_sound.ogg"), )
 
     def __init__(self, subject_x: float, subject_y: float, object_x: float, object_y: float, extra_damage: float,
                  object_group, *groups):
@@ -499,15 +433,11 @@ class HealingSpell(Spell):
 
 class CallZombiesSpell(Spell):
     """
-    Класс по сути сделан для красивого использования его звуков
-
-    При его вызове появляются монстры (2-4)
-
-    Используется только Древним магом, так что красивой документации не будет
+    Заклинание спавна монстров (2-4). Самой реализации спавна тут нет,
+    это просто спецэффект (в данном случае звуки)
     """
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(3)
-
     # Звуки
-    CAST_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "call_zombies.ogg"))
-    CAST_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME * 1.5)
+    CAST_SOUND = load_sound("assets/audio/sfx/spells/call_zombies.ogg",
+                            volume=DEFAULT_SOUNDS_VOLUME * 1.5)

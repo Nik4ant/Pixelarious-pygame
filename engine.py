@@ -1,10 +1,10 @@
 import os
-import sys
-import pygame
-from PIL import Image
 from random import randint, random
 
-from config import TILE_SIZE, BACKGROUND_COLOR
+import pygame
+from PIL import Image
+
+from config import TILE_SIZE, BACKGROUND_COLOR, DEFAULT_SOUNDS_VOLUME
 
 
 def check_any_joystick() -> bool:
@@ -17,7 +17,7 @@ def check_any_joystick() -> bool:
 
 def get_joystick() -> pygame.joystick.Joystick:
     """
-    Отдельная функция по получению одного подключённого джойстика
+    Функция по получению одного иницилизированного джойстика
     :return: Джойстик
     """
     joystick = pygame.joystick.Joystick(0)
@@ -25,80 +25,113 @@ def get_joystick() -> pygame.joystick.Joystick:
     return joystick
 
 
-def concat_two_file_paths(path_to_folder: str, filename: str):
+def loading_screen(screen: pygame.surface.Surface) -> None:
     """
-    Т.к. в разных файлах очень часто нужно загрузить что-либо из ассетов, то
-    для объединения пути до папки сделан отдельный метод здесь (чтобы каждый раз
-    не импортировать модуль os)
-    :param path_to_folder: Путь до папки с файлом
-    :param filename: Название файла
-    :return: Объединённый путь
+    Функция, устанавливающая псевдо загрузочный экран
+    :param screen: Поверхность с экраном, где отрисовывается экран загрузки
     """
-    return os.path.join(path_to_folder, filename)
+    # Центральная точка на экране для вывода текста
+    central_point = (screen.get_width() * 0.5, screen.get_height() * 0.5)
+    # Шрифт для текста
+    font = load_game_font(font_size=48)
+    for i in range(4):
+        text = font.render('Загрузка' + '.' * i, True, (240, 240, 240))
+        # Вывод фона и текста
+        screen.fill(BACKGROUND_COLOR)
+        screen.blit(text, (central_point[0] - text.get_width() * 0.5,
+                           central_point[1] - text.get_height() * 0.5))
+        pygame.display.flip()
+        # Задержка в милисекундах
+        pygame.time.wait(100)
 
 
-def loading_screen(screen):
-    width, height = screen.get_size()
-
-    font = pygame.font.Font('assets\\UI\\pixel_font.ttf', 48)
-    for _ in range(1):
-        for i in range(4):
-            text = font.render('Загрузка' + '.' * i, True, (240, 240, 240))
-            text_x = width // 2 - text.get_width() // 2
-            text_y = height // 2 - text.get_height() // 2
-
-            screen.fill(BACKGROUND_COLOR)
-            screen.blit(text, (text_x, text_y))
-            pygame.display.flip()
-
-            pygame.time.wait(100)
-
-
-def cut_sheet(sheet, columns, rows, size=(TILE_SIZE, TILE_SIZE)):
-    frames = [[] for _ in range(rows)]
-    rect = pygame.Rect(0, 0, sheet.get_width() // columns,
-                       sheet.get_height() // rows)
-    for j in range(rows):
-        for i in range(columns):
-            frame_location = (rect.w * i, rect.h * j)
-            image = sheet.subsurface(pygame.Rect(frame_location, rect.size))
-            image = pygame.transform.scale(image, size)
-            frames[j].append(image)
+def cut_sheet(sheet: pygame.surface.Surface,
+              columns: int, rows: int, size=(TILE_SIZE, TILE_SIZE)) -> list:
+    """
+    Функция нарезает spritesheet на кадры по переданным пвраметрам
+    :param sheet: Поверхность с загруженным spritesheet'ом
+    :param columns: Количество колонок для нарезки
+    :param rows: Количество строк для нарезки
+    :param size: Размер к которому маштабируется каждый кадр
+    (по умолчанию размер тайла)
+    :return: Вложенный список с кадрами
+    """
+    # Ширина и длинна по которой будет делаться вырезка
+    cut_size = (sheet.get_width() // columns, sheet.get_height() // rows)
+    # Нарезанные кадры
+    frames = [[cut_sprite(sheet, i, j, size, cut_size) for i in range(columns)]
+              for j in range(rows)]
     return frames
 
 
-def load_image(filename: str, path_to_folder="assets", size=None, colorkey=None):
-    fullname = concat_two_file_paths(path_to_folder, filename)
-    # если файл не существует, то выходим
-    if not os.path.isfile(fullname):
-        raise FileNotFoundError(f"""Не удалось загрузить изображение {filename} по пути {fullname}""")
-    image = pygame.image.load(fullname)
+def cut_sprite(sheet: pygame.surface.Surface, col: int,
+               row: int, sprite_size: tuple, cut_size: tuple) -> pygame.surface.Surface:
+    """
+    Функция вырезает один спрайт из spritesheet'а
+    :param sheet: Сам spritesheet
+    :param col: Номер колонки спрайта
+    :param row: Номер строки спрайта
+    :param sprite_size: Размер к которому надо отмаштабировать спрайт
+    :param cut_size: Размер вырезаемой части из spritesheet'а
+    :return: Поверхность вырезанного спрайта
+    """
+    # Позиция левого верхнего угла спрайта
+    frame_location = (cut_size[0] * col, cut_size[1] * row)
+    # Вырезка спрайта и его масштабирование
+    image = sheet.subsurface(pygame.Rect(frame_location, cut_size))
+    return pygame.transform.scale(image, sprite_size)
 
+
+def load_image(path_to_image: str, size=None, colorkey=None) -> pygame.surface.Surface:
+    """
+    Функция загружает изображение
+    :param path_to_image: Путь до изображения
+    :param size: Рамзер для маштабирования (по умолчанию оригинальный размер)
+    :param colorkey: Цветовой ключ для фона (по умолчанию используется alpha канал)
+    :return: Поверхность загруженного изображения
+    """
+    # Если файла не существует, то исключение
+    if not os.path.isfile(path_to_image):
+        raise FileNotFoundError(f"""Не удалось загрузить изображение по пути {path_to_image}""")
+    image = pygame.image.load(path_to_image)
+    # Если цветовой ключ для фона не передан, используется alpha канал
     if colorkey is not None:
         image = image.convert()
+        # Если не передан цвет, а -1, то берётся цвет левого верхнего пикселя
         if colorkey == -1:
             colorkey = image.get_at((0, 0))
         image.set_colorkey(colorkey)
     else:
         image = image.convert_alpha()
-    if size:
+    # Если передан размер, то масшабируем изображение под него
+    if size is not None:
         image = pygame.transform.scale(image, size)
     return image
 
 
-def load_tile(filename: str, size=(TILE_SIZE, TILE_SIZE)) -> pygame.surface.Surface:
+def load_game_font(font_size: int) -> pygame.font.Font:
     """
-    Функция нужна для загрузки тайлов и их расширения до TILE_SIZE.
-    (отдельно, т.к. при использовании load_image код выглядел бы некрасиво)
-    :param filename: Имя файла с тайлом
-    :param size: Размер возвращаемого изображения
-    :return: Поверхность, растянутого изображение
+    Функция загружает игровой шрифт, который везде одинаковый
+    :param font_size: Размер шрифта
+    :return: Шрифт
     """
-    image = load_image(filename, path_to_folder='assets\\tiles')
-    image = pygame.transform.scale(image, size)
-    return image
+    return pygame.font.Font('assets\\pixel_font.ttf', font_size)
 
 
+def load_sound(path_to_sound: str, volume: float = DEFAULT_SOUNDS_VOLUME) -> pygame.mixer.Sound:
+    """
+    Функция загружает звук и устанавливаем ему громкость
+    (нужно для частоты кода)
+    :param path_to_sound: Путь до файла со звуком
+    :param volume: Уровень громкости (по умолчанию громкость из config.py)
+    :return: Загруженный звук
+    """
+    sound = pygame.mixer.Sound(path_to_sound)
+    sound.set_volume(volume)
+    return sound
+
+
+# TODO: docs
 def scale_frame(image: pygame.surface.Surface, size: (int, int), k: int = 40):
     image = Image.frombytes('RGBA', image.get_size(), pygame.image.tostring(image, 'RGBA'))
     pix = image.load()
@@ -147,7 +180,3 @@ def true_with_chance(percentage_chance: float = 50.0, seed: list = None, user_se
         if seed:
             seed.append(str(is_true))
     return bool(is_true)
-
-
-def hypot(coords1: (int, int), coords2: (int, int)):
-    return ((coords2[0] - coords1[0]) ** 2 + (coords2[1] - coords1[1]) ** 2) ** 0.5

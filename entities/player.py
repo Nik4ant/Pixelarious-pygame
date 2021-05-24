@@ -1,5 +1,7 @@
+from math import dist
+
 from entities.enemies import *
-from entities.base_entity import *
+from entities.base_entities import *
 from engine import *
 from config import *
 
@@ -9,33 +11,12 @@ class Player(Entity):
     Класс отвечающий за игрока
     """
 
-    # Кадры для анимации игрока
-    size = (TILE_SIZE * 7 // 8, TILE_SIZE)
-    frames = cut_sheet(load_image('player.png'), 4, 4, size)
-    cast_frames = cut_sheet(load_image('player_cast.png'), 5, 4, size)
-
-    get_damage_frames = cut_sheet(load_image('player_get_damage.png'), 4, 1, size)[0]
-    death_frames = cut_sheet(load_image('player_death.png'), 28, 1, size)[0]
-
-    # Переменные добавляющие эти значения к здоровью и мане каждую итерацию update()
+    # Эти значения прибавляются к здоровью и мане каждую итерацию update()
     MANA_UP = 0.4
     HEALTH_UP = 0.01
     MEAT_HEALTH_UP = 25
     # Время неуязвимости, после атаки врагом (в миллисекундах)
     INVULNERABILITY_TIME_AFTER_HIT = 300
-
-    # Словарь типа (направлениями взгляда): *индекс ряда в frames для анимации*
-    look_directions = {
-        (-1, -1): 3,
-        (-1, 0): 3,
-        (0, -1): 1,
-        (-1, 1): 3,
-        (0, 0): 0,
-        (0, 1): 0,
-        (1, -1): 2,
-        (1, 0): 2,
-        (1, 1): 2
-    }
 
     # Время между кастами заклинаний
     between_shoots_range = 300
@@ -60,24 +41,42 @@ class Player(Entity):
     # сила с которой игрок будет набирать/уменьшать свою скорость
     delta_changer = 0.3
 
+    # Кадры для анимации игрока
+    size = (TILE_SIZE * 7 // 8, TILE_SIZE)
+    frames = cut_sheet(load_image("assets/sprites/player/player.png"), 4, 4, size)
+    cast_frames = cut_sheet(load_image("assets/sprites/player/player_cast.png"), 5, 4, size)
+
+    get_damage_frames = cut_sheet(load_image("assets/sprites/player/player_get_damage.png"), 4, 1, size)[0]
+    death_frames = cut_sheet(load_image("assets/sprites/player/player_death.png"), 28, 1, size)[0]
+
+    # Словарь типа (направлениями взгляда): *индекс ряда в frames для анимации*
+    look_directions = {
+        (-1, -1): 3,
+        (-1, 0): 3,
+        (0, -1): 1,
+        (-1, 1): 3,
+        (0, 0): 0,
+        (0, 1): 0,
+        (1, -1): 2,
+        (1, 0): 2,
+        (1, 1): 2
+    }
+
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(1)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "footstep.ogg"))
-    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
-
-    DASH_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "dash.wav"))
-    DASH_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
-
-    NO_MANA_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\spells\\audio", "no_mana_sound.ogg"))
-    NO_MANA_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME + 20)
+    FOOTSTEP_SOUND = load_sound("assets/audio/sfx/player/footstep.ogg")
+    DASH_SOUND = load_sound("assets/audio/sfx/player/dash.wav")
+    NO_MANA_SOUND = load_sound("assets/audio/sfx/player/no_mana_sound.ogg")
 
     def __init__(self, x: float, y: float, level: int, all_sprites: pygame.sprite.Group,
                  health=0, mana=0, money=0):
         # Конструктор класса Entity
-        x, y, level, health, mana, money = float(x), float(y), int(level), float(health), float(mana), int(money)
-        super().__init__(x, y, all_sprites)
+        level = int(level)
+        health, mana = float(health), float(mana)
+        money = int(money)
+        super().__init__(float(x), float(y), all_sprites)
         self.alive = True
         self.destroyed = False
         Entity.player = self
@@ -142,10 +141,10 @@ class Player(Entity):
     def __str__(self):
         delta_pos = self.rect.centerx - self.start_position[0], self.rect.centery - self.start_position[1]
         player_args = [*delta_pos, self.level, self.health, self.mana, self.money, len(self.assistants)]
-        args = [' '.join(map(str, player_args))]
+        args = [" ".join(map(str, player_args))]
         for assistant in self.assistants:
             args.append(str(assistant))
-        return '\n'.join(args)
+        return "\n".join(args)
 
     def update(self):
         if self.alive:
@@ -165,18 +164,17 @@ class Player(Entity):
         # Если джойстик подключен, то управление идёт с него
         if self.joystick:
             # Получение направления куда указывают нажатые стрелки геймпада
-            current_direction_x = round(self.joystick.get_axis(0)) > 0 - round(self.joystick.get_axis(0)) < 0
-            current_direction_y = round(self.joystick.get_axis(1)) > 0 - round(self.joystick.get_axis(1)) < 0
-
+            current_direction_x = int(self.joystick.get_button(CONTROLS["JOYSTICK_RIGHT"])) - \
+                                  int(self.joystick.get_button(CONTROLS["JOYSTICK_LEFT"]))
+            current_direction_y = int(self.joystick.get_button(CONTROLS["JOYSTICK_DOWN"])) - \
+                                  int(self.joystick.get_button(CONTROLS["JOYSTICK_UP"]))
             # Получение позиции правой оси у контроллера
             axis_right_x = self.joystick.get_axis(2)
             axis_right_y = self.joystick.get_axis(3)
-
             # Проверка на использование дэша
             # Переменная отвечает за проверку на то, была ли нажата кнопка дэша.
             # (Но нет гарантии того, что дэш уже перезарядился, это проверяется при использовании)
             was_dash_activated = self.joystick.get_button(CONTROLS["JOYSTICK_DASH"])
-
             # Проверяем, что действительно игрок подвигал правую ось
             if (abs(axis_right_x) > JOYSTICK_SENSITIVITY or
                     abs(axis_right_y) > JOYSTICK_SENSITIVITY):
@@ -187,24 +185,19 @@ class Player(Entity):
         else:
             # Список с клавишами
             keys = pygame.key.get_pressed()
-
             # Направления движения по x и y
             current_direction_x = int(keys[CONTROLS["KEYBOARD_LEFT"][0]] or keys[CONTROLS["KEYBOARD_LEFT"][1]]) * -1
             current_direction_x += int(keys[CONTROLS["KEYBOARD_RIGHT"][0]] or keys[CONTROLS["KEYBOARD_RIGHT"][1]])
             current_direction_y = int(keys[CONTROLS["KEYBOARD_UP"][0]] or keys[CONTROLS["KEYBOARD_UP"][1]]) * -1
             current_direction_y += int(keys[CONTROLS["KEYBOARD_DOWN"][0]] or keys[CONTROLS["KEYBOARD_DOWN"][1]])
-
             # Проверка на использование дэша
             was_dash_activated = keys[CONTROLS["KEYBOARD_DASH"]]
-
             # Позиция для прицела
             new_scope_x, new_scope_y = pygame.mouse.get_pos()
-
         if pygame.time.get_ticks() - self.shoot_last_time < 200:
             self.speed *= 0.8 * Player.default_speed
         else:
             self.speed *= self.default_speed
-
         # Обработка активации дэша
         if (was_dash_activated and pygame.time.get_ticks() -
                 self.dash_last_time > Player.dash_reload_time and self.alive):
@@ -248,7 +241,7 @@ class Player(Entity):
             self.dash_force_y = 0
             self.dash_direction_y = self.look_direction_y
 
-        '''
+        """
         Управление игрока сделано так, что при начале движения игрок не сразу
         получает максимальную скорость, а постепеноо разгоняется. При этом
         если во время набора скорости игрок меняет направление, то разгон будет
@@ -260,7 +253,7 @@ class Player(Entity):
         работало, то это было бы неправильно, поэтому чтобы при изменении 
         направления сохранить скорость, надо не отпуская текущую клавишу, 
         зажать другие клавиши, а затем отпустить текущие.
-        '''
+        """
         # Проверка, что было было движение
         if current_direction_x != 0 or current_direction_y != 0:
             # Обновление направления взгляда
@@ -339,11 +332,11 @@ class Player(Entity):
                 self.is_boosting_from_enemy = False
                 self.set_first_frame()
 
-        for item in pygame.sprite.spritecollide(self.collider, GroundItem.item_group, False):
+        for item in pygame.sprite.spritecollide(self.collider, GroundItem.sprites_group, False):
             item: GroundItem
-            if item.type == 'meat':
+            if item.type == "meat":
                 self.get_damage(-self.MEAT_HEALTH_UP * item.count)
-            elif item.type == 'money':
+            elif item.type == "money":
                 self.money += item.count
             self.sounds_channel.play(item.sound)
             item.kill()
@@ -410,7 +403,7 @@ class Player(Entity):
         else:
             self.sounds_channel.play(Player.NO_MANA_SOUND)
 
-    def get_damage(self, damage, spell_type='', action_time=0):
+    def get_damage(self, damage, spell_type="", action_time=0):
         """
         Получение дамага
 
@@ -422,9 +415,9 @@ class Player(Entity):
         if not self.alive:
             return
 
-        if spell_type == 'ice':
+        if spell_type == "ice":
             self.ice_buff += action_time
-        if spell_type == 'poison' and damage >= 5:
+        if spell_type == "poison" and damage >= 5:
             self.poison_buff += action_time
 
         if damage >= 0:
@@ -433,10 +426,6 @@ class Player(Entity):
             self.last_update = pygame.time.get_ticks() + 50
             self.last_damage_time = pygame.time.get_ticks()
 
-        if self.__class__.__name__ == 'Player' and self.joystick:
-            pass
-            # self.joystick.vibrate(1)
-
         damage *= 1000
         damage += randint(-abs(round(-damage * 0.4)), abs(round(damage * 0.4)))
         damage /= 1000
@@ -444,7 +433,7 @@ class Player(Entity):
         x, y = self.rect.midtop
         if damage >= 0:
             ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages_group, color=(255, 30, 30))
-        elif spell_type == 'poison':
+        elif spell_type == "poison":
             ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages_group, color=(100, 35, 35))
         else:
             ReceivingDamage(x, y, damage, Entity.all_sprites, Entity.damages_group, color=(30, 255, 30))
@@ -454,6 +443,7 @@ class Player(Entity):
             self.health = 0
             self.death()
 
+    # Метод для обработки смерти игрока
     def death(self):
         self.alive = False
         self.cur_frame = 0
@@ -465,14 +455,12 @@ class Player(Entity):
         :param boost_dx: Ускорение по x
         :param boost_dy: Ускорение по y
         """
-
         # Чтобы ускорить игрока, нужно задать флаг, что игрок отталкивается в сторону.
         # Тогда игрок не сможет прервать ускорение.
         self.is_boosting_from_enemy = True
-
         self.dx = boost_dx
         self.dy = boost_dy
-
+        # Последнее время удара
         self.last_hit_time = pygame.time.get_ticks()
 
 
@@ -486,7 +474,7 @@ class PlayerScope(pygame.sprite.Sprite):
         # Конструктор класса Sprite
         super().__init__()
 
-        self.image = load_image("player_scope.png", path_to_folder="assets")
+        self.image = load_image("assets/sprites/player/player_scope.png")
         self.image = pygame.transform.scale(self.image, (round(TILE_SIZE * 0.5),) * 2)
         self.rect = self.image.get_rect()
         # Начальное местоположение
@@ -500,9 +488,6 @@ class PlayerScope(pygame.sprite.Sprite):
         # (но предполагается, что x и y - это координаты)
         # Если размер текущего экрана
         self.rect.center = x, y
-
-    def draw(self, screen):
-        screen.blit(self.image, self.rect.topleft)
 
     def draw(self, screen):
         screen.blit(self.image, self.rect.topleft)
@@ -522,10 +507,10 @@ class PlayerAssistant(Player):
 
     # Кадры для анимации игрока
     size = (TILE_SIZE * 6 // 8, TILE_SIZE * 7 // 8)
-    frames = cut_sheet(load_image('assistant.png'), 4, 4, size)
-    cast_frames = cut_sheet(load_image('assistant_cast.png'), 5, 4, size)
-    get_damage_frames = cut_sheet(load_image('assistant_get_damage.png'), 4, 1, size)[0]
-    death_frames = cut_sheet(load_image('assistant_death.png'), 28, 1, size)[0]
+    frames = cut_sheet(load_image("assets/sprites/assistant/assistant.png"), 4, 4, size)
+    cast_frames = cut_sheet(load_image("assets/sprites/assistant/assistant_cast.png"), 5, 4, size)
+    get_damage_frames = cut_sheet(load_image("assets/sprites/assistant/assistant_get_damage.png"), 4, 1, size)[0]
+    death_frames = cut_sheet(load_image("assets/sprites/assistant/assistant_death.png"), 28, 1, size)[0]
 
     # Переменные добавляющие эти значения к здоровью и мане каждую итерацию update()
     MANA_UP = 0.4
@@ -573,32 +558,32 @@ class PlayerAssistant(Player):
     delta_changer = 0.3
 
     names = [
-        'Aдрахил', 'Aлмариан', 'Aндвайс', 'Aнкалагон', 'Aнкалимон', 'Aулендил', 'Авель',
-        'Адалдрида', 'Аделард', 'Анакин', 'Ариан', 'Аркан', 'Аркана', 'Армандо', 'Асия',
-        'Аскаланте', 'Астор', 'Аттилло', 'Барлиман', 'Бенедикт', 'Бофаро', 'Брооклин',
-        'Вассиан', 'Ваучер', 'Вербер', 'Вилкольм', 'Виринея', 'Вирсавия', 'Виссарион',
-        'Витольд', 'Владигор', 'Володар', 'Гарий', 'Гермоген', 'Гимилзагар', 'Гликерий',
-        'Графиелита', 'Гринат', 'Громель', 'Гус', 'Дан', 'Данаида', 'Дарий', 'Доримедонт',
-        'Евстафий', 'Зородал', 'Иагон', 'Иаоса', 'Изаура', 'Илларий', 'Илларион', 'Калистрат',
-        'Калисфен', 'Каллист', 'Капитон', 'Каспиан', 'Кассиопея', 'Клементий', 'Лаврентий',
-        'Ларион', 'Лика', 'Луара', 'Люцифер', 'Максимиан', 'Меланфий', 'Мефодий', 'Неолина',
-        'Нимфадора', 'Обафеми', 'Оллард', 'Офелия', 'Памфил', 'Парфён', 'Патрикий', 'Пафнутий',
-        'Пофистал', 'Ратибор', 'Ревмир', 'Револьд', 'Рубентий', 'Рувим', 'Селиван', 'Серапион',
-        'Серафим', 'Согдиана', 'Софрон', 'Телемах', 'Тирион', 'Тодор', 'Трифилий', 'Троадий',
-        'Фабиан', 'Фалькор', 'Феанор', 'Феникс', 'Финарфин', 'Флавиан', 'Фрумгар', 'Хамфаст',
-        'Хартвиг', 'Хейнер', 'Хродрик', 'Эвмей', 'Эгнор', 'Эктелион', 'Эланор', 'Элеммакил',
-        'Элим', 'Элуна', 'Эмельдир', 'Эмметт', 'Эрандир', 'Эрендис', 'Эрестор', 'Эрнест',
-        'Эстелмо', 'Ювеналий', 'Юст', 'Юстиниан'
+        "Aдрахил", "Aлмариан", "Aндвайс", "Aнкалагон", "Aнкалимон", "Aулендил", "Авель",
+        "Адалдрида", "Аделард", "Анакин", "Антон", "Ариан", "Аркан", "Аркана", "Армандо", "Асия",
+        "Аскаланте", "Астор", "Аттилло", "Барлиман", "Бенедикт", "Бофаро", "Брооклин",
+        "Вассиан", "Ваучер", "Вербер", "Вилкольм", "Виринея", "Вирсавия", "Виссарион",
+        "Витольд", "Владигор", "Володар", "Гарий", "Гермоген", "Гимилзагар", "Гликерий",
+        "Графиелита", "Гринат", "Громель", "Гус", "Дан", "Данаида", "Дарий", "Доримедонт",
+        "Евстафий", "Зородал", "Иагон", "Иаоса", "Изаура", "Илларий", "Илларион", "Калистрат",
+        "Калисфен", "Каллист", "Капитон", "Каспиан", "Кассиопея", "Клементий", "Лаврентий",
+        "Ларион", "Лика", "Луара", "Люцифер", "Максимиан", "Меланфий", "Мефодий", "Неолина",
+        "Нимфадора", "Обафеми", "Оллард", "Офелия", "Памфил", "Парфён", "Патрикий", "Пафнутий",
+        "Пофистал", "Ратибор", "Ревмир", "Револьд", "Рубентий", "Рувим", "Селиван", "Серапион",
+        "Серафим", "Согдиана", "Софрон", "Телемах", "Тирион", "Тодор", "Трифилий", "Троадий",
+        "Фабиан", "Фалькор", "Феанор", "Феникс", "Финарфин", "Флавиан", "Фрумгар", "Хамфаст",
+        "Хартвиг", "Хейнер", "Хродрик", "Эвмей", "Эгнор", "Эктелион", "Эланор", "Элеммакил",
+        "Элим", "Элуна", "Эмельдир", "Эмметт", "Эрандир", "Эрендис", "Эрестор", "Эрнест",
+        "Эстелмо", "Ювеналий", "Юст", "Юстиниан", "Киссамос", "Малиме", "Ханья", "Мурниес",
+        "Палеохора", "Гиалос", "Ираклион", "Тимбаки", "Асимион", "Гудурас", "Орейнон", "Ластрос"
     ]
 
-    font = pygame.font.Font("assets\\UI\\pixel_font.ttf", 32)
+    font = load_game_font(32)
 
     # Канал для звуков
     sounds_channel = pygame.mixer.Channel(7)
 
     # Звуки
-    FOOTSTEP_SOUND = pygame.mixer.Sound(concat_two_file_paths("assets\\audio", "footstep.ogg"))
-    FOOTSTEP_SOUND.set_volume(DEFAULT_SOUNDS_VOLUME)
+    FOOTSTEP_SOUND = load_sound("assets/audio/sfx/assistant/footstep.ogg")
 
     def __init__(self, x, y, player, all_sprites, health=0, mana=0, name=()):
         x, y, health, mana = float(x), float(y), float(health), float(mana)
@@ -606,7 +591,7 @@ class PlayerAssistant(Player):
 
         self.player = player
         if name:
-            self.name = ' '.join(name)
+            self.name = " ".join(name)
         else:
             self.name = choice(PlayerAssistant.names)
         self.icon = None
@@ -648,7 +633,7 @@ class PlayerAssistant(Player):
 
     def __str__(self):
         args = [*self.rect.center, self.health, self.mana, self.name]
-        return ' '.join(map(str, args))
+        return " ".join(map(str, args))
 
     def update(self, *args):
         if self.alive:
@@ -728,11 +713,11 @@ class PlayerAssistant(Player):
             self.set_first_frame()
 
         # Сбор вещей и отдача их игроку
-        for item in pygame.sprite.spritecollide(self.collider, GroundItem.item_group, False):
+        for item in pygame.sprite.spritecollide(self.collider, GroundItem.sprites_group, False):
             item: GroundItem
-            if item.type == 'meat':
+            if item.type == "meat":
                 self.player.get_damage(-self.MEAT_HEALTH_UP * item.count)
-            elif item.type == 'money':
+            elif item.type == "money":
                 self.player.money += item.count
             self.sounds_channel.play(item.sound)
             item.kill()
@@ -797,7 +782,7 @@ class PlayerAssistant(Player):
             if not enemy.alive:
                 continue
 
-            dist_to_enemy = hypot(self.rect.center, enemy.rect.center)
+            dist_to_enemy = dist(self.rect.center, enemy.rect.center)
             if dist_to_enemy < min_dist_to_enemy:
                 min_dist_to_enemy = dist_to_enemy
                 nearest_enemy = enemy

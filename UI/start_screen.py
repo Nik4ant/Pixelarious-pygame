@@ -1,11 +1,9 @@
 import pygame
+from os.path import exists
 
-from UI.UIComponents import Button, LogoImage, MessageBox
+from UI.UI_components import Button, LogoImage, MessageBox
 from config import FPS, CONTROLS, JOYSTICK_SENSITIVITY, DEFAULT_MUSIC_VOLUME
-from engine import load_image, check_any_joystick, get_joystick, concat_two_file_paths
-
-AUTHORS = """Никита Сошнев (Nik4ant)
-Максим Рудаков (Massering)"""
+from engine import load_image, check_any_joystick, get_joystick
 
 
 def execute(screen: pygame.surface.Surface) -> int:
@@ -32,14 +30,11 @@ def execute(screen: pygame.surface.Surface) -> int:
     button_play = Button((screen_center, next_y), "Играть", 32)
     next_y = button_play.rect.y + button_play.rect.height + button_margin
 
-    button_controls = Button((screen_center, next_y), "Управление", 32)
+    button_controls = Button((screen_center, next_y), "Управление" if exists('data/save.txt') else "УПРАВЛЕНИЕ", 32)
     next_y = button_controls.rect.y + button_controls.rect.height + button_margin
 
-    button_about = Button((screen_center, next_y), "Об игре", 32)
+    button_about = Button((screen_center, next_y), "Об игре" if exists('data/save.txt') else "ОБ ИГРЕ", 32)
     next_y = button_about.rect.y + button_about.rect.height + button_margin
-
-    button_authors = Button((screen_center, next_y), "Авторы", 32)
-    next_y = button_authors.rect.y + button_authors.rect.height + button_margin
 
     button_exit = Button((screen_center, next_y), "Выйти", 32)
 
@@ -49,44 +44,52 @@ def execute(screen: pygame.surface.Surface) -> int:
     ui_sprites.add(button_play)
     ui_sprites.add(button_controls)
     ui_sprites.add(button_about)
-    ui_sprites.add(button_authors)
     ui_sprites.add(button_exit)
 
     # Текущие диалог (может появлятся при нажатии кнопок)
     current_message_box = None
 
     control_text = """На клавиатуре: 
-    WASD/ - двигаться; Shift - рывок;
-    1-5 - заклинания; E - телепорт;
+    WASD/Стрелки направлений - Двигаться
+    Shift - Рывок
+    1-5 - Заклинания атаки
+    Space - Заклинание телепорта
 
-    На джойстике: 
-    PADS - двигаться; R1 - рывок;
-    Остальное я не знаю, подберите там;"""
+    На джойстике PS4 (проводном): 
+    PADS - Двигаться
+    R1 - Рывок
+    Заклинания см. на иконках
+    """
     control_message_box = MessageBox(control_text, 32, (screen_center, screen.get_height() * 0.5))
 
     about_text = """
-    Игра жанра Roguelite с видом сверху,
-    в которой Вам предстоит пройти
-    сквозь подземелье, заполненное врагами.
-    Желаем удачи!"""
+    Pixelarious
+Игра была создана как проект на тему PyGame для Яндекс Лицея.
+Игра жанра Rogulite, поэтому смерть в игре перманентна.
+Чтобы победить, надо пройти 10 уровней подземелья.
+Чтобы убивать врагов, нужно использовать заклинания (см. управление).
+Играть можно как на клавиутуре, так и на проводном джойстике от PS4.
+Управление показывается внутри игры на главном окне при нажатии на кнопку "Управление". 
+Его РЕКОМЕНДУЕТСЯ прочитать перед началом игры.
+Ещё ОБЯЗАТЕЛЬНО посмотрите ОСОБЕННОСТИ заклинаний, НАВЕДЯ НА ИКОНКУ заклинания внизу.
+
+Желаем удачи в прохождении!
+"""
     about_message_box = MessageBox(about_text, 32, (screen_center, screen.get_height() * 0.5))
-
-    authors_message_box = MessageBox(AUTHORS, 32, (screen_center, screen.get_height() * 0.5))
-
     # Фоновое изоюражение
-    background_image = load_image("main_menu_BG.png", "assets\\UI\\backgrounds")
+    background_image = load_image("assets/sprites/UI/backgrounds/main_menu_BG.png")
     # Меняем размер картинки в зависимости от размера экрана
     background_image = pygame.transform.scale(background_image, screen.get_size())
 
     # Делаем курсор мыши невидимым и загружаем вместо него своё изображение
     pygame.mouse.set_visible(False)
-    cursor_image = load_image("cursor.png", "assets\\UI\\icons")
+    cursor_image = load_image("assets/sprites/UI/icons/cursor.png")
     # координаты курсора
     cursor_x, cursor_y = screen_center, screen.get_height() * 0.1
     cursor_speed = 10  # скорость курсора (нужно если используется джойстик)
 
     # Фоновая музыка
-    pygame.mixer.music.load(concat_two_file_paths("assets\\audio", "main_menu.ogg"))
+    pygame.mixer.music.load("assets/audio/music/main_menu.ogg")
     # Воспроизведение музыки вечно
     pygame.mixer.music.play(-1)
     # Установка громкости
@@ -97,16 +100,14 @@ def execute(screen: pygame.surface.Surface) -> int:
         # Переменная, становящайся True если было нажатие курсора
         # (предусмотрен как джойстик, так и обычная мышка)
         was_click = False
-
         # Обработка событий
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 is_open = False
-
-            if event.type == pygame.MOUSEBUTTONUP:
-                if event.button == 1:
-                    was_click = True
-
+            # Мышь
+            if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                was_click = True
+            # Клавиши
             if event.type == pygame.KEYDOWN:
                 if event.key in (pygame.K_KP_ENTER, pygame.K_SPACE, pygame.K_RETURN):
                     # Музыка затухает (1 секунду), т.к. главный экран закроется
@@ -117,7 +118,7 @@ def execute(screen: pygame.surface.Surface) -> int:
                     # Музыка затухает (1 секунду), т.к. главный экран закроется
                     pygame.mixer.music.fadeout(1000)
                     return 0
-
+            # Кастомное событие нажатия на кнопку
             if event.type == Button.PRESS_TYPE:
                 # Текст нажатой кнопки
                 # (гарантированно есть, т.к. устанавливается при инициализации)
@@ -131,11 +132,6 @@ def execute(screen: pygame.surface.Surface) -> int:
                 # Об игре
                 elif sender_text == button_about.text:
                     current_message_box = about_message_box
-                    current_message_box.need_to_draw = True
-
-                # Авторы
-                elif sender_text == button_authors.text:
-                    current_message_box = authors_message_box
                     current_message_box.need_to_draw = True
 
                 # Проверяем какая кнопка была нажата

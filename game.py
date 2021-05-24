@@ -1,30 +1,31 @@
-from time import time
-
-from generation_map import initialise_level, generate_new_level
-from entities.spells import *
-from entities.base_entity import *
-from entities.items import GroundItem
-from entities.enemies import Monster
-from entities.tile import Chest
-from entities.player import Player, PlayerAssistant
-from UI import end_screen, game_menu
-from UI.UIComponents import SpellContainer, PlayerIcon, Message
 from config import *
 from engine import *
 
+from entities.base_entities import *
+from entities.enemies import Monster
+from entities.items import GroundItem
+from entities.player import Player, PlayerAssistant
+from entities.spells import *
+from entities.tile import Chest, load_tile
 
+from UI import end_screen, game_menu
+from UI.UI_components import SpellContainer, PlayerIcon, Message
+
+from generation_map import initialise_level, generate_new_level
+
+
+# Функция сохраняющая игру
 def save(current_seed: str):
     if 'data' not in os.listdir():
         os.mkdir('data')
-    with open('data\\save.txt', 'w', encoding='utf-8') as file:
+    with open('data/save.txt', 'w', encoding='utf-8') as file:
         file.write(current_seed)
 
 
 class Camera:
     """
-    Класс представляющий камеру
+    Класс, представляющий камеру
     """
-
     def __init__(self, screen_size, speed_coefficient=0.5):
         # инициализация начального сдвига для камеры
         self.dx = 0
@@ -55,11 +56,11 @@ class Camera:
 def play(screen: pygame.surface.Surface,
          level_number: int = 1, user_seed: str = None) -> int:
     """
-    Сама игра (генерация уровня и затем цикл)
+    Функция запуска игры
     :param screen: экран
     :param level_number: Номер уровня, чтобы при подгрузке показывать его
     таким, каким он был задан.
-    :param user_seed: сид если есть, создаем по нему уровень и мобов
+    :param user_seed: сид карты если есть, создаем по нему уровень и мобов
     :return: Код завершения игры. 0 - выход из игры -1 в остальных случаях
     """
     # Ставим загрузочный экран
@@ -84,7 +85,7 @@ def play(screen: pygame.surface.Surface,
     # Группа со спрайтом конца уровня
     end_of_level = pygame.sprite.Group()
     # Группа с предметаими, которые находятся на полу
-    GroundItem.item_group = pygame.sprite.Group()
+    GroundItem.sprites_group = pygame.sprite.Group()
     # Группа с сундуками
     Chest.chest_group = pygame.sprite.Group()
 
@@ -139,13 +140,13 @@ def play(screen: pygame.surface.Surface,
     # Инициализируем прицел игрока
     player.scope.init_scope_position((screen_width * 0.5, screen_height * 0.5))
 
-    fps_font = pygame.font.Font('assets\\UI\\pixel_font.ttf', 48)
+    fps_font = load_game_font(48)
 
     level_number_icon = load_tile('DOWNSTAIRS.png')
-    minster_number_icon = load_image('monster_number.png', 'assets\\UI\\icons', (TILE_SIZE,) * 2)
-    level_number_font = pygame.font.Font('assets\\UI\\pixel_font.ttf', 64)
+    minster_number_icon = load_image('assets/sprites/UI/icons/monster_number.png', (TILE_SIZE,) * 2)
+    level_number_font = load_game_font(64)
 
-    chest_title = Message(screen, 'Нажмите Е, чтобы открыть сундук', screen.get_height() * 0.1)
+    chest_title = Message(screen, 'Нажмите Е (или L2), чтобы открыть сундук', screen.get_height() * 0.1)
 
     # Иконки для отображения частей UI с заклинаниями
     spells_containers = (
@@ -167,17 +168,12 @@ def play(screen: pygame.surface.Surface,
     indent = 20
 
     # Фоновая музыка
-    pygame.mixer.music.load(concat_two_file_paths("assets\\audio", "game_bg.ogg"))
+    pygame.mixer.music.load("assets/audio/music/game_bg.ogg")
     pygame.mixer.music.play(-1)
     pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
 
-    t = time()
     # Игровой цикл
     while is_game_open:
-        if time() - t > 1:
-            t = time()
-            print(len(furniture_group), len(all_sprites), '\n')
-
         was_pause_activated = False
         keys = pygame.key.get_pressed()
         buttons = pygame.mouse.get_pressed(5)
@@ -192,10 +188,8 @@ def play(screen: pygame.surface.Surface,
 
         # Текущий джойстик находится в игроке, поэтому кнопки проверяем по нему же
         if player.joystick:
-            # Только если joystick подключен проверяем нажатие кнопки
             if player.joystick.get_button(CONTROLS["JOYSTICK_UI_PAUSE"]):
                 was_pause_activated = True
-
             if player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_FIRE"]):
                 player.shoot('fire', enemies_group)
             if player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_ICE"]):
@@ -206,7 +200,8 @@ def play(screen: pygame.surface.Surface,
                 player.shoot('poison', enemies_group)
             if player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_VOID"]):
                 player.shoot('void', enemies_group)
-            if player.joystick.get_button(CONTROLS["JOYSTICK_SPELL_TELEPORT"]):
+            # Используется ось, т.к. назначенн триггер R2
+            if player.joystick.get_axis(CONTROLS["JOYSTICK_SPELL_TELEPORT"]) > JOYSTICK_SENSITIVITY:
                 player.shoot('teleport', tiles_group)
         # Иначе ввод с клавиатуры
         else:
@@ -228,10 +223,10 @@ def play(screen: pygame.surface.Surface,
             pygame.mixer.pause()
             pygame.mixer.music.pause()
             # Если была нажата кнопка выйти из игры, то цикл прерывается
-            if game_menu.execute(screen) == -1:
+            code = game_menu.execute(screen)
+            if code == 1:
                 # Ставим экран загрузки перед следующими действиями
                 loading_screen(screen)
-
                 # Очищаем все группы со спрайтами
                 all_sprites.empty()
                 tiles_group.empty()
@@ -242,9 +237,26 @@ def play(screen: pygame.surface.Surface,
                 torches_group.empty()
                 end_of_level.empty()
                 Chest.chest_group.empty()
-                GroundItem.item_group.empty()
+                GroundItem.sprites_group.empty()
                 Entity.damages_group.empty()
-
+                # Сохранение данных перед выходом
+                save('')
+                return 2
+            if code:
+                # Ставим экран загрузки перед следующими действиями
+                loading_screen(screen)
+                # Очищаем все группы со спрайтами
+                all_sprites.empty()
+                tiles_group.empty()
+                furniture_group.empty()
+                collidable_tiles_group.empty()
+                enemies_group.empty()
+                doors_group.empty()
+                torches_group.empty()
+                end_of_level.empty()
+                Chest.chest_group.empty()
+                GroundItem.sprites_group.empty()
+                Entity.damages_group.empty()
                 # Сохранение данных перед выходом
                 if player.alive:
                     current_seed = '\n'.join([' '.join(level_seed), ' '.join(monsters_seed), ' '.join(boxes_seed),
@@ -253,6 +265,7 @@ def play(screen: pygame.surface.Surface,
                 else:
                     save('')
                 return -1
+
             pygame.mixer.unpause()
             pygame.mixer.music.unpause()
 
@@ -272,7 +285,10 @@ def play(screen: pygame.surface.Surface,
 
         if pygame.sprite.spritecollideany(player, Chest.chest_group):
             chest_title.last_collide_time = pygame.time.get_ticks()
-            if keys[CONTROLS['KEYBOARD_USE']] or keys[CONTROLS['JOYSTICK_USE']]:
+            # Проверка на использование (с джойстика или клавиатуры
+            if ((player.joystick and
+                 player.joystick.get_axis(CONTROLS['JOYSTICK_USE']) > JOYSTICK_SENSITIVITY)
+                    or (keys[CONTROLS['KEYBOARD_USE']] or keys[CONTROLS['JOYSTICK_USE']])):
                 pygame.sprite.spritecollide(player, Chest.chest_group, False)[0].open()
 
         enemies_group.update(player)
@@ -295,7 +311,7 @@ def play(screen: pygame.surface.Surface,
         for chest in Chest.chest_group:
             chest: Chest
             chest.draw_back_image(screen)
-        GroundItem.item_group.draw(screen)
+        GroundItem.sprites_group.draw(screen)
         collidable_tiles_group.draw(screen)
 
         doors_group.draw(screen)
@@ -325,7 +341,6 @@ def play(screen: pygame.surface.Surface,
             if not assistant.icon:
                 assistant.icon = PlayerIcon(assistant)
             assistant.icon.draw(screen, (indent + 20, assistants_height + number_of_assistant * 80), 0.5)
-        player.scope.draw(screen)
 
         # Отрисовка фпс
         fps_text = fps_font.render(str(int(clock.get_fps())), True, (100, 255, 100))
@@ -339,15 +354,18 @@ def play(screen: pygame.surface.Surface,
         screen.blit(level_number_icon, (screen_width - 70, 10))
         screen.blit(level_number_text, (screen_width - 120, 10))
 
+        player.scope.draw(screen)
+
         # Проверка перехода на следующий уровень, путём соприкосновением с лестницой вниз
         if pygame.sprite.spritecollideany(player.collider, end_of_level):
             transition += 1
-            pygame.mixer.fadeout(1000)
-            pygame.mixer.music.fadeout(1000)
-            if transition < 20:
+            if transition < 10:
                 transparent_grey.fill(BACKGROUND_COLOR + (round(transition ** 2 / 4),))
                 screen.blit(transparent_grey, (0, 0))
             else:
+                # Как только переход завершён, музыка затухает
+                pygame.mixer.fadeout(1000)
+                pygame.mixer.music.fadeout(1000)
                 loading_screen(screen)
                 transition = 0
                 # Если игрок собирается перейти на 11 уровень, то это победа
@@ -367,7 +385,7 @@ def play(screen: pygame.surface.Surface,
                     torches_group.empty()
                     end_of_level.empty()
                     Chest.chest_group.empty()
-                    GroundItem.item_group.empty()
+                    GroundItem.sprites_group.empty()
                     Entity.damages_group.empty()
 
                     level_number += 1  # номер уровня
@@ -412,9 +430,6 @@ def play(screen: pygame.surface.Surface,
 
     # Сохранение данных
     save(current_seed)
-
-    # Очистка UI
-    del player_icon, spells_containers, player
 
     # Код возврата 0 для закрытия игры
     return 0
