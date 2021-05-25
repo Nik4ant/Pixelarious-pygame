@@ -26,9 +26,9 @@ class Player(Entity):
     # время перезарядки дэша в миллисекундах
     dash_reload_time = 2000
     # сила дэша, которая устанавливается в самом начале
-    dash_force_base = 3
+    dash_force_base = 5
     # сила замедляющая дэш со временем
-    dash_force_slower = 0.04
+    dash_force_slower = 0.24
     # Минимальгая скорость дэша
     dash_minimum_speed = 0.8
 
@@ -278,8 +278,9 @@ class Player(Entity):
                     self.dy = current_direction_y * Player.max_delta_movements
             # Дополнительное ослабленное воздействие на игрока при дэше
             else:
-                self.dx += current_direction_x * 0.4
-                self.dy += current_direction_y * 0.4
+                pass
+                # self.dx += current_direction_x * 0.4
+                # self.dy += current_direction_y * 0.4
 
         # Если игрок не совершает дэш и направления движения нет, то
         # ускорение сбрасывается
@@ -480,7 +481,7 @@ class PlayerScope(pygame.sprite.Sprite):
         # Начальное местоположение
         self.rect.center = x, y
         # Скорость перемещения
-        self.speed = 15
+        self.speed = 30
 
     def update(self, x, y):
         # Т.к. update вызывается ещё и в игровом цикле, то

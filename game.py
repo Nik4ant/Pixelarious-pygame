@@ -1,5 +1,8 @@
+import os
+
 from config import *
-from engine import *
+from engine import load_image, load_game_font, loading_screen, \
+    get_joystick, check_any_joystick
 
 from entities.base_entities import *
 from entities.enemies import Monster

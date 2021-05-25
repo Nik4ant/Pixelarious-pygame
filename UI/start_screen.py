@@ -2,7 +2,7 @@ import pygame
 from os.path import exists
 
 from UI.UI_components import Button, LogoImage, MessageBox
-from config import FPS, CONTROLS, JOYSTICK_SENSITIVITY, DEFAULT_MUSIC_VOLUME
+from config import FPS, CONTROLS, JOYSTICK_SENSITIVITY, JOYSTICK_CURSOR_SPEED, DEFAULT_MUSIC_VOLUME
 from engine import load_image, check_any_joystick, get_joystick
 
 
@@ -86,15 +86,12 @@ def execute(screen: pygame.surface.Surface) -> int:
     cursor_image = load_image("assets/sprites/UI/icons/cursor.png")
     # координаты курсора
     cursor_x, cursor_y = screen_center, screen.get_height() * 0.1
-    cursor_speed = 10  # скорость курсора (нужно если используется джойстик)
-
     # Фоновая музыка
     pygame.mixer.music.load("assets/audio/music/main_menu.ogg")
     # Воспроизведение музыки вечно
     pygame.mixer.music.play(-1)
     # Установка громкости
     pygame.mixer.music.set_volume(DEFAULT_MUSIC_VOLUME)
-
     # Цикл окна
     while is_open:
         # Переменная, становящайся True если было нажатие курсора
@@ -113,32 +110,29 @@ def execute(screen: pygame.surface.Surface) -> int:
                     # Музыка затухает (1 секунду), т.к. главный экран закроется
                     pygame.mixer.music.fadeout(1000)
                     return 1
-
                 if event.key == CONTROLS["KEYBOARD_PAUSE"]:
                     # Музыка затухает (1 секунду), т.к. главный экран закроется
                     pygame.mixer.music.fadeout(1000)
                     return 0
             # Кастомное событие нажатия на кнопку
             if event.type == Button.PRESS_TYPE:
-                # Текст нажатой кнопки
+                # Текст нажатой кнопки (нужно для определения какая кнопка нажата
                 # (гарантированно есть, т.к. устанавливается при инициализации)
                 sender_text = event.dict["sender_text"]
-
                 # Управление
                 if sender_text == button_controls.text:
                     current_message_box = control_message_box
                     current_message_box.need_to_draw = True
-
                 # Об игре
                 elif sender_text == button_about.text:
                     current_message_box = about_message_box
                     current_message_box.need_to_draw = True
-
-                # Проверяем какая кнопка была нажата
+                # Играть
                 elif sender_text == button_play.text:
                     # Музыка затухает (1 секунду), т.к. главный экран закроется
                     pygame.mixer.music.fadeout(1000)
                     return 1
+                # Выход
                 elif sender_text == button_exit.text:
                     # Музыка затухает (1 секунду), т.к. главный экран закроется
                     pygame.mixer.music.fadeout(1000)
@@ -147,8 +141,10 @@ def execute(screen: pygame.surface.Surface) -> int:
         # Определение местоположения для курсора
         if joystick:
             axis_x, axis_y = joystick.get_axis(0), joystick.get_axis(1)
-            cursor_x += cursor_speed * axis_x if abs(axis_x) >= JOYSTICK_SENSITIVITY else 0
-            cursor_y += cursor_speed * axis_y if abs(axis_y) >= JOYSTICK_SENSITIVITY else 0
+            if abs(axis_x) >= JOYSTICK_SENSITIVITY:
+                cursor_x += JOYSTICK_CURSOR_SPEED * 2 * axis_x
+            if abs(axis_y) >= JOYSTICK_SENSITIVITY:
+                cursor_y += JOYSTICK_CURSOR_SPEED * 2 * axis_y
             # Проверка на нажатие
             was_click = joystick.get_button(CONTROLS["JOYSTICK_UI_CLICK"])
         else:
