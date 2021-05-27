@@ -1,4 +1,5 @@
 from random import randint
+from math import dist
 
 import pygame
 
@@ -88,7 +89,7 @@ class Furniture(pygame.sprite.Sprite):
         # если он будет разрушен
         self.seed = new_boxes_seed
         self.index = index
-        self.image = self.IMAGES[tile_type]
+        self.image = Furniture.IMAGES[tile_type]
         self.rect = self.image.get_rect().move(x * TILE_SIZE, y * TILE_SIZE)
         self.collider = Collider(x, y)
 
@@ -137,11 +138,10 @@ class Torch(pygame.sprite.Sprite):
                     self.cur_frame = n
                     break
             self.image = Torch.frames[self.cur_frame]
-
         # Вычисляем расстояние до игрока и ставим с этим коэффиццентом громкость звука
         # Так он будет меняться, когда мы подходим к факелам и отходим
-        dx, dy = player.rect.centerx - self.rect.centerx, player.rect.centery - self.rect.centery
-        Torch.min_distance_to_player = min(max((dx ** 2 + dy ** 2) ** 0.5, 0.000001), Torch.min_distance_to_player)
+        distance_to_player = dist(player.rect.center, self.rect.center)
+        Torch.min_distance_to_player = min(max(distance_to_player, 0.000001), Torch.min_distance_to_player)
         self.BURNING_SOUND.set_volume(min(DEFAULT_SOUNDS_VOLUME / (Torch.min_distance_to_player / TILE_SIZE) * 3, 1.2))
         if not self.sounds_channel.get_busy():
             self.sounds_channel.play(self.BURNING_SOUND)

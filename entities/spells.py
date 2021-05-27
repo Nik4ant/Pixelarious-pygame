@@ -370,7 +370,6 @@ class FlashSpell(Spell):
     action_time = 0
 
     size = (TILE_SIZE // 2 * 2, TILE_SIZE // 2 * 5)
-    # TODO: протестировать загрузку изображения просто, установив размер в load_image
     frames = cut_sheet(load_image("assets/sprites/tiles/EMPTY.png"), 1, 1, size)
     frames += cut_sheet(load_image("assets/sprites/spells/light.png"), 15, 1, size)
 
@@ -408,7 +407,6 @@ class TeleportSpell(Spell):
     action_time = 0
 
     size = (TILE_SIZE // 4 * 7,) * 2
-    # TODO: протестировать загрузку изображения просто, установив размер в load_image
     frames = cut_sheet(load_image("assets/sprites/tiles/EMPTY.png"), 1, 1, size)
     frames += cut_sheet(load_image("assets/sprites/spells/teleport_puf.png"), 8, 1, size)
 

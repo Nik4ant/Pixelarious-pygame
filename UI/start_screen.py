@@ -9,9 +9,7 @@ from engine import load_image, check_any_joystick, get_joystick
 def execute(screen: pygame.surface.Surface) -> int:
     """
     Функция запускает главное меню игры на переданном экране. В
-    зависимости от действий возвращает свой код
-    0 - была нажата кнопка выйти
-    1 - была нажата кнопка играть
+    зависимости от действий возвращает свой код, описанный в main.py
     :param screen: Экран, на котором надо отрисовывать меню
     :return: Код
     """
@@ -29,7 +27,8 @@ def execute(screen: pygame.surface.Surface) -> int:
 
     button_play = Button((screen_center, next_y), "Играть", 32)
     next_y = button_play.rect.y + button_play.rect.height + button_margin
-
+    # Если файла сохранения нет (т.е. игрок играет в первый раз), то эта кнопка
+    # выделяется caps lock'ом (выделяются кнопки "управление" и "об игре")
     button_controls = Button((screen_center, next_y), "Управление" if exists('data/save.txt') else "УПРАВЛЕНИЕ", 32)
     next_y = button_controls.rect.y + button_controls.rect.height + button_margin
 
@@ -37,7 +36,6 @@ def execute(screen: pygame.surface.Surface) -> int:
     next_y = button_about.rect.y + button_about.rect.height + button_margin
 
     button_exit = Button((screen_center, next_y), "Выйти", 32)
-
     # Добавление в группу
     ui_sprites = pygame.sprite.Group()
     ui_sprites.add(game_logo)
@@ -45,10 +43,9 @@ def execute(screen: pygame.surface.Surface) -> int:
     ui_sprites.add(button_controls)
     ui_sprites.add(button_about)
     ui_sprites.add(button_exit)
-
     # Текущие диалог (может появлятся при нажатии кнопок)
     current_message_box = None
-
+    # Текст появляющийся в сообщении при нажатии на кнопку "управление"
     control_text = """На клавиатуре: 
     WASD/Стрелки направлений - Двигаться
     Shift - Рывок
@@ -61,7 +58,7 @@ def execute(screen: pygame.surface.Surface) -> int:
     Заклинания см. на иконках
     """
     control_message_box = MessageBox(control_text, 32, (screen_center, screen.get_height() * 0.5))
-
+    # Текст появляющийся в сообщении при нажатии на кнопку "об игре"
     about_text = """
     Pixelarious
 Игра была создана как проект на тему PyGame для Яндекс Лицея.
@@ -73,14 +70,13 @@ def execute(screen: pygame.surface.Surface) -> int:
 Его РЕКОМЕНДУЕТСЯ прочитать перед началом игры.
 Ещё ОБЯЗАТЕЛЬНО посмотрите ОСОБЕННОСТИ заклинаний, НАВЕДЯ НА ИКОНКУ заклинания внизу.
 
-Желаем удачи в прохождении!
+Удачи в прохождении!
 """
     about_message_box = MessageBox(about_text, 32, (screen_center, screen.get_height() * 0.5))
     # Фоновое изоюражение
     background_image = load_image("assets/sprites/UI/backgrounds/main_menu_BG.png")
     # Меняем размер картинки в зависимости от размера экрана
     background_image = pygame.transform.scale(background_image, screen.get_size())
-
     # Делаем курсор мыши невидимым и загружаем вместо него своё изображение
     pygame.mouse.set_visible(False)
     cursor_image = load_image("assets/sprites/UI/icons/cursor.png")
@@ -142,18 +138,17 @@ def execute(screen: pygame.surface.Surface) -> int:
         if joystick:
             axis_x, axis_y = joystick.get_axis(0), joystick.get_axis(1)
             if abs(axis_x) >= JOYSTICK_SENSITIVITY:
-                cursor_x += JOYSTICK_CURSOR_SPEED * 2 * axis_x
+                cursor_x += JOYSTICK_CURSOR_SPEED * axis_x
             if abs(axis_y) >= JOYSTICK_SENSITIVITY:
-                cursor_y += JOYSTICK_CURSOR_SPEED * 2 * axis_y
+                cursor_y += JOYSTICK_CURSOR_SPEED * axis_y
             # Проверка на нажатие
             was_click = joystick.get_button(CONTROLS["JOYSTICK_UI_CLICK"])
         else:
             cursor_x, cursor_y = pygame.mouse.get_pos()
-
         cursor_position = cursor_x, cursor_y
+
         # Обновляем все ui элементы
         ui_sprites.update(cursor_position, was_click)
-
         # Фоновое изобраджение
         screen.blit(background_image, (0, 0))
         # Рисуем весь ui
@@ -163,11 +158,9 @@ def execute(screen: pygame.surface.Surface) -> int:
             if current_message_box.need_to_draw:
                 current_message_box.draw(screen)
             current_message_box.update(was_click)
-
         # Рисуем курсор поверх всего
         screen.blit(cursor_image, cursor_position)
         pygame.display.flip()
-
         # Обновляем состояние джойстика
         joystick = get_joystick() if check_any_joystick() else None
         clock.tick(FPS)

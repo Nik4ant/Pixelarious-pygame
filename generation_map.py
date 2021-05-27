@@ -5,25 +5,27 @@ from entities.tile import *
 from entities.player import Player, PlayerAssistant
 from entities.enemies import random_monster
 from entities.spells import Spell
+
 from config import TILE_SIZE
 from engine import true_with_chance
 
 
+# Шансы появления длинных и коротнких блоков
 SHORT_BLOCK_CHANCE = 45
 LONG_BLOCK_CHANCE = 35
-
+# Шанс появление спрайта разломанного пола
 CRACKED_FLOOR_CHANCE = 15
 
 
-# "0-9" + "-=" - Walls
-# . - Floor
-# r, t, l, b - Doors
+# "0-9" + "-=" - Стены
+# . - Пол
+# r, t, l, b - Двери
 # M - Mob (Monster)
-# P - Player, start stairs
-# C - Chest
-# T - Torch
-# E - End stairs
-# B - Box/Barrel
+# P - Игрок и начальная лестница
+# C - Сундук
+# T - Факел
+# E - Спуск вниз
+# B - Бочка, либо коробка
 
 
 # Карты комнат
@@ -1138,7 +1140,6 @@ def generate_new_level(user_seed=None) -> [str, ..., str]:
     seed = []
     if user_seed:
         seed.append(user_seed.pop(0))
-        # del user_seed[0]
     else:
         seed.append(choice(list(FORMS)))
     level_form = FORMS[seed[-1]]

@@ -6,7 +6,6 @@ from engine import load_image, cut_sheet, load_game_font
 from config import TILE_SIZE, DEFAULT_SOUNDS_VOLUME
 
 
-# TODO: comments
 class Entity(pygame.sprite.Sprite):
     """
     Класс, отвечающий за предстовление базовой сущности в игре
@@ -41,7 +40,6 @@ class Entity(pygame.sprite.Sprite):
     small_font = load_game_font(15)
     font = load_game_font(24)
 
-    # TODO: rewrite line order + comments
     def __init__(self, x: float, y: float, *args):
         # Конструктор класса Sprite
         super().__init__(*((Entity.entities_group,) + args))
@@ -77,7 +75,6 @@ class Entity(pygame.sprite.Sprite):
         self.look_direction_x = 0
         self.look_direction_y = 1
 
-    # TODO: rewrite doc + comments
     def update(self) -> None:
         if self.ice_buff:
             self.ice_buff -= 1
@@ -91,25 +88,22 @@ class Entity(pygame.sprite.Sprite):
             self.poison_buff -= 1
             self.get_damage(Entity.POISON_DAMAGE, 'poison')
 
-    # TODO: rewrite doc + comments
     def move(self, dx, dy):
         """
-        Метод передвижения
-        Сдвинется на указанные параметры, если там свободно
-
+        Метод передвижения. Сущность сдвинется на указанные параметры,
+        если там свободно.
         :param dx: Изменение координаты по Х
         :param dy: Изменение координаты по Y
-        
         """
         if not self.alive:
             return
-        # Запоминаем координаты
+        # Координаты до движения
         pos = self.rect.x, self.rect.y
-
+        # Перемещение по x и обновление столкновений
         self.rect.x = round(self.rect.x + dx)
         self.collider.update(*self.rect.center)
 
-        # Если плохо, возвращаем к исходному
+        # Если сущность врезалась во что-то, возвращаем к исходному x
         if pygame.sprite.spritecollide(self.collider, Entity.collisions_group, False):
             self.rect.x = pos[0]
             self.dx = 0
@@ -118,11 +112,11 @@ class Entity(pygame.sprite.Sprite):
                 self.dash_direction_x = self.look_direction_x
             elif self.__class__.__name__ == 'PlayerAssistant':
                 self.point = None
-
+        # Перемещение по y и обновление столкновений
         self.rect.y = round(self.rect.y + dy)
         self.collider.update(*self.rect.center)
 
-        # Если плохо, возвращаем к исходному
+        # Если сущность врезалась во что-то, возвращаем к исходному y
         if pygame.sprite.spritecollide(self.collider, Entity.collisions_group, False):
             self.rect.y = pos[1]
             self.dy = 0
@@ -132,7 +126,6 @@ class Entity(pygame.sprite.Sprite):
             elif self.__class__.__name__ == 'PlayerAssistant':
                 self.point = None
 
-    # TODO: rewrite doc + comments
     def update_frame_state(self, n=0):
         """
         Воспроизводит звук и сменяет кадр анимации
@@ -166,33 +159,36 @@ class Entity(pygame.sprite.Sprite):
                 self.FOOTSTEP_SOUND.set_volume(min(DEFAULT_SOUNDS_VOLUME / (self.distance_to_player / TILE_SIZE) * 3, 1))
                 self.sounds_channel.play(self.FOOTSTEP_SOUND)
 
-    # TODO: rewrite doc + comments
     def draw_health_bar(self, screen):
         """
-        Функция отрисовки полоски здоровья
-        Отрисовка знака сна (Z-Z-Z).
-
-        :param screen: Экран отрисовки
-        
+        Отрисовка полоски здоровья и отрисовка знака сна (Z-Z-Z).
+        :param screen: Экран
         """
-        line_width = Entity.HEALTH_LINE_WIDTH
-        x, y = self.rect.center
-        width, height = self.rect.size
+        line_width = Entity.HEALTH_LINE_WIDTH  # длинна полоски здоровья
+        x, y = self.rect.center  # текущая позиция сущности
+        width, height = self.rect.size  # текущие размеры сущности
+        # Позиция над сущностью
         x1, y1 = x - width * 0.5, y - height * 0.5
-
+        # При получении урона или наведении прицелом выводиться шкала здоровья
         if pygame.time.get_ticks() - self.last_damage_time < Entity.HEALTH_LINE_TIME or \
                 pygame.sprite.collide_rect(self, Entity.player.scope):
+            # Обводка вокруг шкалы здоровья
             pygame.draw.rect(screen, 'dark grey', (x1 - 1, y1 - 10 - 1, width + 2, line_width + 2))
+            # Длинная полоски здоровья
             health_length = width * max(self.health, 0) / self.full_health
+            # Для игрока и его помошника зелёный цвет, для остальных красный
             color = '#00b300' if self.__class__.__name__ in ('Player', 'PlayerAssistant') else 'red'
+            # Сама полоска здоровья
             pygame.draw.rect(screen, color, (x1, y1 - 10, health_length, line_width))
-
+            # Текст с текущем здоровьем
             health_text = f'{round(self.health + 0.5)}/{self.full_health}'
             health = self.small_font.render(health_text, True, (255, 255, 255))
+            # Отцентровка текста по середине
             rect = health.get_rect()
             rect.center = (x1 + width // 2, y1 - 5)
+            # Вывод на экран
             screen.blit(health, rect.topleft)
-
+        # Для всех сущностей кроме игрока выводиться их название
         if self.__class__.__name__ not in ('Player',):
             name = self.font.render(self.name, True, (255, 255, 255))
             rect = name.get_rect()
@@ -201,21 +197,20 @@ class Entity(pygame.sprite.Sprite):
 
         if not self.alive:
             return
-
+        # Отрисовка эффетка яда и обновление параметров
         ticks = pygame.time.get_ticks()
         if self.poison_buff:
             if ticks - self.poison_static_time > Entity.UPDATE_TIME:
                 self.poison_static_time = ticks
                 self.cur_poison_frame = (self.cur_poison_frame + 1) % len(Entity.poison_frames)
             screen.blit(Entity.poison_frames[self.cur_poison_frame], (self.rect.x, self.rect.y))
-
+        # Отрисовка анимации сна и обновление параметров
         if self.__class__.__name__ not in ('Player',) and not self.target_observed:
             if not self.sleeping_time or ticks - self.sleeping_time >= 250:
                 self.cur_sleeping_frame = (self.cur_sleeping_frame + 1) % len(self.sleeping_frames[0])
                 self.sleeping_time = ticks
             screen.blit(self.sleeping_frames[0][self.cur_sleeping_frame], (self.rect.centerx + 10, self.rect.y - 35))
 
-    # TODO: rewrite doc + comments
     def get_damage(self, damage, spell_type='', action_time=0):
         """
         Получение дамага
@@ -274,7 +269,6 @@ class Entity(pygame.sprite.Sprite):
             self.health = 0
             self.death()
 
-    # TODO: rewrite doc + comments
     def set_first_frame(self):
         """Установка первого спрайта"""
         tick = pygame.time.get_ticks()
@@ -285,7 +279,6 @@ class Entity(pygame.sprite.Sprite):
             self.cur_frame = 0
             self.image = self.__class__.frames[look][self.cur_frame]
 
-    # TODO: rewrite doc docs
     @staticmethod
     def set_global_groups(collisions_group: pygame.sprite.Group, all_sprites: pygame.sprite.Group):
         """
@@ -301,7 +294,6 @@ class Entity(pygame.sprite.Sprite):
         Entity.all_sprites = all_sprites
 
 
-# TODO: docs + comments
 class Collider(pygame.sprite.Sprite):
     """
     Класс, который будет невидимым, но будет использоваться для просчёта колизий у сущности
@@ -317,7 +309,6 @@ class Collider(pygame.sprite.Sprite):
             self.rect.size = size
 
 
-# TODO: docs + comments
 class ReceivingDamage(pygame.sprite.Sprite):
     update_time = 40
     delta_up = 1

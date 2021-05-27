@@ -131,45 +131,63 @@ def load_sound(path_to_sound: str, volume: float = DEFAULT_SOUNDS_VOLUME) -> pyg
     return sound
 
 
-# TODO: docs
-def scale_frame(image: pygame.surface.Surface, size: (int, int), k: int = 40):
-    image = Image.frombytes('RGBA', image.get_size(), pygame.image.tostring(image, 'RGBA'))
+def scale_frame(image: pygame.surface.Surface,
+                size: (int, int), k: int = 40) -> pygame.surface.Surface:
+    """
+    Функция масшабирует фон (рамку) к размеру <= размеру image, добавляя
+    ему красивую текстуру
+    :param image: Изображение фона
+    :param size: Размер, к которому будет приведено изображение (но при этом
+    этот размер <= размеру image
+    :param k: Параметр для задания текстуры
+    :return: Новое изображение
+    """
+    # Получение пикселец текущего изображения
+    image = Image.frombytes('RGBA', image.get_size(),
+                            pygame.image.tostring(image, 'RGBA'))
     pix = image.load()
-
+    # Новое иизображение
     new_image = Image.new('RGBA', size)
     new_pix = new_image.load()
+    # Итерация по пикселям текущего изображения и придание им текстуры
+    # + масштабирование к размеру <= размеру image
     for j in range(size[1]):
         for i in range(size[0]):
+            # Вычисления ниже нужны для придачи текстуры изображению. Так, в
+            # сравнении с обычным уменьшеным изображением, оно будет выглядит красивее
+
+            # Вычисление ряда пикселя
             if i <= k:
                 a = i
             elif k <= i <= size[0] - k:
                 a = k + randint(0, 10)
             else:
                 a = i - size[0] + image.size[0]
-
+            # Вычесление колонки пикселя
             if j <= k:
                 b = j
             elif k <= j <= size[1] - k:
                 b = k + randint(0, 10)
             else:
                 b = j - size[1] + image.size[1]
+            # Запись пикселя по вычисленной позиции
             new_pix[i, j] = pix[a, b]
-
     return pygame.image.fromstring(new_image.tobytes(), size, 'RGBA')
 
 
-# Функция, возвращающая случайное булевое значение с вводящимся шансом
-def true_with_chance(percentage_chance: float = 50.0, seed: list = None, user_seed: list = None) -> bool:
+# Функция, возвращающая случайное булевое значение с переданным шансом
+def true_with_chance(percentage_chance: float = 50.0,
+                     seed: list = None, user_seed: list = None) -> bool:
     """
     Функция принимает целое число и переводит в коэффицент, 0 <= k <= 1.
     Затем генерирует случайное число с помощью функции рандом.
     Если случайное число меньше либо равно коэффиценту, функция возвращает True.
     Получившееся значение записывается в переданный сид (в виде числа 1 или 0, для краткости).
-
-    :param percentage_chance: шанс выпадания значения True, в процентах
-    :param seed: в сид записывается полученное значение
-    :param user_seed: если пользовательский сид передан, значение берётся из него
-    :return: булевое значение (True/False)
+    :param percentage_chance: шанс получения значения True, в процентах
+    :param seed: Сид, куда записывается полученное значение
+    :param user_seed: пользовательский сид (если передан, значение берётся
+    из него, по умолчанию None)
+    :return: True либо False
     """
     if user_seed and seed:
         is_true = int(user_seed[0])

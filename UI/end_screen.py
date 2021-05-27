@@ -3,16 +3,19 @@ import os
 import pygame
 
 from UI.UI_components import LogoImage, AnimatedBackground
-from engine import load_image, get_joystick, check_any_joystick
+from engine import load_image, load_game_font, get_joystick, check_any_joystick
 from config import JOYSTICK_CURSOR_SPEED, JOYSTICK_SENSITIVITY, CONTROLS
 
 
-def execute(screen: pygame.surface.Surface, is_win=False):
+def execute(screen: pygame.surface.Surface, money: int,
+            count_of_alive_assistants: int, is_win=False):
     """
     Функция запускает конечной экран (либо смерти, либо победы)
     :param screen: Экран на котором надо отрисовывать менюв
     :param is_win: Флаг, выиграл ли игрок
-    :return None
+    :param money: Количество собранных игроком и асистентом денег
+    :param count_of_alive_assistants: Количетсво всех живых осистентов к концу игры
+    игры
     """
     is_open = True
     # Фоновое изображение для всего экрана
@@ -51,10 +54,21 @@ def execute(screen: pygame.surface.Surface, is_win=False):
     if os.path.isfile("data/save.txt"):
         with open('data/save.txt', 'r+', encoding="utf-8") as file:
             file.truncate(0)
-    # События, которые активируют закрытие
+    # Кортеж с текстом который надо вывести (каждый элемент на новой строке)
+    texts = (f"Деньги собранные игроком вместе с асистентом: {money}",
+             f"Количество живых асистентов: {count_of_alive_assistants}")
+    # Шрифт для поверхностей ниже
+    title_font = load_game_font(64)
+    # Поверхности с одним и тем же текстом, но разный цвет делает крассивый эффект
+    text_surfaces_yellow = [title_font.render(part.strip(), True, (255, 184, 50))
+                            for part in texts]
+    text_surfaces_red = [title_font.render(part.strip(), True, (179, 64, 16))
+                         for part in texts]
+    # Смещение между наложенными поверхностями для красивого эффекта
+    surfaces_offset = 3
+    margin = title_font.get_height() * 0.9  # отступ между двумя поверхностями
+    # События, которые активируют закрытие экрана с концном
     QUITING_EVENTS = (pygame.QUIT, pygame.MOUSEBUTTONUP, pygame.KEYDOWN, )
-    # Т.к. на этом экране нужно только часть событий, они и устанавливаются
-    pygame.event.set_allowed(QUITING_EVENTS)
     # Цикл меню
     while is_open:
         # Обработка событий
@@ -85,12 +99,28 @@ def execute(screen: pygame.surface.Surface, is_win=False):
                     animated_background.image.get_rect(center=screen.get_rect().center))
         # Вывод картинки победного заголовка, если игрок выиграл
         if is_win:
-            # IDE может ругаться, но если is_win истина, то
+            # Анализатор может ругаться, но если is_win истина, то
             # переменные 100% объявлены выше
             screen.blit(title_you_win, you_win_rect)
+        # следущая позиция по y (будет нужно при вычислении смещения)
+        next_y = 20
+        # Вывод красного текста
+        for text_surface in text_surfaces_red:
+            y_pos = screen.get_height() * 0.6 + next_y
+            screen.blit(text_surface, text_surface.get_rect(midtop=(screen.get_rect().centerx + surfaces_offset,
+                                                                    y_pos + surfaces_offset)))
+            next_y += margin
+        next_y = 20
+        # Вывод жёлтого текста
+        for text_surface in text_surfaces_yellow:
+            y_pos = screen.get_height() * 0.6 + next_y
+            screen.blit(text_surface, text_surface.get_rect(midtop=(screen.get_rect().centerx, y_pos)))
+            next_y += margin
         # Вывод логотипа игры
         screen.blit(logo.image, logo.rect.topleft)
         # Вывод изображения курсора
         screen.blit(cursor_image, (cursor_x, cursor_y))
 
+        # Обновление состояния джойстика
+        joystick = get_joystick() if check_any_joystick() else None
         pygame.display.flip()

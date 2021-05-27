@@ -18,11 +18,10 @@ SOUNDS_VOLUME_REDUCER = 0.12
 # (только при достижении этого значения игра просчитает движения джойстика)
 JOYSTICK_SENSITIVITY = 0.11
 # Скорость курсора при использовании джойстика (не относится к прицелу!!!)
-JOYSTICK_CURSOR_SPEED = 10
+JOYSTICK_CURSOR_SPEED = 20
 # Управление
 CONTROLS = {
     # Для джойстика
-    # TODO:
     'JOYSTICK_USE': 4,  # L2 (ось)
     "JOYSTICK_DASH": 10,  # R1
     # эта кнопка для кликов по UI
@@ -45,7 +44,6 @@ CONTROLS = {
     "KEYBOARD_SPELL_VOID": pygame.K_4,
     "KEYBOARD_SPELL_LIGHT": pygame.K_5,
     "KEYBOARD_SPELL_TELEPORT": pygame.K_SPACE,
-    "KEYBOARD_SPELL_HEAL": pygame.K_h,
     "KEYBOARD_USE": pygame.K_e,
     "KEYBOARD_PAUSE": pygame.K_ESCAPE,
     "KEYBOARD_DASH": pygame.K_LSHIFT,
